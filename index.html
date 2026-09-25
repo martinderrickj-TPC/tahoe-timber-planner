@@ -421,8 +421,9 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           <div class="seg" role="radiogroup" aria-labelledby="spLab">
             <input type="radio" name="sp" id="spPosts" value="posts" checked><label for="spPosts">Posts<small>as few as the beam needs</small></label>
             <input type="radio" name="sp" id="spWall" value="wall"><label for="spWall">Center bearing wall<small>doubles as a room divider</small></label>
+            <input type="radio" name="sp" id="spTies" value="ties"><label for="spTies">Tied rafters<small>no ridge beam, steel ties</small></label>
           </div>
-          <span class="sub">A center bearing wall carries the roof along the beam line with no posts, and a short header spans its doorway. It splits the home lengthwise, for example bedroom and bath on one side and living on the other.</span>
+          <span class="sub">A center bearing wall carries the roof along the beam line with no posts, and a short header spans its doorway. It splits the home lengthwise, for example bedroom and bath on one side and living on the other. Tied rafters skip the ridge beam entirely. The two roof slopes lean on each other at the peak, and steel ties across the room at wall-top height keep the walls from spreading. They work on gable roofs only.</span>
         </div>
       </section>
 
@@ -528,7 +529,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           <li>Snow deflection increased 1.5× for creep, limited to span/240.</li>
           <li>A floor load of 40 psf, limited to span/480, with spans capped at 16 ft.</li>
         </ul>
-        <p class="note">When the roof needs a ridge beam or beam lines, the planner sizes a 24F-V4 glulam (Fb 2,400 psi, E 1.8 million psi) for bending, shear and span/240. Round logs use placeholder values for visually graded local pine or fir (Fb 1,000 psi, E 1.1 million psi) until logs are graded. NLT beams are 3 to 8 plies of 2x12 Hem-Fir No. 2 nailed together. CLT beams are a preview. They use a 5-ply, 6⅞-in panel on edge with generic PRG 320 E1 values (Fb 1,950 psi with a 0.85 reduction, E 1.7 million psi) until Alpenglow's panels are certified. It adds evenly spaced interior posts on a 2-ft half-panel grid, each with its own pier or footing, when a single span won't work. The walls are load-bearing. They carry the roof panels and the beam ends, but wall capacity, headers over openings, earthquake and wind bracing, and connections aren't checked. A licensed engineer will replace all of this with stamped span tables.</p>
+        <p class="note">When the roof needs a ridge beam or beam lines, the planner sizes a 24F-V4 glulam (Fb 2,400 psi, E 1.8 million psi) for bending, shear and span/240. Round logs use placeholder values for visually graded local pine or fir (Fb 1,000 psi, E 1.1 million psi) until logs are graded. NLT beams are 3 to 8 plies of 2x12 Hem-Fir No. 2 nailed together. CLT beams are a preview. They use a 5-ply, 6⅞-in panel on edge with generic PRG 320 E1 values (Fb 1,950 psi with a 0.85 reduction, E 1.7 million psi) until Alpenglow's panels are certified. Tied rafters treat the gable as a three-hinged frame. A36 steel rods at wall-top height (allowable 0.33 × 58 ksi on the gross area) take the outward push, H = w·W²/(8·rise), under balanced snow. It adds evenly spaced interior posts on a 2-ft half-panel grid, each with its own pier or footing, when a single span won't work. The walls are load-bearing. They carry the roof panels and the beam ends, but wall capacity, headers over openings, earthquake and wind bracing, and connections aren't checked. A licensed engineer will replace all of this with stamped span tables.</p>
       </div>
     </details>
 
@@ -1033,6 +1034,18 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         var nom = { glulam: [5.125, 12], log: [10, 10], nlt: [4.5, 11.25], clt: [6.875, 12] }[s.beamType] || [5.125, 12];
         beam = { type: "wall", beamType: s.beamType, b: nom[0], d: nom[1], bays: 1, bay: s.L, posts: [] };
       }
+      if (s.support === "ties" && s.roof === "gable" && roofD.segments === 1) {
+        // three-hinged gable: horizontal thrust per ft of length H = w * W^2 / (8 * rise), balanced snow + dead (ASD)
+        var riseT = (s.W / 2) * p, wT = pfASD + 12 + roofD.lumber.d / 12 * PCF;
+        var H = wT * s.W * s.W / (8 * riseT), rod = null, sp = 4;
+        var RODS = [0.75, 0.875, 1, 1.25, 1.5, 1.75, 2];                 // A36 rod, allowable 0.33 x 58 ksi on the gross area
+        [4, 2].forEach(function (spc) {
+          if (rod) return;
+          for (var r = 0; r < RODS.length; r++) if (0.33 * 58000 * Math.PI * RODS[r] * RODS[r] / 4 >= H * spc) { rod = RODS[r]; sp = spc; break; }
+        });
+        beam = { type: "ties", rod: rod, spacing: sp, force: H * sp, thrust: H, posts: [], b: 0, d: 0, bays: 1, bay: s.L };
+        passes = [];
+      }
       passes.forEach(function (maxD) {
         for (var bays = 1; !beam && bays <= maxBays; bays++) {
           var xs = postsFor(bays), pts = [-s.L / 2].concat(xs, [s.L / 2]), bay = 0;
@@ -1210,8 +1223,13 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     }
     if (c.clt) checks.push(["info", "Snow design pending for CLT", "Needs Alpenglow's certified panel values. Design snow here is " + fmt(c.pf) + " psf."]);
     else if (c.roofD && c.needsBeam && !c.beam) checks.push(["warn", "Roof beams need an engineer", c.roofD.lumber.nom + " NLT panels work, but no " + ({ glulam: "glulam up to " + GL.maxD + " in deep", log: "log up to 24 in diameter", nlt: "NLT beam up to 8 plies of 2x12", clt: "CLT beam up to 42 in deep" }[s.beamType] || "beam") + " works" + (s.clearSpan ? " as a clear span" : " with posts 8 ft apart or more") + " at " + fmt(s.pg) + " psf. " + (s.clearSpan ? "Allow interior posts, or narrow the home." : "Try a narrower width, a steeper pitch or a lower snow load.")]);
-    else if (c.roofD) checks.push(["ok", "Roof screened for " + fmt(s.pg) + " psf ground snow (ASCE 7-22)", c.roofD.lumber.nom + " NLT spanning " + fmt(c.roofD.span, 1) + " ft" + (c.needsBeam ? ", on " + beamText(s, c).charAt(0).toLowerCase() + beamText(s, c).slice(1) : "") + (c.unbal ? ". Includes unbalanced snow (" + fmt(s.pg) + " psf on the leeward side)" : "") + ". The walls carry the roof, and wall capacity, headers, bracing and connections aren't checked. Screening only; an engineer's stamped tables replace this."]);
+    else if (c.roofD) checks.push(["ok", "Roof screened for " + fmt(s.pg) + " psf ground snow (ASCE 7-22)", c.roofD.lumber.nom + " NLT spanning " + fmt(c.roofD.span, 1) + " ft" + (c.needsBeam ? (c.beam && c.beam.type === "ties" ? ", with tied rafters instead of a ridge beam" : ", on " + beamText(s, c).charAt(0).toLowerCase() + beamText(s, c).slice(1)) : "") + (c.unbal ? ". Includes unbalanced snow (" + fmt(s.pg) + " psf on the leeward side)" : "") + ". The walls carry the roof, and wall capacity, headers, bracing and connections aren't checked. Screening only; an engineer's stamped tables replace this."]);
     else checks.push(["bad", "Roof beyond this demo's range", "No 2x6–2x12 NLT layout with up to three beam lines works at this snow load and width. An engineer would look at deeper panels or CLT."]);
+    if (c.beam && c.beam.type === "ties") {
+      if (c.beam.rod) checks.push(["info", "Tied rafters push the walls outward", "Each tie carries about " + fmt(Math.round(c.beam.force / 100) * 100) + " lb. The long walls need a strong top plate anchored to the rods, and an engineer designs the peak joint and the uneven-snow case. A steeper pitch cuts the tie force, since the push is inversely proportional to the roof's rise."]);
+      else checks.push(["warn", "Ties would be too large", "At this width, pitch and snow load the ties would need steel rods over 2 in, even at 2 ft spacing. Use a ridge beam, a center bearing wall or a steeper pitch."]);
+    }
+    if (s.support === "ties" && !(c.beam && c.beam.type === "ties") && c.roofD) checks.push(["info", "Tied rafters not used here", s.roof !== "gable" ? "Tied rafters only work on a gable roof, so the planner uses a beam on posts instead." : "At this width the roof panels can't reach the peak in one span and would need purlins, so the planner uses a beam on posts instead."]);
     if (c.beam && c.beam.posts.length >= 4) checks.push(["info", "Consider a center bearing wall", "With posts about every " + fmt(c.beam.bay) + " ft, a wall along the beam line may be simpler. Choose Center bearing wall under Ridge support to see it. It can double as the wall between rooms, and the beam then only needs to span door openings."]);
     if (s.roof === "flat" && s.pg >= 200) checks.push(["warn", "Low-slope roof in deep snow", "A low-slope roof holds the full snow load all winter and needs careful drainage and ice-dam detailing. Most basin designs use a pitched roof."]);
     if (s.exterior !== "siding") checks.push(["warn", "Wood exterior needs a wildfire-code path", s.loc.state === "CA" ? "In mapped fire hazard zones, California's Wildland-Urban Interface Code limits exposed wood cladding. The usual routes are fire-retardant-treated wood, a tested wall assembly, or noncombustible cladding on the most exposed walls. Confirm with the building department." : "Nevada counties' wildland-urban interface codes limit exposed wood cladding. Fire-retardant-treated wood or a tested assembly is the usual route. Confirm with the county."]);
@@ -1330,6 +1348,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     if (!c.beam) return t + ", size not found";
     var np = c.beam.posts.length;
     var names = { glulam: "glulam", log: "log", nlt: "NLT", clt: "CLT" };
+    if (c.beam.type === "ties") return c.beam.rod ? "No ridge beam: tied rafters with " + ({ 0.75: "¾", 0.875: "⅞", 1: "1", 1.25: "1¼", 1.5: "1½", 1.75: "1¾", 2: "2" }[c.beam.rod] || inches(c.beam.rod)) + " in steel rods every " + c.beam.spacing + " ft" : "No ridge beam: the ties would need rods over 2 in";
     if (c.beam.type === "wall") return (s.roof === "gable" ? "Center bearing wall under the ridge" : "Bearing wall on each beam line") + ", with " + ({ glulam: "a glulam", log: "a log", nlt: "an NLT", clt: "a CLT" }[c.beam.beamType] || "a") + " header over the doorway";
     var size = c.beam.type === "log" ? inches(c.beam.d) + " in diameter log"
              : c.beam.type === "nlt" ? c.beam.plies + "-ply 2x12 NLT beam (" + inches(c.beam.b) + " × 11¼ in)"
@@ -1463,6 +1482,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       clt: new THREE.MeshStandardMaterial({ map: makeStripeTexture(true), roughness: 0.78 }),
       glulam: new THREE.MeshStandardMaterial({ color: 0xb07a45, roughness: 0.7 }),
       log: new THREE.MeshStandardMaterial({ color: 0x7a5534, roughness: 0.95 }),
+      steel: new THREE.MeshStandardMaterial({ color: 0x2b2f33, roughness: 0.4, metalness: 0.6 }),
       wall: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, transparent: true, opacity: 1 }),
       wallGable: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, transparent: true, opacity: 1 }),
       trim: new THREE.MeshStandardMaterial({ color: 0x2b3431, roughness: 0.6, transparent: true, opacity: 1 }),
@@ -1708,6 +1728,15 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       if (s.roof === "gable") { zs.push(0); for (var k2 = 1; k2 < n; k2++) { zs.push(W / 2 * k2 / n); zs.push(-W / 2 * k2 / n); } }
       else for (var k3 = 1; k3 < n; k3++) zs.push(-W / 2 + W * k3 / n);
       var bd = c.beam ? c.beam.d / 12 : 1.25, bb = c.beam ? c.beam.b / 12 : 0.5;
+      if (c.beam && c.beam.type === "ties") {
+        var sp2 = c.beam.spacing || 4, rr = Math.max((c.beam.rod || 1) / 24, 0.06);
+        for (var xt = -L / 2 + sp2; xt < L / 2 - 0.5; xt += sp2) {
+          var rodM = new THREE.Mesh(new THREE.CylinderGeometry(rr, rr, W - 2 * T, 10), M.steel);
+          rodM.rotation.x = Math.PI / 2; rodM.position.set(xt, yTop - 0.35, 0); rodM.castShadow = true;
+          g.add(rodM);
+        }
+        zs = [];
+      }
       zs.forEach(function (z) {
         var yb = yUnder(z);
         var btype = c.beam ? (c.beam.type === "wall" ? c.beam.beamType : c.beam.type) : "glulam";
