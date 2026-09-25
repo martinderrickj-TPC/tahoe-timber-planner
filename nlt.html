@@ -147,9 +147,11 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         </div>
         <div class="row2">
           <div class="field"><label for="capex">Equipment ($)</label><input type="number" id="capex" min="0" step="100" value="1100"></div>
-          <div class="field"><label for="wc">Working capital ($)</label><input type="number" id="wc" min="0" step="100" value="2000"></div>
+          <div class="field"><label for="wc">Working capital, cash buffer ($)</label><input type="number" id="wc" min="0" step="100" value="2000"></div>
         </div>
-        <span class="sub">Scenario A is a nailer, compressor, clamps and a plywood jig. Scenario B adds a sturdier jig, a gantry, a pallet jack, a planer, dust collection and electrical upgrades.</span>
+        <label class="check" for="haveEq" style="display:flex;gap:8px;align-items:center;font-size:13.5px;font-weight:600;cursor:pointer;"><input type="checkbox" id="haveEq" style="width:16px;height:16px;margin:0;accent-color:var(--tw);"> I already have the equipment</label>
+        <p class="sub" id="startNote"></p>
+        <span class="sub">Startup costs are one-time. They never go into the cost of a panel, the margin or monthly profit; they only set how long payback takes. Working capital floats lumber and nails until you're paid and comes back to you, so it isn't counted in payback. Scenario A is a nailer, compressor, clamps and a plywood jig. Scenario B adds a sturdier jig, a gantry, a pallet jack, a planer, dust collection and electrical upgrades.</span>
       </section>
 
       <section class="card" aria-labelledby="h-pn">
@@ -224,7 +226,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         <h2 id="h-sens">What different prices mean</h2>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Price / ft²</th><th>Price / panel</th><th>Margin / panel</th><th>Margin / ft²</th><th>Breakeven panels</th><th>Monthly profit</th></tr></thead>
+            <thead><tr><th>Price / ft²</th><th>Price / panel</th><th>Margin / panel</th><th>Margin / ft²</th><th>Payback (panels)</th><th>Monthly profit</th></tr></thead>
             <tbody id="sens"></tbody>
           </table>
         </div>
@@ -270,7 +272,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           <li>Board feet per foot of board = thickness × depth ÷ 12. Rough-sawn uses full nominal sizes (a 2x6 is 2 × 6 in); surfaced uses actual sizes (1½ × 5½ in).</li>
           <li>Nails per panel = boards × (panel length ÷ nail spacing) × nails per spot.</li>
           <li>Labor hours per panel = panel area ÷ throughput. Weight is estimated at 2.5 lb per board foot.</li>
-          <li>Breakeven panels = (equipment + working capital) ÷ margin per panel, before your own wages beyond the labor line.</li>
+          <li>Payback = equipment ÷ margin per panel, before your own wages beyond the labor line. Working capital is a cash buffer you get back, so it shows in "cash to start" but not in payback. Cost per panel, margin and monthly profit never include startup costs.</li>
           <li>All figures are draft estimates for discussion, not quotes or financial advice.</li>
         </ul>
       </div>
@@ -302,10 +304,10 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var transport = num("tr", 20), overhead = num("oh", 15);
     var cost = lumber + nails + labor + transport + overhead;
     var p = price == null ? num("price", 15) : price, revenue = area * p, margin = revenue - cost;
-    var invest = num("capex", 0) + num("wc", 0);
+    var invest = $("haveEq").checked ? 0 : num("capex", 0);   // payback covers equipment only; working capital comes back
     return { w: w, L: L, nom: nom, rs: rs, thick: thick, depth: depth, boards: boards, panelBF: panelBF, area: area, weight: panelBF * 2.5,
              lumber: lumber, nails: nails, labor: labor, transport: transport, overhead: overhead, cost: cost, hours: hours,
-             price: p, revenue: revenue, margin: margin, invest: invest, breakeven: margin > 0 ? Math.ceil(invest / margin) : null };
+             price: p, revenue: revenue, margin: margin, invest: invest, breakeven: margin > 0 ? Math.ceil(invest / margin) : null, cashStart: invest + num("wc", 0) };
   }
 
   function render() {
@@ -322,8 +324,12 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     $("kpis").innerHTML =
       kpi("Cost", usd(c.cost / c.area, 2) + "/ft²", usd(c.cost) + " per panel", "") +
       kpi("Margin", usd(c.margin) + " / panel", usd(c.margin / c.area, 2) + "/ft² at " + usd(c.price, 2) + "/ft²", c.margin >= 0 ? "good" : "bad") +
-      kpi("Breakeven", c.breakeven ? fmt(c.breakeven) + " panels" : "Not at this price", c.breakeven ? "to pay back " + usd(c.invest) + " of setup" : "Price is below cost", c.breakeven ? "" : "bad") +
-      kpi("Monthly profit", usd(mo), fmt(pm) + " panels · " + fmt(hrsMo, 1) + " of " + fmt(avail) + " hours", mo >= 0 ? "good" : "bad");
+      kpi("Monthly profit", usd(mo), fmt(pm) + " panels · " + fmt(hrsMo, 1) + " of " + fmt(avail) + " hours", mo >= 0 ? "good" : "bad") +
+      (c.margin <= 0 ? kpi("Payback", "Not at this price", "Price is below cost per panel", "bad")
+       : c.invest === 0 ? kpi("Payback", "From panel one", "No equipment to pay back", "good")
+       : kpi("Payback", fmt(c.breakeven) + " panels", (mo > 0 ? "≈ " + fmt(Math.ceil(c.invest / mo)) + " month" + (Math.ceil(c.invest / mo) > 1 ? "s" : "") + " at " + fmt(pm) + "/month · " : "") + usd(c.invest) + " of equipment", ""));
+    $("startNote").textContent = "Cash to start: " + usd(c.cashStart) + (c.invest ? " (" + usd(c.invest) + " equipment + " + usd(c.cashStart - c.invest) + " working capital)" : " (working capital only)") + ".";
+    $("capex").disabled = $("haveEq").checked;
     var over = hrsMo > avail;
     $("capFlag").hidden = !over;
     if (over) $("capFlag").textContent = fmt(pm) + " panels a month takes about " + fmt(hrsMo, 1) + " hours, more than the " + fmt(avail) + " available. Add hours, help, or throughput.";
@@ -332,7 +338,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     $("sens").innerHTML = prices.map(function (pr) {
       var x = calc(pr);
       return '<tr' + (pr === c.price ? ' class="sel"' : '') + '><td>' + usd(pr, 2) + '</td><td>' + usd(x.revenue) + '</td><td class="' + (x.margin >= 0 ? "pos" : "neg") + '">' + usd(x.margin) +
-        '</td><td class="' + (x.margin >= 0 ? "pos" : "neg") + '">' + usd(x.margin / x.area, 2) + '</td><td>' + (x.breakeven ? fmt(x.breakeven) : "—") + '</td><td class="' + (x.margin >= 0 ? "pos" : "neg") + '">' + usd(pm * x.margin) + '</td></tr>';
+        '</td><td class="' + (x.margin >= 0 ? "pos" : "neg") + '">' + usd(x.margin / x.area, 2) + '</td><td>' + (x.margin <= 0 ? "—" : x.invest === 0 ? "none needed" : fmt(x.breakeven)) + '</td><td class="' + (x.margin >= 0 ? "pos" : "neg") + '">' + usd(pm * x.margin) + '</td></tr>';
     }).join("");
     var rows = [["Monthly", pm], ["One order", order]];
     $("vol").innerHTML = rows.map(function (r) {
