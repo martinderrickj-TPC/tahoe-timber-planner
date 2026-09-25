@@ -1,6 +1,6 @@
 # Tahoe Timber Planner
 
-A working demo from [Tahoe Wood](https://tahoewood.org), with Tahoe Prosperity Center, Tahoe Earth Institute and Berkeley Wood Lab. You sketch a backyard home or ADU built from nail-laminated timber (NLT) panels made locally from Tahoe forest-thinning wood on a 4-ft plywood module. The planner then:
+A working demo from [Tahoe Wood](https://tahoewood.org). You sketch a backyard home or ADU built from nail-laminated timber (NLT) panels made locally from Tahoe forest-thinning wood on a 4-ft plywood module. The planner then:
 
 - checks what a Lake Tahoe lot allows (TRPA coverage, California ADU size and height)
 - screens the roof for ASCE 7-22 snow loads

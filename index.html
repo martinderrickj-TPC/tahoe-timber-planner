@@ -266,7 +266,6 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       <a class="tw-link" href="https://tahoewood.org" target="_blank" rel="noopener"><span class="tw-mark" role="img" aria-label="Tahoe Wood"></span></a>
       <div class="brand-text">
         <div class="eyebrow"><a href="https://tahoewood.org" target="_blank" rel="noopener" style="color: inherit; text-decoration: none;">Tahoe Wood</a> <span aria-hidden="true">·</span> <span class="pill demo">Working demo · screening numbers only</span></div>
-        <p class="partners">With Tahoe Prosperity Center, Tahoe Earth Institute and Berkeley Wood Lab</p>
       </div>
     </div>
     <h1>Tahoe Timber Planner</h1>
@@ -374,6 +373,15 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
             <input type="radio" name="ht" id="htMarket" value="market" checked><label for="htMarket">Market rate<small>no deed restriction</small></label>
             <input type="radio" name="ht" id="htWork" value="work"><label for="htWork">Workforce<small>deed-restricted</small></label>
           </div>
+        </div>
+        <div class="field">
+          <span class="lab" id="exLab">Exterior look</span>
+          <div class="seg" role="radiogroup" aria-labelledby="exLab">
+            <input type="radio" name="ex" id="exLive" value="live" checked><label for="exLive">All wood<small>NLT walls, live-edge boards</small></label>
+            <input type="radio" name="ex" id="exPly" value="ply"><label for="exPly">Plywood<small>panels on the 4-ft grid</small></label>
+            <input type="radio" name="ex" id="exSide" value="siding"><label for="exSide">Siding<small>fiber cement or metal</small></label>
+          </div>
+          <span class="sub">Each option has continuous insulation behind the cladding to meet California's Climate Zone 16 energy code. All wood adds NLT wall panels, sized 4 ft by the wall height, to the panel list.</span>
         </div>
       </section>
 
@@ -532,7 +540,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       </div>
     </section>
 
-    <footer>This is a concept demo from Tahoe Wood, with Tahoe Prosperity Center, Tahoe Earth Institute and Berkeley Wood Lab. The rules, snow loads, panel depths and prices shown are illustrative placeholders for discussion. They are not code determinations, engineering or quotes. Always confirm with TRPA, your local building department and a licensed design professional.</footer>
+    <footer>This is a concept demo from Tahoe Wood. The rules, snow loads, panel depths and prices shown are illustrative placeholders for discussion. They are not code determinations, engineering or quotes. Always confirm with TRPA, your local building department and a licensed design professional.</footer>
   </div>
 </div>
 
@@ -919,6 +927,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       sheltered: $("shelt").checked,
       units: +radioVal("un") || 1,
       housing: radioVal("ht"),
+      exterior: radioVal("ex") || "live",
       aRest: Math.max(0, numVal("aRest", 225)),
       aSite: Math.max(0, numVal("aSite", 45000)),
       utilities: radioVal("ut") || "shared",
@@ -1005,6 +1014,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     if (s.roof === "gable") addRows("Roof", roofRun, (s.W / 2 + OVERHANG) / Math.cos(theta), 2, roofD && roofD.lumber);
     else addRows("Roof", roofRun, (s.W + 2 * OVERHANG) / Math.cos(theta), 1, roofD && roofD.lumber);
     if (s.floor === "crawl") addRows("Floor", s.L, s.W, 1, floorD && floorD.lumber);
+    if (s.exterior === "live") addRows("Walls", 2 * (s.L + s.W), s.H, 1, LUMBER[0]);   // 2x6 NLT wall panels, 4 ft x wall height
 
     var n = s.units || 1;
     rows.forEach(function (r) { r.qty *= n; });
@@ -1023,7 +1033,9 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var utilCost = (s.utilities === "separate" ? 22000 : 8000) * n + 60 * runFt;
     var siteCost = siteWork + utilCost;
     var panelsCost = clt ? null : bf * s.aNlt;
-    var hard = (panelsCost || 0) + totalArea * s.aRest + siteCost;
+    // placeholder: NLT walls replace wall framing and local live-edge boards are cheap; plywood is cheaper than fiber cement
+    var restRate = s.aRest * ({ live: 0.94, ply: 0.97, siding: 1 }[s.exterior] || 1);
+    var hard = (panelsCost || 0) + totalArea * restRate + siteCost;
     var mid = hard * (1 + s.aSoft / 100);
 
     return {
@@ -1032,7 +1044,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       rows: rows, bf: bf, co2: co2, count: count, area: area,
       panelsCost: panelsCost, hard: hard, mid: mid, low: mid * 0.85, high: mid * 1.2, clt: clt,
       // shell = walls 12% + roofing 10% + windows/doors/siding 16% of "rest of build", plus their share of builder overhead (20% x 38/80)
-      shell: ((panelsCost || 0) + siteCost + totalArea * s.aRest * 0.475) * (1 + s.aSoft / 100),
+      shell: ((panelsCost || 0) + siteCost + totalArea * restRate * 0.475) * (1 + s.aSoft / 100), restRate: restRate,
       n: n, totalArea: totalArea, siteCost: siteCost,
       places: places, siteWork: siteWork, utilCost: utilCost, runFt: runFt
     };
@@ -1125,6 +1137,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     else if (c.roofD) checks.push(["ok", "Roof screened for " + fmt(s.pg) + " psf ground snow (ASCE 7-22)", c.roofD.lumber.nom + " NLT spanning " + fmt(c.roofD.span, 1) + " ft" + (c.needsBeam ? ", on " + beamText(s, c).charAt(0).toLowerCase() + beamText(s, c).slice(1) : "") + (c.unbal ? ". Includes unbalanced snow (" + fmt(s.pg) + " psf on the leeward side)" : "") + ". Screening only; an engineer's stamped tables replace this."]);
     else checks.push(["bad", "Roof beyond this demo's range", "No 2x6–2x12 NLT layout with up to three beam lines works at this snow load and width. An engineer would look at deeper panels or CLT."]);
     if (s.roof === "flat" && s.pg >= 200) checks.push(["warn", "Low-slope roof in deep snow", "A low-slope roof holds the full snow load all winter and needs careful drainage and ice-dam detailing. Most basin designs use a pitched roof."]);
+    if (s.exterior !== "siding") checks.push(["warn", "Wood exterior needs a wildfire-code path", s.loc.state === "CA" ? "In mapped fire hazard zones, California's Wildland-Urban Interface Code limits exposed wood cladding. The usual routes are fire-retardant-treated wood, a tested wall assembly, or noncombustible cladding on the most exposed walls. Confirm with the building department." : "Nevada counties' wildland-urban interface codes limit exposed wood cladding. Fire-retardant-treated wood or a tested assembly is the usual route. Confirm with the county."]);
     checks.push(["info", "Wildfire zone not yet checked", s.loc.state === "CA" ? "The fire-hazard lookup isn't connected yet. In mapped fire hazard severity zones and wildland-urban interface areas, the California Wildland-Urban Interface Code (Title 24, Part 7) applies. It replaced CBC Chapter 7A and CRC R337 in 2026." : "The fire-hazard lookup isn't connected yet. Nevada counties apply their adopted wildland-urban interface code."]);
     $("checks").innerHTML = checks.map(function (k) {
       var lab = { ok: "Fits", warn: "Check", bad: "Blocked", info: "Note" }[k[0]];
@@ -1144,7 +1157,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     }).join("");
     $("costLines").innerHTML =
       line(c.clt ? "CLT panels (pending pricing)" : "NLT panels (" + fmt(c.bf) + " bd ft)", c.clt ? "—" : money(c.panelsCost)) +
-      line("Rest of build (" + fmt(c.totalArea) + " ft² × $" + fmt(s.aRest) + ")", money(c.totalArea * s.aRest)) +
+      line("Rest of build (" + fmt(c.totalArea) + " ft² × $" + fmt(c.restRate) + ")", money(c.totalArea * c.restRate)) +
       line("Site work and foundation" + (c.n > 1 ? " (2 homes)" : ""), money(c.siteWork)) +
       line((s.utilities === "separate" ? "Separate utility hookups" : "Utilities tied into the main house") + " (about " + fmt(c.runFt) + " ft of trench)", money(c.utilCost)) +
       line("Design, engineering, permits (" + fmt(s.aSoft) + "%)", money(soft)) +
@@ -1158,7 +1171,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       ["Interior finishes", 22, "Drywall, flooring, cabinets, counters, tile, appliances, paint"],
       ["Builder overhead and profit", 20, "Supervision, insurance, winter protection, cleanup, overhead and profit"]
     ];
-    var restTotal = c.totalArea * s.aRest;
+    var restTotal = c.totalArea * c.restRate;
     $("restBody").innerHTML = REST.map(function (r) {
       return '<div class="cost-line"><span><b>' + esc(r[0]) + "</b> · " + r[1] + '%<br><span class="sub">' + esc(r[2]) + "</span></span><span>" + money(restTotal * r[1] / 100) + "</span></div>";
     }).join("");
@@ -1248,6 +1261,38 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
   var view = { structure: false, snow: false };
   var liveT = 0, lastMsg = null;
 
+  // cladding textures for one 4-ft wall module (canvas 128 x 256 = 4 ft x 8 ft)
+  function makeCladTexture(kind) {
+    var cv = document.createElement("canvas"); cv.width = 128; cv.height = 256;
+    var g = cv.getContext("2d");
+    var seed = 11; var rnd = function () { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+    if (kind === "live") {
+      g.fillStyle = "#3b2a1c"; g.fillRect(0, 0, 128, 256);            // shadow gaps between boards
+      for (var b = 0; b < 4; b++) {
+        var x0 = b * 32, t = 0.86 + rnd() * 0.2, ph = rnd() * 6, amp = 1.5 + rnd() * 2;
+        g.fillStyle = "rgb(" + Math.round(176 * t) + "," + Math.round(132 * t) + "," + Math.round(88 * t) + ")";
+        g.beginPath();
+        for (var y = 0; y <= 256; y += 8) g.lineTo(x0 + 2 + amp * (1 + Math.sin(y / 23 + ph)), y);
+        for (var y2 = 256; y2 >= 0; y2 -= 8) g.lineTo(x0 + 30 - amp * (1 + Math.sin(y2 / 19 + ph * 2)), y2);
+        g.closePath(); g.fill();
+        g.strokeStyle = "rgba(70,45,25,0.55)"; g.lineWidth = 2; g.stroke();    // bark edge
+        g.strokeStyle = "rgba(110,75,40,0.25)"; g.lineWidth = 1;
+        for (var k = 0; k < 4; k++) { var gx = x0 + 8 + rnd() * 16; g.beginPath(); g.moveTo(gx, 0); g.bezierCurveTo(gx + 3, 80, gx - 3, 170, gx + 1, 256); g.stroke(); }
+      }
+    } else if (kind === "ply") {
+      g.fillStyle = "#c9a56c"; g.fillRect(0, 0, 128, 256);
+      g.strokeStyle = "rgba(140,100,55,0.22)"; g.lineWidth = 1;
+      for (var i = 0; i < 26; i++) { var yy = rnd() * 256; g.beginPath(); g.moveTo(0, yy); g.bezierCurveTo(40, yy + 6 * rnd(), 90, yy - 6 * rnd(), 128, yy + 3); g.stroke(); }
+      g.strokeStyle = "rgba(60,45,30,0.7)"; g.lineWidth = 2; g.strokeRect(1, 1, 126, 254);   // panel seams on the 4-ft grid
+      g.fillStyle = "rgba(60,45,30,0.35)";
+      for (var ny = 16; ny < 256; ny += 24) { g.fillRect(4, ny, 2, 2); g.fillRect(122, ny, 2, 2); }
+    } else {
+      g.fillStyle = "#5f7f86"; g.fillRect(0, 0, 128, 256);
+      for (var ly = 0; ly < 256; ly += 16) { g.fillStyle = "rgba(20,35,40,0.35)"; g.fillRect(0, ly, 128, 2); g.fillStyle = "rgba(255,255,255,0.06)"; g.fillRect(0, ly + 2, 128, 3); }
+    }
+    var tex = new THREE.CanvasTexture(cv); tex.anisotropy = 4;
+    return tex;
+  }
   function makeStripeTexture(cross) {
     var cv = document.createElement("canvas"); cv.width = 256; cv.height = 256;
     var g = cv.getContext("2d");
@@ -1333,7 +1378,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       nlt: new THREE.MeshStandardMaterial({ map: makeStripeTexture(false), roughness: 0.78 }),
       clt: new THREE.MeshStandardMaterial({ map: makeStripeTexture(true), roughness: 0.78 }),
       glulam: new THREE.MeshStandardMaterial({ color: 0xb07a45, roughness: 0.7 }),
-      wall: new THREE.MeshStandardMaterial({ color: 0x5f7f86, roughness: 0.9, transparent: true, opacity: 1 }),
+      wall: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, transparent: true, opacity: 1 }),
+      wallGable: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, transparent: true, opacity: 1 }),
       trim: new THREE.MeshStandardMaterial({ color: 0x2b3431, roughness: 0.6, transparent: true, opacity: 1 }),
       glass: new THREE.MeshStandardMaterial({ color: 0x9cc3d5, roughness: 0.1, metalness: 0.1, transparent: true, opacity: 0.55 }),
       concrete: new THREE.MeshStandardMaterial({ color: 0xa7a8a2, roughness: 1 }),
@@ -1382,7 +1428,14 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       renderer.render(scene, camera);
     })();
 
-    return { scene: scene, group: group, site: site, mats: mats, camera: camera, controls: controls, lastLot: undefined };
+    // one texture per look for box faces (0..1 UVs per 4-ft module) and one for gable infill (UVs in feet)
+    var clad = {};
+    ["live", "ply", "siding"].forEach(function (k) {
+      var a = makeCladTexture(k), gt = makeCladTexture(k);
+      gt.wrapS = gt.wrapT = THREE.RepeatWrapping; gt.repeat.set(0.25, 0.125);
+      clad[k] = { box: a, gable: gt };
+    });
+    return { scene: scene, group: group, site: site, mats: mats, camera: camera, controls: controls, lastLot: undefined, clad: clad, cladKind: null };
   }
 
   function box(w, h, d, mat, x, y, z, cast) {
@@ -1433,6 +1486,11 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var panelMat = c.clt ? M.clt : M.nlt;
     var wallOpacity = view.structure ? 0.12 : 1;
     M.wall.opacity = wallOpacity; M.wall.depthWrite = !view.structure;
+    M.wallGable.opacity = wallOpacity; M.wallGable.depthWrite = !view.structure;
+    if (three.cladKind !== s.exterior && three.clad[s.exterior]) {
+      M.wall.map = three.clad[s.exterior].box; M.wallGable.map = three.clad[s.exterior].gable;
+      M.wall.needsUpdate = true; M.wallGable.needsUpdate = true; three.cladKind = s.exterior;
+    }
     M.trim.opacity = view.structure ? 0.15 : 1; M.trim.depthWrite = !view.structure;
     M.glass.opacity = view.structure ? 0.1 : 0.55;
 
@@ -1498,7 +1556,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       shape.closePath();
       [L / 2 - T, -L / 2].forEach(function (xp) {
         var geo = new THREE.ExtrudeGeometry(shape, { depth: T, bevelEnabled: false });
-        var m = new THREE.Mesh(geo, M.wall);
+        var m = new THREE.Mesh(geo, M.wallGable);
         m.rotation.y = Math.PI / 2;
         m.position.set(xp, yTop, 0);
         m.castShadow = true; m.receiveShadow = true;
@@ -1605,8 +1663,10 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
   var pending = 0;
   function scheduleUpdate() {
     if (pending) return;
-    var run = function () { pending = 0; update(); };
-    pending = document.hidden ? setTimeout(run, 0) : requestAnimationFrame(run);
+    pending = 1;
+    // next animation frame, with a timer backup in case frames are paused (hidden or covered window)
+    var done = false, run = function () { if (done) return; done = true; pending = 0; update(); };
+    requestAnimationFrame(run); setTimeout(run, 120);
   }
   function update() {
     var s = readState();
