@@ -515,13 +515,13 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       <summary>Price and engineering assumptions</summary>
       <div class="body">
         <div class="assump">
-          <div class="field"><label for="aNlt">NLT panels ($/board ft)</label><input type="number" id="aNlt" min="0" step="0.05" value="1.00"></div>
+          <div class="field"><label for="aNlt">NLT panel price, 6-in panel ($/ft² of panel)</label><input type="number" id="aNlt" min="0" step="0.5" value="15"></div>
           <div class="field"><label for="aRest">Rest of build ($/ft² floor)</label><input type="number" id="aRest" min="0" step="5" value="225"></div>
           <div class="field"><label for="aSite">Site work and foundation ($)</label><input type="number" id="aSite" min="0" step="1000" value="45000"></div>
           <div class="field"><label for="aSoft">Design, engineering, permits and fees (%)</label><input type="number" id="aSoft" min="0" max="60" step="1" value="8"></div>
         </div>
-        <p class="note">NLT pricing is an early estimate from local partners. "Rest of build" covers walls, windows, roofing, insulation, mechanical, electrical, plumbing and finishes. The range shown is −15% to +20% around the midpoint.</p>
-        <p class="note">Panel depths are a theoretical screening calculation on the plywood-size module, to show the method. They are not an engineering design. The calculation assumes:</p>
+        <p class="note">NLT panel pricing follows Tahoe Wood's draft NLT financials: rough-sawn local lumber at about $1 per board foot, plus nails, labor, transport and overhead, comes to about $11–12/ft² of 6-in panel. The $15/ft² default leaves a small producer a margin. Deeper roof panels cost more in proportion to their extra lumber. "Rest of build" covers walls, windows, roofing, insulation, mechanical, electrical, plumbing and finishes. The range shown is −15% to +20% around the midpoint.</p>
+        <p class="note">Panel depths are a theoretical screening calculation on the plywood-size module, to show the method. They are not an engineering design. For NLT detailing, see Think Wood's <a href="https://info.thinkwood.com/download/nlt-design-and-construction-guide-usa" target="_blank" rel="noopener">NLT Design and Construction Guide</a>. The calculation assumes:</p>
         <ul class="list note">
           <li>Hem-Fir No. 2 lumber with NDS size factors and a 1.15 snow load-duration factor.</li>
           <li>A 0.8 reduction on strength and stiffness for butt joints.</li>
@@ -982,7 +982,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       pitch: +$("pitch").value,
       pg: +$("pg").value,
       system: radioVal("ps"),
-      aNlt: Math.max(0, numVal("aNlt", 1)),
+      aNlt: Math.max(0, numVal("aNlt", 15)),
       sheltered: $("shelt").checked,
       clearSpan: $("clearSpan").checked,
       beamType: radioVal("bm") || "glulam",
@@ -1122,7 +1122,12 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     // placeholder utility allowances: tie-in vs new meters/laterals, plus $60/ft of shared trench
     var utilCost = (s.utilities === "separate" ? 22000 : 8000) * n + 60 * runFt;
     var siteCost = siteWork + utilCost;
-    var panelsCost = clt ? null : bf * s.aNlt;
+    // lumber is about 56% of panel cost for a 6-in panel, so deeper panels scale that share with lumber volume
+    var panelSf = 0, panelsCost = clt ? null : rows.reduce(function (sum, r) {
+      if (!r.lumber) return sum;
+      var sf = r.qty * r.w * r.len; panelSf += sf;
+      return sum + sf * s.aNlt * (0.56 * r.lumber.nomD / 6 + 0.44);
+    }, 0);
     // placeholder: NLT walls replace wall framing and local live-edge boards are cheap; plywood is cheaper than fiber cement
     var restRate = s.aRest * ({ live: 0.94, ply: 0.97, siding: 1 }[s.exterior] || 1);
     var hard = (panelsCost || 0) + totalArea * restRate + siteCost;
@@ -1135,7 +1140,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       panelsCost: panelsCost, hard: hard, mid: mid, low: mid * 0.85, high: mid * 1.2, clt: clt,
       // shell = walls 12% + roofing 10% + windows/doors/siding 16% of "rest of build", plus their share of builder overhead (20% x 38/80)
       shell: ((panelsCost || 0) + siteCost + totalArea * restRate * 0.475) * (1 + s.aSoft / 100), restRate: restRate,
-      n: n, totalArea: totalArea, siteCost: siteCost,
+      n: n, totalArea: totalArea, siteCost: siteCost, panelSf: panelSf,
       places: places, siteWork: siteWork, utilCost: utilCost, runFt: runFt
     };
   }
@@ -1252,7 +1257,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       return '<li class="tier' + (t[4] ? " main" : "") + '"><h3>' + esc(t[0]) + (c.n > 1 ? " · 2 homes" : "") + '</h3><span class="from">' + price + "</span><p>" + esc(t[1]) + "</p></li>";
     }).join("");
     $("costLines").innerHTML =
-      line(c.clt ? "CLT panels (pending pricing)" : "NLT panels (" + fmt(c.bf) + " bd ft)", c.clt ? "—" : money(c.panelsCost)) +
+      line(c.clt ? "CLT panels (pending pricing)" : "NLT panels (" + fmt(c.panelSf) + " ft² of panel)", c.clt ? "—" : money(c.panelsCost)) +
       line("Rest of build (" + fmt(c.totalArea) + " ft² × $" + fmt(c.restRate) + ")", money(c.totalArea * c.restRate)) +
       line("Site work and foundation" + (c.n > 1 ? " (2 homes)" : ""), money(c.siteWork)) +
       line((s.utilities === "separate" ? "Separate utility hookups" : "Utilities tied into the main house") + " (about " + fmt(c.runFt) + " ft of trench)", money(c.utilCost)) +
