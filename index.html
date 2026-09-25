@@ -1,0 +1,1625 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tahoe Timber Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Sofia+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --lake-blue: #43779b;
+  --evergreen: #1f5a63;
+  --copper: #c98649;
+  --teal-mist: #8fadb1;
+  --teal-pale: #d2dee0;
+  --ink: #222724;
+
+  --surface: #f8f9f8;
+  --raised: #ffffff;
+  --border: #e4e5e5;
+  --border-strong: #7a7d7c;
+  --text: #222724;
+  --muted: #6f7371;
+  --accent-text: #1f5a63;
+  --brand-fill: #43779b;
+  --on-brand: #ffffff;
+  --seg-on: #1f5a63;
+  --focus: #43779b;
+
+  --ok: #2d6a4a;   --ok-bg: #e2efe7;
+  --warn: #8a5712; --warn-bg: #f6ead9;
+  --bad: #b3382e;  --bad-bg: #f7e1de;
+  --info: #3f5f6b; --info-bg: #e6edf0;
+
+  --stage-bg: #e3eaec;
+  --stage-grid: #b3c2c5;
+  --stage-grid-major: #8fadb1;
+  --stage-ground: #d5ddd8;
+
+  --font-display: "Sora", -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-body: "Sofia Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
+  --r-sm: 6px; --r-md: 10px; --r-lg: 16px;
+  --shadow-sm: 0 1px 2px #1f5a630f, 0 1px 3px #1f5a631a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface: #141715; --raised: #222724; --border: #383d3a; --border-strong: #7f8280;
+    --text: #e4e5e5; --muted: #abadac; --accent-text: #8fadb1;
+    --brand-fill: #43779b; --on-brand: #ffffff; --seg-on: #8fadb1; --focus: #8fadb1;
+    --ok: #8fcaa6; --ok-bg: #1c3127; --warn: #e3b47c; --warn-bg: #3a2b19;
+    --bad: #ef9c8a; --bad-bg: #3d201c; --info: #a9c3cb; --info-bg: #1f2a2d;
+    --stage-bg: #1a201d; --stage-grid: #313b37; --stage-grid-major: #4a5a57; --stage-ground: #222a26;
+    --shadow-sm: 0 1px 3px #00000059;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: #141715; --raised: #222724; --border: #383d3a; --border-strong: #7f8280;
+  --text: #e4e5e5; --muted: #abadac; --accent-text: #8fadb1;
+  --brand-fill: #43779b; --on-brand: #ffffff; --seg-on: #8fadb1; --focus: #8fadb1;
+  --ok: #8fcaa6; --ok-bg: #1c3127; --warn: #e3b47c; --warn-bg: #3a2b19;
+  --bad: #ef9c8a; --bad-bg: #3d201c; --info: #a9c3cb; --info-bg: #1f2a2d;
+  --stage-bg: #1a201d; --stage-grid: #313b37; --stage-grid-major: #4a5a57; --stage-ground: #222a26;
+  --shadow-sm: 0 1px 3px #00000059;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+body {
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.47;
+  padding-inline: 16px;
+  padding-block: 0 48px;
+}
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+p { margin: 0; }
+.wrap { max-width: 1280px; margin-inline: auto; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- header ---------- */
+.top { display: grid; gap: 10px; padding-block: 28px 20px; }
+.eyebrow {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+}
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  border-radius: 999px; padding: 2px 10px; font-size: 11px; font-weight: 600;
+  letter-spacing: 0.03em; text-transform: uppercase;
+}
+.pill.demo { background: var(--warn-bg); color: var(--warn); }
+.top h1 { font-size: clamp(28px, 4vw, 38px); line-height: 1.12; font-weight: 700; letter-spacing: -0.01em; }
+.lede { max-width: 68ch; color: var(--muted); font-size: 16px; }
+
+/* ---------- app grid ---------- */
+.app { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .app { grid-template-columns: minmax(0, 1fr); } }
+
+.stage {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px);
+  height: min(calc(100vh - 40px), 720px); min-height: 420px;
+  border-radius: var(--r-lg); overflow: hidden; background: var(--stage-bg);
+  border: 1px solid var(--border);
+}
+@media (max-width: 900px) {
+  .stage { position: relative; top: 0; height: 62vw; min-height: 320px; max-height: 520px; }
+}
+.stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+@media (pointer: coarse) { .stage canvas { touch-action: pan-y; } .stage.orbit-on canvas { touch-action: none; } }
+.stage-fallback { pointer-events: none; position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); }
+.stage-bar {
+  position: absolute; left: 12px; right: 12px; top: 12px;
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; pointer-events: none;
+}
+.stage-bar > * { pointer-events: auto; }
+.stage-foot {
+  position: absolute; left: 12px; right: 12px; bottom: 12px;
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; pointer-events: none;
+}
+.chip-float {
+  background: var(--raised); color: var(--text); border: 1px solid var(--border);
+  border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 600; box-shadow: var(--shadow-sm);
+}
+.hint { font-size: 12px; color: var(--muted); background: var(--raised); border-radius: 999px; padding: 4px 10px; border: 1px solid var(--border); }
+
+/* ---------- controls ---------- */
+.panel { display: grid; gap: 14px; }
+.card {
+  background: var(--raised); border: 1px solid var(--border); border-radius: var(--r-md);
+  padding: 16px; display: grid; gap: 14px;
+}
+.card h2 { font-size: 16px; font-weight: 600; display: flex; align-items: baseline; gap: 10px; }
+.card h2 .step { font-family: var(--font-body); font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.04em; }
+.field { display: grid; gap: 6px; }
+.field > label, .field > .lab { font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
+.field > label output, .field > .lab output { font-weight: 700; color: var(--accent-text); }
+.sub { font-size: 12.5px; color: var(--muted); }
+.row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 420px) { .row2 { grid-template-columns: minmax(0, 1fr); } }
+
+select, input[type="number"] {
+  width: 100%; font: inherit; color: var(--text); background: var(--raised);
+  border: 1px solid var(--border-strong); border-radius: var(--r-sm); padding: 8px 10px;
+}
+input[type="range"] { width: 100%; accent-color: var(--lake-blue); }
+.check-inline { display: flex; gap: 8px; align-items: center; font-size: 13.5px; font-weight: 500; cursor: pointer; }
+.check-inline input { width: 16px; height: 16px; accent-color: var(--lake-blue); margin: 0; }
+
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label {
+  flex: 1 1 auto; text-align: center; cursor: pointer; user-select: none;
+  border: 1px solid var(--border-strong); border-radius: var(--r-sm);
+  padding: 7px 10px; font-size: 13.5px; font-weight: 600; background: var(--raised); color: var(--text);
+}
+.seg label small { display: block; font-weight: 500; font-size: 11.5px; color: var(--muted); }
+.seg input:checked + label { border-color: var(--seg-on); box-shadow: inset 0 0 0 1px var(--seg-on); color: var(--accent-text); }
+.seg input:checked + label small { color: var(--accent-text); }
+.seg input:focus-visible + label { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.toggles { display: flex; flex-wrap: wrap; gap: 6px; }
+.tbtn {
+  font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--border); background: var(--raised); color: var(--text);
+  border-radius: 999px; padding: 5px 12px; box-shadow: var(--shadow-sm);
+}
+.tbtn[aria-pressed="true"] { background: var(--brand-fill); color: var(--on-brand); border-color: var(--brand-fill); }
+
+/* ---------- summary ---------- */
+.summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+.stat { background: var(--raised); padding: 12px 14px; display: grid; gap: 2px; align-content: start; }
+.stat .k { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.stat .v { font-family: var(--font-display); font-size: 20px; font-weight: 700; line-height: 1.2; }
+.stat .d { font-size: 12.5px; color: var(--muted); }
+
+/* ---------- checks ---------- */
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.check { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; }
+.badge {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  border-radius: 999px; padding: 2px 8px; min-width: 64px; text-align: center; margin-top: 1px;
+}
+.badge.ok { background: var(--ok-bg); color: var(--ok); }
+.badge.warn { background: var(--warn-bg); color: var(--warn); }
+.badge.bad { background: var(--bad-bg); color: var(--bad); }
+.badge.info { background: var(--info-bg); color: var(--info); }
+.check b { font-weight: 700; }
+.check .sub { display: block; }
+
+/* ---------- lower sections ---------- */
+.lower { display: grid; gap: 16px; margin-top: 24px; }
+.lower-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .lower-grid { grid-template-columns: minmax(0, 1fr); } }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+th { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+td.r, th.r { text-align: right; }
+tfoot td { font-weight: 700; border-bottom: 0; }
+.cost-lines { display: grid; gap: 6px; }
+.cost-line { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.cost-line.total { border-top: 1px solid var(--border); padding-top: 8px; font-weight: 700; font-size: 15px; }
+.cost-line span:last-child { font-variant-numeric: tabular-nums; }
+
+details { background: var(--raised); border: 1px solid var(--border); border-radius: var(--r-md); }
+details > summary {
+  cursor: pointer; list-style: none; padding: 12px 16px; font-weight: 600; font-size: 14.5px;
+  display: flex; justify-content: space-between; gap: 12px; align-items: center;
+}
+details > summary::-webkit-details-marker { display: none; }
+details > summary::after { content: "+"; font-size: 18px; color: var(--muted); line-height: 1; }
+details[open] > summary::after { content: "–"; }
+details > .body { padding: 0 16px 16px; display: grid; gap: 12px; }
+.assump { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.note { font-size: 13px; color: var(--muted); max-width: 72ch; }
+.list { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.status-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+
+.facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; margin: 2px 0 0; font-size: 13.5px; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.results { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.results button { width: 100%; text-align: left; font: inherit; font-size: 13.5px; cursor: pointer; background: var(--raised); color: var(--text); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 7px 10px; }
+.results button:hover { border-color: var(--border-strong); }
+.tiers { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.tier { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--r-md); }
+.tier.main { border-color: var(--seg-on); box-shadow: inset 0 0 0 1px var(--seg-on); }
+.tier h3 { font-size: 15px; font-weight: 600; margin: 0; }
+.tier .from { font-family: var(--font-display); font-size: 19px; font-weight: 700; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tier .from small { display: block; font-family: var(--font-body); font-size: 12px; font-weight: 500; color: var(--muted); }
+.tier p { grid-column: 1 / -1; font-size: 13px; color: var(--muted); }
+.clt-banner { background: var(--info-bg); color: var(--info); border-radius: var(--r-sm); padding: 10px 12px; font-size: 13px; }
+
+.involve { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.involve div { display: grid; gap: 4px; }
+.involve h3 { font-size: 14.5px; font-weight: 600; }
+.involve p { font-size: 13.5px; color: var(--muted); }
+.roadmap { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 640px) { .roadmap { grid-template-columns: minmax(0, 1fr); } }
+.roadmap div { border-top: 3px solid var(--teal-mist); padding-top: 8px; display: grid; gap: 4px; }
+.roadmap div:last-child { border-top-color: var(--copper); }
+.roadmap .when { font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.roadmap p { font-size: 13.5px; }
+footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90ch; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Tahoe Prosperity Center <span aria-hidden="true">·</span> <span class="pill demo">Working demo · screening numbers only</span></div>
+    <h1>Tahoe Timber Planner</h1>
+    <p class="lede">Sketch a backyard home or ADU built from locally made nail-laminated timber (NLT) panels. The planner checks what a Tahoe lot allows and sizes the roof for snow. It then lists every panel with a rough cost and the carbon stored in the wood. Everything snaps to a 4-ft plywood module, so the same grid works for local CLT when it arrives.</p>
+  </header>
+
+  <main class="app">
+    <section class="stage" id="stage" aria-label="3D model of the design">
+      <div class="stage-fallback" id="stageFallback" hidden>The 3D view could not start in this browser. All the numbers below still update.</div>
+      <div class="stage-bar">
+        <div class="toggles" role="group" aria-label="View options">
+          <button class="tbtn" id="viewExterior" aria-pressed="true" type="button">Exterior</button>
+          <button class="tbtn" id="viewStructure" aria-pressed="false" type="button">Structure</button>
+          <button class="tbtn" id="viewSnow" aria-pressed="false" type="button">Design snow</button>
+          <button class="tbtn" id="orbitToggle" aria-pressed="false" type="button" hidden>Rotate model</button>
+        </div>
+      </div>
+      <div class="stage-foot">
+        <span class="chip-float num" id="dimChip">28 × 24 ft · 672 ft²</span>
+        <span class="hint" id="stageHint">Drag to orbit · Ctrl/⌘ + scroll or pinch to zoom</span>
+      </div>
+    </section>
+
+    <div class="panel">
+      <div class="summary" id="summary"></div>
+      <p id="liveStatus" class="sr-only" aria-live="polite"></p>
+      <section class="card" aria-labelledby="h-lot">
+        <h2 id="h-lot"><span class="step">1</span> Your lot</h2>
+        <div class="seg" role="radiogroup" aria-label="Lot source" id="lotModeSeg">
+          <input type="radio" name="lotMode" id="lmSample" value="sample" checked><label for="lmSample">Real Tahoe lot<small>TRPA parcel data</small></label>
+          <input type="radio" name="lotMode" id="lmLive" value="live" hidden><label for="lmLive" id="lmLiveLab" hidden>Any address<small>36,991 basin homes</small></label>
+          <input type="radio" name="lotMode" id="lmOwn" value="own"><label for="lmOwn">My own numbers<small>type them in</small></label>
+        </div>
+        <div class="field" id="liveBox" hidden>
+          <label for="addrQ">Street address in the Tahoe Basin</label>
+          <input type="search" id="addrQ" placeholder="Street number and name" autocomplete="off">
+          <ul class="results" id="addrResults"></ul>
+          <span class="sub" id="liveStatusMsg">Type at least 4 characters. The search covers a built-in snapshot of TRPA's 36,991 residential parcels, taken 2026-09-24. It works even if TRPA's service is down. Nothing you type is stored or sent anywhere.</span>
+          <dl class="facts" id="liveFacts"></dl>
+        </div>
+        <div class="field" id="sampleBox">
+          <label for="sampleLot">Sample lot</label>
+          <select id="sampleLot"></select>
+          <dl class="facts" id="lotFacts"></dl>
+          <span class="sub">Real parcels from <a href="https://maps.trpa.org/server/rest/services" target="_blank" rel="noopener">TRPA's public parcel service</a>. We've left out addresses and parcel numbers. The planner places the home on the lot at least 5 ft from the lot lines and 10 ft from the existing house, as close to the house as that allows to keep utility runs short. Both distances are placeholders.</span>
+        </div>
+        <div class="field" id="locField">
+          <label for="loc">Community</label>
+          <select id="loc"></select>
+          <span class="sub" id="locSub"></span>
+        </div>
+        <div class="row2">
+          <div class="field" id="lotAreaField">
+            <label for="lotArea">Lot size (ft²)</label>
+            <input type="number" id="lotArea" min="1000" max="200000" step="100" value="8000">
+          </div>
+          <div class="field">
+            <label for="existCov">Existing coverage (ft²)</label>
+            <input type="number" id="existCov" min="0" max="200000" step="50" value="1200">
+          </div>
+        </div>
+        <div class="field" id="lcField">
+          <label for="landClass">TRPA land capability class</label>
+          <select id="landClass"></select>
+          <span class="sub">Sets base allowable coverage for parcels rated by land capability (Bailey) class. Many single-family parcels were scored under IPES instead, and their base coverage (1–30%) comes from that score. Later this comes from TRPA parcel data automatically.</span>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="h-shape">
+        <h2 id="h-shape"><span class="step">2</span> Size and shape</h2>
+        <div class="field">
+          <label for="len">Length <output id="lenOut" class="num" aria-live="off">28 ft</output></label>
+          <input type="range" id="len" min="16" max="48" step="4" value="28">
+        </div>
+        <div class="field">
+          <label for="wid">Width <output id="widOut" class="num" aria-live="off">24 ft</output></label>
+          <input type="range" id="wid" min="12" max="28" step="4" value="24">
+          <span class="sub">Both snap to the 4-ft panel module: one plywood sheet width, or 32 boards of 1½-in lumber.</span>
+        </div>
+        <div class="field">
+          <span class="lab" id="whLab">Wall height</span>
+          <div class="seg" role="radiogroup" aria-labelledby="whLab">
+            <input type="radio" name="wh" id="wh8" value="8" checked><label for="wh8">8 ft<small>4×8 sheet</small></label>
+            <input type="radio" name="wh" id="wh9" value="9"><label for="wh9">9 ft<small>4×9 sheet</small></label>
+            <input type="radio" name="wh" id="wh10" value="10"><label for="wh10">10 ft<small>4×10 sheet</small></label>
+          </div>
+        </div>
+        <div class="field">
+          <span class="lab" id="fdLab">Floor</span>
+          <div class="seg" role="radiogroup" aria-labelledby="fdLab">
+            <input type="radio" name="fd" id="fdCrawl" value="crawl" checked><label for="fdCrawl">NLT floor<small>over crawlspace</small></label>
+            <input type="radio" name="fd" id="fdSlab" value="slab"><label for="fdSlab">Slab<small>no floor panels</small></label>
+          </div>
+        </div>
+        <div class="field">
+          <span class="lab" id="unLab">Homes on this lot</span>
+          <div class="seg" role="radiogroup" aria-labelledby="unLab">
+            <input type="radio" name="un" id="un1" value="1" checked><label for="un1">One<small>single ADU</small></label>
+            <input type="radio" name="un" id="un2" value="2"><label for="un2">Two<small>TRPA's per-lot maximum</small></label>
+          </div>
+        </div>
+        <div class="field">
+          <span class="lab" id="htLab">Who it's for</span>
+          <div class="seg" role="radiogroup" aria-labelledby="htLab">
+            <input type="radio" name="ht" id="htMarket" value="market" checked><label for="htMarket">Market rate<small>no deed restriction</small></label>
+            <input type="radio" name="ht" id="htWork" value="work"><label for="htWork">Workforce<small>deed-restricted</small></label>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="h-roof">
+        <h2 id="h-roof"><span class="step">3</span> Roof and snow</h2>
+        <div class="field">
+          <span class="lab" id="rfLab">Roof</span>
+          <div class="seg" role="radiogroup" aria-labelledby="rfLab">
+            <input type="radio" name="rf" id="rfGable" value="gable" checked><label for="rfGable">Gable</label>
+            <input type="radio" name="rf" id="rfShed" value="shed"><label for="rfShed">Shed</label>
+            <input type="radio" name="rf" id="rfFlat" value="flat"><label for="rfFlat">Low-slope</label>
+          </div>
+        </div>
+        <div class="field" id="pitchField">
+          <label for="pitch">Pitch <output id="pitchOut" class="num" aria-live="off">4 in 12</output></label>
+          <input type="range" id="pitch" min="3" max="12" step="1" value="4">
+        </div>
+        <div class="field">
+          <label for="pg">Ground snow load, ASCE 7-22 <output id="pgOut" class="num" aria-live="off">600 psf</output></label>
+          <input type="range" id="pg" min="100" max="1000" step="10" value="600">
+          <label class="check-inline" for="shelt"><input type="checkbox" id="shelt"> Lot tight among tall conifers (sheltered roof, more snow stays on)</label>
+          <span class="sub">Placeholder value. Since the 2025 California Building Code took effect on January 1, 2026, each site's snow load comes from the ASCE 7-22 Hazard Tool. Those values are strength-level and much higher than the old county tables. One example: 842 psf at a 6,881-ft site in Placer County. The planner will look this up by address.</span>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="h-panel">
+        <h2 id="h-panel"><span class="step">4</span> Panel system</h2>
+        <div class="seg" role="radiogroup" aria-label="Panel system">
+          <input type="radio" name="ps" id="psNLT" value="nlt" checked><label for="psNLT">NLT<small>made locally now</small></label>
+          <input type="radio" name="ps" id="psCLT" value="clt"><label for="psCLT">CLT preview<small>Alpenglow Timber, planned</small></label>
+        </div>
+        <p class="clt-banner" id="cltBanner" hidden>CLT preview shows the panel layout on the same 4-ft grid, as 8-ft-wide panels. Panel thickness, cost and carbon will follow once Alpenglow's panels have certified design values (ANSI/APA PRG 320). Until then the cost total leaves the panels out.</p>
+      </section>
+    </div>
+  </main>
+
+  <div class="lower">
+    <div class="lower-grid">
+      <section class="card" aria-labelledby="h-checks">
+        <h2 id="h-checks">What this lot allows</h2>
+        <ul class="checks" id="checks"></ul>
+      </section>
+
+      <section class="card" aria-labelledby="h-cost">
+        <h2 id="h-cost">Price guide</h2>
+        <div class="field">
+          <span class="lab" id="flLab">Finish level</span>
+          <div class="seg" role="radiogroup" aria-labelledby="flLab">
+            <input type="radio" name="fl" id="flBasic" value="basic" checked><label for="flBasic">Rental grade<small>minimum fittings</small></label>
+            <input type="radio" name="fl" id="flStd" value="standard"><label for="flStd">Standard<small>mid-range</small></label>
+            <input type="radio" name="fl" id="flPrem" value="premium"><label for="flPrem">Premium<small>custom</small></label>
+          </div>
+        </div>
+        <label class="check-inline" for="preapp"><input type="checkbox" id="preapp" checked> Built from a pre-approved standard plan (lower design and permit costs)</label>
+        <div class="field">
+          <span class="lab" id="utLab">Utilities</span>
+          <div class="seg" role="radiogroup" aria-labelledby="utLab">
+            <input type="radio" name="ut" id="utShared" value="shared" checked><label for="utShared">Tie into the main house<small>shared sewer, water, electric</small></label>
+            <input type="radio" name="ut" id="utSep" value="separate"><label for="utSep">Separate hookups<small>new meters and laterals</small></label>
+          </div>
+          <span class="sub">All-electric with heat pumps, so there's no gas line or meter. Septic isn't an option in the Tahoe Basin. State law requires sewage to be piped out of the basin, so every home connects to sewer, and most parcels have public water rather than wells. The planner sites the home near the house to keep the utility trench short. Each water and sewer district decides whether a detached ADU may share hookups, and California law requires any ADU connection fee to be proportionate to the unit's size.</span>
+        </div>
+        <ul class="tiers" id="tiers"></ul>
+        <details id="saveDetails">
+          <summary>Ways to lower the cost</summary>
+          <div class="body"><ul class="list note">
+            <li><b>Stay under 750 ft².</b> California bars impact fees on ADUs that size.</li>
+            <li><b>Keep it a simple rectangle on the 4-ft grid.</b> Panels arrive cut to size, with little waste and a short crane day.</li>
+            <li><b>Leave the NLT ceiling exposed.</b> The structure becomes the finished wood ceiling, so there's no drywall or paint overhead.</li>
+            <li><b>Use a pre-approved standard plan.</b> It cuts architect, engineering and plan-check time for every home that repeats it.</li>
+            <li><b>Tie into the main house's sewer, water and electric</b>, and site the ADU close to the house. The trench stays short and there are no new meters.</li>
+            <li><b>Go all-electric with heat pumps.</b> There's no gas line, meter or trench.</li>
+            <li><b>Build two homes at once.</b> They share site work, utility runs and mobilization.</li>
+            <li><b>Take the weathertight shell and finish the inside yourself</b>, or with a local finish carpenter.</li>
+            <li><b>Deed-restrict it as workforce housing.</b> That can open fee waivers, bonus units and housing grants where they're offered.</li>
+          </ul></div>
+        </details>
+        <details id="costDetails">
+          <summary>Detailed estimate</summary>
+          <div class="body"><div class="cost-lines" id="costLines"></div></div>
+        </details>
+        <details id="restDetails">
+          <summary>What "rest of build" covers</summary>
+          <div class="body"><div class="cost-lines" id="restBody"></div>
+          <p class="note">This is an illustrative split for a small Tahoe home, for discussion only. Builder bids will replace it. Land isn't included. Utility connections and the foundation sit in the site line.</p></div>
+        </details>
+        <p class="note">"From" is the low end of each range. Panel price is an early local estimate. Finish-level rates and the other prices are placeholders until builders bid real designs, and all are editable under Price and engineering assumptions. Small homes cost more per square foot because site work and utilities are a fixed cost.</p>
+      </section>
+    </div>
+
+    <section class="card" aria-labelledby="h-save">
+      <h2 id="h-save">Savings that apply here</h2>
+      <ul class="checks" id="savings"></ul>
+      <p class="note">These programs change often. Confirm each one with the agency before counting on it. Researched September 2026.</p>
+    </section>
+
+    <section class="card" aria-labelledby="h-sched">
+      <h2 id="h-sched">Panel list</h2>
+      <p class="note" id="schedNote"></p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Use</th><th class="r">Qty</th><th>Size</th><th>Build-up</th><th class="r">Board ft</th><th class="r">Each (lb)</th></tr></thead>
+          <tbody id="schedBody"></tbody>
+          <tfoot id="schedFoot"></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <details id="assumpDetails">
+      <summary>Price and engineering assumptions</summary>
+      <div class="body">
+        <div class="assump">
+          <div class="field"><label for="aNlt">NLT panels ($/board ft)</label><input type="number" id="aNlt" min="0" step="0.05" value="1.00"></div>
+          <div class="field"><label for="aRest">Rest of build ($/ft² floor)</label><input type="number" id="aRest" min="0" step="5" value="225"></div>
+          <div class="field"><label for="aSite">Site work and foundation ($)</label><input type="number" id="aSite" min="0" step="1000" value="45000"></div>
+          <div class="field"><label for="aSoft">Design, engineering, permits and fees (%)</label><input type="number" id="aSoft" min="0" max="60" step="1" value="8"></div>
+        </div>
+        <p class="note">NLT pricing is an early estimate from local partners. "Rest of build" covers walls, windows, roofing, insulation, mechanical, electrical, plumbing and finishes. The range shown is −15% to +20% around the midpoint.</p>
+        <p class="note">Panel depths are a theoretical screening calculation on the plywood-size module, to show the method. They are not an engineering design. The calculation assumes:</p>
+        <ul class="list note">
+          <li>Hem-Fir No. 2 lumber with NDS size factors and a 1.15 snow load-duration factor.</li>
+          <li>A 0.8 reduction on strength and stiffness for butt joints.</li>
+          <li>ASCE 7-22 flat-roof snow pf = 0.7·Ce·Ct·pg with no slope reduction. Ce = 1.0, or 1.2 when the lot is sheltered among conifers. Ct = 1.2, the upper end of ASCE 7-22 Table 7.3-3 for a heated, insulated, unventilated roof. Loads are applied at 0.7 for allowable-stress design, because ASCE 7-22 ground snow values are strength-level.</li>
+          <li>Gable roofs at 7:12 or flatter are also checked for ASCE 7-22 §7.6.1 unbalanced snow: the full ground snow load on the leeward side, with the windward side unloaded. This is applied to every gable layout as a conservative simplification.</li>
+          <li>Snow deflection increased 1.5× for creep, limited to span/240.</li>
+          <li>A floor load of 40 psf, limited to span/480, with spans capped at 16 ft.</li>
+        </ul>
+        <p class="note">When the roof needs a ridge beam or beam lines, the planner sizes a 24F-V4 glulam (Fb 2,400 psi, E 1.8 million psi) for bending, shear and span/240. It adds interior posts on the 4-ft grid when a single span won't work. A licensed engineer will replace all of this with stamped span tables.</p>
+      </div>
+    </details>
+
+    <details id="statusDetails">
+      <summary>What's real in this demo and what's next</summary>
+      <div class="body">
+        <ul class="status-list" id="statusList"></ul>
+      </div>
+    </details>
+
+    <section class="card" aria-labelledby="h-road">
+      <h2 id="h-road">Where this is going</h2>
+      <div class="roadmap">
+        <div><span class="when">Year 1</span><p>Agree a Tahoe NLT panel standard with local makers. Connect TRPA parcel, snow and fire data. Put real pricing into the planner.</p></div>
+        <div><span class="when">Year 2</span><p>Turn the most useful configurations into engineered, pre-approved NLT plan sets with partner architects and engineers. Build one pilot if funded.</p></div>
+        <div><span class="when">Year 3</span><p>Add CLT plan variants for Alpenglow Timber's local mill on the same grid, ready when its panels are certified.</p></div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="h-inv">
+      <h2 id="h-inv">How the wood community can help</h2>
+      <div class="involve">
+        <div><h3>Panel makers</h3><p>Help set the 4-ft Tahoe panel standard and share fabrication pricing and lead times.</p></div>
+        <div><h3>Architects and engineers</h3><p>Turn these configurations into stamped span tables and pre-approved plan sets.</p></div>
+        <div><h3>Jurisdictions and TRPA</h3><p>Pilot a pre-approved plan pathway for mass-timber ADUs.</p></div>
+        <div><h3>Builders and lot owners</h3><p>Put your hand up for the first pilot build.</p></div>
+      </div>
+    </section>
+
+    <footer>This is a concept demo from Tahoe Prosperity Center. The rules, snow loads, panel depths and prices shown are illustrative placeholders for discussion. They are not code determinations, engineering or quotes. Always confirm with TRPA, your local building department and a licensed design professional.</footer>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------------- reference data ----------------
+  var LOCATIONS = [
+    { id: "slt", name: "South Lake Tahoe", juris: "City of South Lake Tahoe", state: "CA", trpa: true },
+    { id: "meyers", name: "Meyers", juris: "El Dorado County", state: "CA", trpa: true },
+    { id: "tahoecity", name: "Tahoe City", juris: "Placer County", state: "CA", trpa: true },
+    { id: "kingsbeach", name: "Kings Beach", juris: "Placer County", state: "CA", trpa: true },
+    { id: "incline", name: "Incline Village", juris: "Washoe County", state: "NV", trpa: true },
+    { id: "zephyr", name: "Zephyr Cove / Stateline", juris: "Douglas County", state: "NV", trpa: true },
+    { id: "truckee", name: "Truckee", juris: "Town of Truckee", state: "CA", trpa: false }
+  ];
+  // TRPA base allowable land coverage by land capability (Bailey) class
+  var LAND_CLASSES = [
+    { id: "1a", pct: 1 }, { id: "1b", pct: 1 }, { id: "1c", pct: 1 }, { id: "2", pct: 1 },
+    { id: "3", pct: 5 }, { id: "4", pct: 20 }, { id: "5", pct: 25 }, { id: "6", pct: 30 }, { id: "7", pct: 30 }
+  ];
+  var LUMBER = [
+    { nom: "2x6", d: 5.5, nomD: 6, cf: 1.3 },
+    { nom: "2x8", d: 7.25, nomD: 8, cf: 1.2 },
+    { nom: "2x10", d: 9.25, nomD: 10, cf: 1.1 },
+    { nom: "2x12", d: 11.25, nomD: 12, cf: 1.0 }
+  ];
+  var FB = 850, E = 1.3e6, JOINT = 0.8, PCF = 30;
+  var MODULE = 4, OVERHANG = 2, MAX_PANEL_LEN = 24;
+  var KG_PER_M3 = 420, CO2_PER_KG_WOOD = 0.5 * 44 / 12;
+
+  // ---------------- dom helpers ----------------
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = function (n, d) { return Number(n).toLocaleString("en-US", { maximumFractionDigits: d || 0, minimumFractionDigits: d || 0 }); };
+  var money = function (n) { return "$" + fmt(Math.round(n / 1000) * 1000); };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  var radioVal = function (name) { var el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : null; };
+  var numVal = function (id, fallback) { var v = parseFloat($(id).value); return isFinite(v) ? v : fallback; };
+
+  LOCATIONS.forEach(function (l) {
+    var o = document.createElement("option"); o.value = l.id; o.textContent = l.name + " — " + l.juris; $("loc").appendChild(o);
+  });
+  LAND_CLASSES.forEach(function (c) {
+    var o = document.createElement("option"); o.value = c.id; o.textContent = "Class " + c.id + " — " + c.pct + "% base coverage"; $("landClass").appendChild(o);
+  });
+  $("landClass").value = "5";
+
+  // ---------------- real sample lots (TRPA public parcel data, anonymized) ----------------
+  var SAMPLE_LOTS = /*LOTS*/[{"id":"lot-a","community":"South Lake Tahoe","jurisdiction":"City of South Lake Tahoe","state":"CA","lotAreaSqft":10013,"planName":"Al Tahoe (Plan Area Statement)","zoning":"Al Tahoe Special Area #1","coverageBasis":"Land capability","landCapabilityClass":"7","ipesScore":null,"baseCoveragePct":30.0,"allowedCoverageSqft":3004,"existingCoverageSqft":1841,"elevationFt":6254,"outline":[[41.6,57.4],[-7.8,49.3],[-57.2,41.5],[-41.6,-57.4],[7.8,-49.3],[57.2,-41.5]],"buildings":[[[-34.8,1.1],[-6.6,3.1],[-7.2,38.7],[-21.6,38.0],[-21.3,27.6],[-38.5,26.7],[-41.5,26.5],[-38.1,0.9]],[[-31.0,-27.5],[-31.0,-7.9],[-31.0,-1.9],[-34.4,-1.9],[-41.6,-1.9],[-43.1,-1.9],[-43.1,-4.0],[-43.1,-27.5]]]},{"id":"lot-b","community":"Meyers","jurisdiction":"El Dorado County","state":"CA","lotAreaSqft":10069,"planName":"Tahoe Paradise (TP) Meadowvale (Plan Area Statement)","zoning":"Tahoe Paradise Meadowvale","coverageBasis":"IPES","landCapabilityClass":"4","ipesScore":1009.0,"baseCoveragePct":30.0,"allowedCoverageSqft":3021,"existingCoverageSqft":1683,"elevationFt":6350,"outline":[[-11.9,71.4],[-48.4,26.9],[-72.6,-2.3],[17.1,-69.4],[26.5,-57.3],[34.9,-46.0],[43.8,-35.1],[52.7,-24.2],[62.1,-13.5],[71.5,-2.9]],"buildings":[[[2.7,36.1],[-15.4,16.5],[-18.5,16.5],[-18.5,15.0],[-13.9,11.9],[-13.9,10.4],[-12.4,10.4],[-10.9,10.4],[-4.9,2.9],[16.3,-12.2],[17.8,-16.7],[20.8,-16.7],[26.8,-7.7],[28.3,-7.7],[28.3,-6.2],[32.9,-0.1],[34.4,-0.1],[34.4,1.4],[35.9,1.4],[37.4,5.9]]]},{"id":"lot-c","community":"Dollar Point","jurisdiction":"Placer County","state":"CA","lotAreaSqft":14895,"planName":"Placer County Tahoe Basin Area Plan","zoning":"Residential - Highlands","coverageBasis":"Estimate","landCapabilityClass":"5","ipesScore":null,"baseCoveragePct":25.0,"allowedCoverageSqft":3724,"existingCoverageSqft":1933,"elevationFt":6578,"outline":[[46.5,77.9],[-52.8,71.9],[-46.3,-78.0],[-41.4,-77.7],[52.6,-72.0]],"buildings":[[[-27.5,-6.3],[-10.9,-6.3],[-10.9,-3.3],[-10.9,-1.8],[-10.9,4.3],[-10.9,10.3],[-10.9,37.5],[-10.9,40.5],[-10.9,46.5],[-35.0,46.5],[-35.0,45.0],[-35.0,42.0],[-35.0,2.8],[-35.0,1.2],[-35.0,-6.3]],[[7.3,46.5],[19.3,46.5],[19.3,51.0],[19.3,69.2],[17.8,69.2],[7.3,69.2],[2.7,69.2],[-3.3,69.2],[-3.3,54.1],[-3.3,48.0],[-3.3,46.5]]]},{"id":"lot-d","community":"Kings Beach","jurisdiction":"Placer County","state":"CA","lotAreaSqft":9384,"planName":"Placer County Tahoe Basin Area Plan","zoning":"Residential - Kings Beach Residential","coverageBasis":"IPES","landCapabilityClass":"5","ipesScore":850.0,"baseCoveragePct":25.0,"allowedCoverageSqft":2346,"existingCoverageSqft":1994,"elevationFt":6291,"outline":[[35.7,63.6],[-39.3,61.4],[-35.7,-63.6],[14.3,-62.2],[39.3,-61.4]],"buildings":[[[9.7,-25.6],[8.2,22.7],[8.2,24.2],[5.1,24.2],[0.6,24.2],[0.6,22.7],[-5.4,22.7],[-8.4,22.7],[-8.4,0.1],[-6.9,-25.6]]]},{"id":"lot-e","community":"Incline Village","jurisdiction":"Washoe County","state":"NV","lotAreaSqft":15292,"planName":"Washoe County Tahoe Area Plan","zoning":"Incline Village #4","coverageBasis":"Land capability","landCapabilityClass":"4","ipesScore":null,"baseCoveragePct":20.0,"allowedCoverageSqft":3058,"existingCoverageSqft":1796,"elevationFt":6477,"outline":[[2.2,76.3],[-3.3,71.3],[-9.5,67.3],[-16.3,64.3],[-23.4,62.5],[-30.8,61.9],[-38.2,62.5],[-45.4,64.3],[-63.2,-3.4],[-83.5,-80.8],[-8.5,-52.8],[113.3,-7.3]],"buildings":[[[-1.4,30.5],[-2.9,30.5],[-2.9,29.0],[-36.1,19.9],[-36.1,16.9],[-34.6,16.9],[-34.6,10.8],[-33.1,10.8],[-33.1,4.8],[-31.6,4.8],[-30.1,-7.3],[-25.5,-8.8],[-25.5,-7.3],[-5.9,-2.7],[-5.9,-1.2],[6.1,1.8],[0.1,27.5],[-1.4,27.5]],[[-42.1,-2.7],[-49.7,-4.2],[-49.7,-5.8],[-63.3,-8.8],[-60.3,-22.4],[-58.7,-22.4],[-58.7,-28.4],[-57.2,-28.4],[-55.7,-39.0],[-54.2,-39.0],[-54.2,-40.5],[-51.2,-40.5],[-51.2,-39.0],[-45.2,-39.0],[-45.2,-37.4],[-40.6,-37.4],[-40.6,-35.9],[-34.6,-35.9],[-36.1,-22.4],[-37.6,-22.4]]]},{"id":"lot-f","community":"Zephyr Cove","jurisdiction":"Douglas County","state":"NV","lotAreaSqft":12768,"planName":"Marla Bay/Zephyr Heights (Plan Area Statement)","zoning":"Marla Bay/Zephyr Heights","coverageBasis":"Land capability","landCapabilityClass":"1a (64%) / 2 (36%)","ipesScore":null,"baseCoveragePct":1.0,"allowedCoverageSqft":128,"existingCoverageSqft":1430,"elevationFt":6330,"outline":[[50.0,-21.3],[46.5,63.0],[-53.6,64.9],[-48.4,-56.9],[-14.8,-60.9],[52.1,-71.7]],"buildings":[[[-33.7,0.0],[-35.2,-22.6],[-35.2,-36.2],[1.1,-37.7],[1.1,-22.6],[1.1,-21.1],[2.6,-1.5],[-0.5,-1.5]]]}]/*END*/;
+  var LOT_LETTERS = "ABCDEFGHIJ";
+  SAMPLE_LOTS.forEach(function (lot, i) {
+    lot.label = "Lot " + LOT_LETTERS.charAt(i);
+    var o = document.createElement("option"); o.value = lot.id;
+    o.textContent = lot.label + " · " + lot.community + " · " + fmt(lot.lotAreaSqft) + " ft²";
+    $("sampleLot").appendChild(o);
+  });
+  if (!SAMPLE_LOTS.length) { $("lotModeSeg").hidden = true; $("lmOwn").checked = true; }
+  function currentLot() {
+    var mode = radioVal("lotMode");
+    if (mode === "live") return liveLot;
+    if (mode !== "sample") return null;
+    return SAMPLE_LOTS.filter(function (l) { return l.id === $("sampleLot").value; })[0] || SAMPLE_LOTS[0] || null;
+  }
+  function syncLotInputs() {
+    var lot = currentLot();
+    if (lot && lot.existingCoverageSqft != null) $("existCov").value = Math.round(lot.existingCoverageSqft / 10) * 10;
+  }
+  $("sampleLot").addEventListener("input", syncLotInputs);
+  $("lmSample").addEventListener("input", syncLotInputs);
+  syncLotInputs();
+
+  // ---------------- live address lookup (works wherever the browser may reach TRPA) ----------------
+  var TRPA = "https://maps.trpa.org/server/rest/services/";
+  var M2FT = 3.280839895;
+  var JURIS = { CSLT: ["City of South Lake Tahoe", "CA", "South Lake Tahoe"], EL: ["El Dorado County", "CA", "El Dorado County"], PL: ["Placer County", "CA", "Placer County"],
+                WA: ["Washoe County", "NV", "Incline Village / Crystal Bay"], DG: ["Douglas County", "NV", "Douglas County"], CC: ["Carson City", "NV", "Carson City"] };
+  var liveLot = null, liveSeq = 0;
+  function trpa(path, params) {
+    var qs = Object.keys(params).map(function (k) { return k + "=" + encodeURIComponent(params[k]); }).join("&");
+    var ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, 12000);
+    return fetch(TRPA + path + "?" + qs + "&f=json", { signal: ctl.signal }).then(function (r) { clearTimeout(t); return r.json(); });
+  }
+  function ringArea(r) { var a = 0; for (var i = 0, j = r.length - 1; i < r.length; j = i++) a += (r[j][0] + r[i][0]) * (r[j][1] - r[i][1]); return a / 2; }
+  function ringCentroid(r) {
+    var a = 0, cx = 0, cy = 0;
+    for (var i = 0, j = r.length - 1; i < r.length; j = i++) { var f = r[j][0] * r[i][1] - r[i][0] * r[j][1]; a += f; cx += (r[j][0] + r[i][0]) * f; cy += (r[j][1] + r[i][1]) * f; }
+    return a ? [cx / (3 * a), cy / (3 * a)] : r[0];
+  }
+  function biggestRing(g) { return (g.rings || []).slice().sort(function (a, b) { return Math.abs(ringArea(b)) - Math.abs(ringArea(a)); })[0]; }
+  function thin(r, max) { if (r.length <= max) return r; var k = Math.ceil(r.length / max); return r.filter(function (_, i) { return i % k === 0; }); }
+  function probeLive() {
+    if (document.getElementById("parcelData")) { $("lmLive").hidden = false; $("lmLiveLab").hidden = false; return; }
+    fetch("parcels.json").then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (d) {
+      SNAP = d; $("lmLive").hidden = false; $("lmLiveLab").hidden = false;
+      return fetch("buildings.json").then(function (r) { return r.ok ? r.json() : null; }).then(function (b) {
+        if (b) d.p.forEach(function (row, i) { row[12] = b[i] || []; });
+      });
+    }).catch(function () { SNAP = false; tryLive(); });
+    return;
+  }
+  function tryLive() {
+    trpa("Zoning/MapServer/1", {}).then(function (d) {
+      if (!d || !d.fields) return;
+      $("lmLive").hidden = false; $("lmLiveLab").hidden = false;
+    }).catch(function () { /* sandboxed page: keep sample lots only */ });
+  }
+  var searchT = 0;
+  $("addrQ").addEventListener("input", function () {
+    clearTimeout(searchT);
+    var q = $("addrQ").value.trim().toUpperCase().replace(/[^A-Z0-9 .#-]/g, "");
+    if (q.length < 4) { $("addrResults").innerHTML = ""; return; }
+    var snap = snapshot();
+    if (snap) {
+      var hits = [];
+      for (var i = 0; i < snap.p.length && hits.length < 8; i++) if (snap.p[i][0].indexOf(q) !== -1) hits.push(i);
+      $("liveStatusMsg").textContent = hits.length ? "Pick a parcel." : "No residential parcel in the basin matches that. Try the street number and name only.";
+      $("addrResults").innerHTML = hits.map(function (i) {
+        var r = snap.p[i];
+        return '<li><button type="button" data-idx="' + i + '">' + esc(r[0]) + " · " + esc(snap.juris[r[1]][0]) + "</button></li>";
+      }).join("");
+      return;
+    }
+    searchT = setTimeout(function () {
+      $("liveStatusMsg").textContent = "Searching TRPA parcels…";
+      trpa("Zoning/MapServer/1/query", { where: "UPPER(APO_ADDRESS) LIKE '%" + q.replace(/'/g, "''") + "%'", outFields: "APN,APO_ADDRESS,JURISDICTION", resultRecordCount: 8, returnGeometry: "false", orderByFields: "APO_ADDRESS" })
+        .then(function (d) {
+          var f = (d.features || []).filter(function (x) { return x.attributes.APN; });
+          $("liveStatusMsg").textContent = f.length ? "Pick a parcel." : "No basin parcel matches that. Try the street number and name only.";
+          $("addrResults").innerHTML = f.map(function (x) {
+            var a = x.attributes, j = JURIS[a.JURISDICTION] || [a.JURISDICTION];
+            return '<li><button type="button" data-apn="' + esc(a.APN) + '" data-addr="' + esc(a.APO_ADDRESS || "") + '">' + esc(a.APO_ADDRESS || "(no address)") + " · " + esc(j[0]) + "</button></li>";
+          }).join("");
+        }).catch(function () { $("liveStatusMsg").textContent = "TRPA's service didn't answer. Try again in a moment."; });
+    }, 350);
+  });
+  $("addrResults").addEventListener("click", function (e) {
+    var bi = e.target.closest("button[data-idx]");
+    if (bi) { loadSnapshotParcel(+bi.getAttribute("data-idx")); return; }
+    var b = e.target.closest("button[data-apn]"); if (!b) return;
+    loadParcel(b.getAttribute("data-apn"), b.getAttribute("data-addr"));
+  });
+  var SNAP = null;
+  function snapshot() {
+    if (SNAP === null) {
+      var el = document.getElementById("parcelData");
+      try { SNAP = el ? JSON.parse(el.textContent) : false; } catch (e) { SNAP = false; }
+    }
+    return SNAP || null;
+  }
+  function pairs(flat) { var out = []; for (var i = 0; i + 1 < flat.length; i += 2) out.push([flat[i], flat[i + 1]]); return out; }
+  function loadSnapshotParcel(i) {
+    var snap = snapshot(), r = snap.p[i], j = snap.juris[r[1]];
+    liveSeq++;
+    liveLot = {
+      id: "snap-" + i, community: r[0], jurisdiction: j[0], state: j[1], lotAreaSqft: r[2],
+      planName: snap.plans[r[3]] || null, zoning: snap.zones[r[4]] || null,
+      coverageBasis: r[5] != null ? "IPES" : r[10] ? "Land capability" : "Estimate",
+      landCapabilityClass: r[9], ipesScore: r[5], baseCoveragePct: r[6], allowedCoverageSqft: r[7],
+      existingCoverageSqft: r[8], elevationFt: null, outline: pairs(r[11]), buildings: r[12].map(pairs)
+    };
+    if (r[8] != null) $("existCov").value = Math.round(r[8] / 10) * 10;
+    $("addrResults").innerHTML = "";
+    $("liveStatusMsg").textContent = "Loaded from the built-in TRPA snapshot (" + snap.date + "). Coverage figures are estimates until TRPA verifies the site.";
+    scheduleUpdate();
+  }
+  function loadParcel(apn, addr) {
+    var seq = ++liveSeq, where = "APN='" + apn.replace(/'/g, "''") + "'";
+    $("addrResults").innerHTML = "";
+    $("liveStatusMsg").textContent = "Loading " + addr + " from TRPA…";
+    Promise.all([
+      trpa("Zoning/MapServer/1/query", { where: where, outFields: "JURISDICTION,PLAN_NAME,ZONING_DESCRIPTION,PARCEL_SQFT,EXISTING_LANDUSE", returnGeometry: "false" }),
+      trpa("Parcels/FeatureServer/0/query", { where: where, outFields: "APN", returnGeometry: "true", outSR: 26910 }),
+      trpa("Parcel_Joins/FeatureServer/3/query", { where: where, outFields: "IPESScore,BaseAllowableCoveragePercent,IPESTotalAllowableCoverageSqFt", returnGeometry: "false" }).catch(function () { return {}; }),
+      trpa("Parcel_Joins/FeatureServer/6/query", { where: where, outFields: "ESTIMATED_COVERAGE_ALLOWED,LCV,PARCEL_SQFT", returnGeometry: "false" }).catch(function () { return {}; }),
+      trpa("Parcel_Joins/FeatureServer/7/query", { where: where, outFields: "CAPABILITY,Percent_Type", returnGeometry: "false" }).catch(function () { return {}; })
+    ]).then(function (r) {
+      if (seq !== liveSeq) return;
+      var z = ((r[0].features || [])[0] || {}).attributes || {};
+      var ring = biggestRing((((r[1].features || [])[0]) || {}).geometry || {});
+      if (!ring) throw new Error("no geometry");
+      var c = ringCentroid(ring);
+      var toLocal = function (q) { return [(q[0] - c[0]) * M2FT, (q[1] - c[1]) * M2FT]; };
+      var ip = ((r[2].features || [])[0] || {}).attributes || null;
+      if (ip) { ip.BaseAllowableCoveragePercent = parseFloat(ip.BaseAllowableCoveragePercent); if (!isFinite(ip.BaseAllowableCoveragePercent)) ip.BaseAllowableCoveragePercent = null; }
+      var pr = ((r[3].features || [])[0] || {}).attributes || {};
+      var caps = (r[4].features || []).map(function (x) { return x.attributes; });
+      var j = JURIS[z.JURISDICTION] || [z.JURISDICTION || "Unknown", "CA", z.JURISDICTION || ""];
+      var area = z.PARCEL_SQFT || pr.PARCEL_SQFT || Math.abs(ringArea(ring)) * M2FT * M2FT;
+      var allowed = pr.ESTIMATED_COVERAGE_ALLOWED != null ? pr.ESTIMATED_COVERAGE_ALLOWED
+                  : ip && ip.IPESTotalAllowableCoverageSqFt ? ip.IPESTotalAllowableCoverageSqFt
+                  : ip && ip.BaseAllowableCoveragePercent != null ? area * ip.BaseAllowableCoveragePercent / 100 : null;
+      var lot = {
+        id: "live-" + apn, community: addr, jurisdiction: j[0], state: j[1], lotAreaSqft: Math.round(area),
+        planName: z.PLAN_NAME || null, zoning: z.ZONING_DESCRIPTION || null,
+        coverageBasis: ip && ip.IPESScore != null ? "IPES" : pr.LCV === "Yes" ? "Land capability" : "Estimate",
+        landCapabilityClass: caps.length ? caps.map(function (x) { return x.CAPABILITY + (x.Percent_Type != null && caps.length > 1 ? " (" + Math.round(x.Percent_Type <= 1 ? x.Percent_Type * 100 : x.Percent_Type) + "%)" : ""); }).join(" / ") : null,
+        ipesScore: ip ? ip.IPESScore : null, baseCoveragePct: ip ? ip.BaseAllowableCoveragePercent : null,
+        allowedCoverageSqft: allowed != null ? Math.round(allowed) : null, existingCoverageSqft: null, elevationFt: null,
+        outline: thin(ring.slice(0, -1), 120).map(toLocal), buildings: [], live: true
+      };
+      liveLot = lot;
+      $("liveStatusMsg").textContent = "Loaded from TRPA. Checking existing buildings and elevation…";
+      scheduleUpdate();
+      // second pass: existing impervious cover + buildings, and elevation
+      var xs = ring.map(function (q) { return q[0]; }), ys = ring.map(function (q) { return q[1]; });
+      var env = [Math.min.apply(null, xs), Math.min.apply(null, ys), Math.max.apply(null, xs), Math.max.apply(null, ys)];
+      var poly = lot.outline;
+      var big = area > 5 * 43560;
+      Promise.all([
+        big ? Promise.resolve({}) : trpa("DataDownloader_Impervious/MapServer/1/query", { resultRecordCount: 300, geometry: env.join(","), geometryType: "esriGeometryEnvelope", inSR: 26910, spatialRel: "esriSpatialRelIntersects", outFields: "Feature", returnGeometry: "true", outSR: 26910 }).catch(function () { return {}; }),
+        trpa("Tahoe_Elevation/MapServer/identify", { geometry: JSON.stringify({ x: c[0], y: c[1], spatialReference: { wkid: 26910 } }), geometryType: "esriGeometryPoint", sr: 26910, layers: "all:1", tolerance: 0, mapExtent: [c[0] - 100, c[1] - 100, c[0] + 100, c[1] + 100].join(","), imageDisplay: "200,200,96", returnGeometry: "false" }).catch(function () { return {}; })
+      ]).then(function (r2) {
+        if (seq !== liveSeq) return;
+        var cov = 0, blds = [];
+        (r2[0].features || []).forEach(function (f) {
+          var rg = biggestRing(f.geometry || {}); if (!rg || f.attributes.Feature === "Road") return;
+          var loc = rg.map(toLocal);
+          if (!pip(ringCentroid(loc), poly)) return;
+          cov += Math.abs(ringArea(loc));
+          if (f.attributes.Feature === "Building" && blds.length < 4) blds.push(thin(loc.slice(0, -1), 30));
+        });
+        lot.existingCoverageSqft = big ? null : Math.round(cov);
+        lot.buildings = blds;
+        var ev = ((r2[1].results || [])[0] || {}).attributes || {};
+        var m = parseFloat(ev["Classify.Pixel Value"] || ev["Pixel Value"]);
+        lot.elevationFt = isFinite(m) ? Math.round(m * M2FT) : null;
+        delete placeCache[lot.id + ":" + readState().L + ":" + readState().W];
+        Object.keys(placeCache).forEach(function (k) { if (k.indexOf(lot.id + ":") === 0) delete placeCache[k]; });
+        if (!big) $("existCov").value = Math.round(cov / 10) * 10;
+        $("liveStatusMsg").textContent = "Loaded from TRPA's public parcel service. Coverage figures are estimates until TRPA verifies the site.";
+        scheduleUpdate();
+      });
+    }).catch(function () { if (seq === liveSeq) $("liveStatusMsg").textContent = "Couldn't load that parcel from TRPA. Try another result."; });
+  }
+
+  // ---------------- finish level / plan type presets (placeholders until builder bids) ----------------
+  var FINISH_RATE = { basic: 225, standard: 325, premium: 450 };   // "rest of build" $/ft2
+  function syncCostPresets(e) {
+    if (!e || e.target.name === "fl") $("aRest").value = FINISH_RATE[radioVal("fl")] || 225;
+    if (!e || e.target.id === "preapp") $("aSoft").value = $("preapp").checked ? 8 : 15;
+  }
+  ["flBasic", "flStd", "flPrem", "preapp"].forEach(function (id) { $(id).addEventListener("input", syncCostPresets); });
+
+  // ---------------- siting: place the home inside the lot ----------------
+  var SETBACK = 5, SEPARATION = 10;
+  function pip(pt, poly) {
+    var inside = false;
+    for (var i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      var xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+      if (((yi > pt[1]) !== (yj > pt[1])) && (pt[0] < (xj - xi) * (pt[1] - yi) / (yj - yi) + xi)) inside = !inside;
+    }
+    return inside;
+  }
+  function segDist(p, a, b) {
+    var dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy;
+    var t = l2 ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2)) : 0;
+    var x = a[0] + t * dx - p[0], y = a[1] + t * dy - p[1];
+    return Math.sqrt(x * x + y * y);
+  }
+  function rectPts(cx, cy, ca, sa, hu, hv, step) {
+    var out = [], u, v;
+    for (u = -hu; u <= hu + 0.01; u += step) { out.push([u, -hv]); out.push([u, hv]); }
+    for (v = -hv; v <= hv + 0.01; v += step) { out.push([-hu, v]); out.push([hu, v]); }
+    return out.map(function (q) { return [cx + q[0] * ca - q[1] * sa, cy + q[0] * sa + q[1] * ca]; });
+  }
+  var placeCache = {};
+  function placeHomes(lot, L, W, n) {
+    var p1 = placeHome(lot, L, W, [], "");
+    if (n < 2 || !p1.fits) return [p1];
+    var ca = Math.cos(p1.angle), sa = Math.sin(p1.angle);
+    var rect = [[-L / 2, -W / 2], [L / 2, -W / 2], [L / 2, W / 2], [-L / 2, W / 2]].map(function (q) { return [p1.x + q[0] * ca - q[1] * sa, p1.y + q[0] * sa + q[1] * ca]; });
+    return [p1, placeHome(lot, L, W, [rect], ":2")];
+  }
+  function placeHome(lot, L, W, extra, tag) {
+    var key = lot.id + ":" + L + ":" + W + (tag || "");
+    if (placeCache[key]) return placeCache[key];
+    var poly = lot.outline, blds = (lot.buildings || []).concat(extra || []);
+    var ang = 0, longest = 0, minx = 1e9, maxx = -1e9, miny = 1e9, maxy = -1e9;
+    for (var i = 0; i < poly.length; i++) {
+      var a = poly[i], b = poly[(i + 1) % poly.length];
+      var len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      if (len > longest) { longest = len; ang = Math.atan2(b[1] - a[1], b[0] - a[0]); }
+      minx = Math.min(minx, a[0]); maxx = Math.max(maxx, a[0]); miny = Math.min(miny, a[1]); maxy = Math.max(maxy, a[1]);
+    }
+    var best = null, step = Math.max(2, Math.ceil(Math.max(maxx - minx, maxy - miny) / 120));
+    [ang, ang + Math.PI / 2].forEach(function (an) {
+      var ca = Math.cos(an), sa = Math.sin(an);
+      for (var x = minx; x <= maxx; x += step) {
+        for (var y = miny; y <= maxy; y += step) {
+          var ok = true, pts = rectPts(x, y, ca, sa, L / 2 + SETBACK, W / 2 + SETBACK, 2);
+          for (var k = 0; k < pts.length && ok; k++) if (!pip(pts[k], poly)) ok = false;
+          if (!ok) continue;
+          var edge = rectPts(x, y, ca, sa, L / 2, W / 2, 2), clear = 60;
+          for (var bi = 0; bi < blds.length && ok; bi++) {
+            var bp = blds[bi];
+            for (var m = 0; m < bp.length && ok; m++) {
+              var du = (bp[m][0] - x) * ca + (bp[m][1] - y) * sa, dv = -(bp[m][0] - x) * sa + (bp[m][1] - y) * ca;
+              if (Math.abs(du) <= L / 2 && Math.abs(dv) <= W / 2) ok = false;
+            }
+            if (ok && pip([x, y], bp)) ok = false;
+            for (var e = 0; e < edge.length && ok; e++) {
+              if (pip(edge[e], bp)) { ok = false; break; }
+              for (var n = 0; n < bp.length; n++) clear = Math.min(clear, segDist(edge[e], bp[n], bp[(n + 1) % bp.length]));
+            }
+          }
+          if (!ok || clear < SEPARATION) continue;
+          var score = (blds.length ? -Math.abs(clear - 14) : 0) - 0.01 * Math.hypot(x, y);
+          if (!best || score > best.score) best = { x: x, y: y, angle: an, clear: clear, score: score };
+        }
+      }
+    });
+    var res = best ? { fits: true, x: best.x, y: best.y, angle: best.angle, clear: best.clear } : { fits: false, x: 0, y: 0, angle: ang };
+    placeCache[key] = res;
+    return res;
+  }
+
+  // ---------------- engineering screening ----------------
+  function nltDepth(span, liveOrSnow, superDL, deflLimit, cd, creep) {
+    for (var i = 0; i < LUMBER.length; i++) {
+      var lu = LUMBER[i];
+      var self = lu.d / 12 * PCF;
+      var w = liveOrSnow + superDL + self;                    // psf on a 1-ft strip = plf
+      var M = w * span * span / 8 * 12;                       // in-lb per ft width
+      var S = 2 * lu.d * lu.d;                                // 12 d^2 / 6
+      var fb = M / S;
+      var fbAllow = FB * lu.cf * cd * JOINT;
+      var wIn = liveOrSnow * creep / 12;                      // lb/in
+      var Lin = span * 12;
+      var I = lu.d * lu.d * lu.d;                             // 12 d^3 / 12
+      var defl = 5 * wIn * Math.pow(Lin, 4) / (384 * E * JOINT * I);
+      if (fb <= fbAllow && defl <= Lin / deflLimit) return { lumber: lu, fb: fb, fbAllow: fbAllow, defl: defl, limit: Lin / deflLimit };
+    }
+    return null;
+  }
+  // 24F-V4 glulam screening: returns smallest standard section that works, or null
+  var GL = { Fb: 2400, Fv: 265, E: 1.8e6, cd: 1.15, widths: [5.125, 6.75, 8.75, 10.75], maxD: 42 };
+  function glulam(clear, trib, snow, dead, maxD) {
+    for (var bi = 0; bi < GL.widths.length; bi++) {
+      for (var d = 9; d <= (maxD || GL.maxD); d += 1.5) {
+        var b = GL.widths[bi], Lin = clear * 12;
+        var w = (snow + dead) * trib + b * d / 144 * 35;             // plf incl. self weight
+        var M = w * clear * clear / 8 * 12, V = w * clear / 2;
+        var cv = Math.min(1, Math.pow((21 / clear) * (12 / d) * (5.125 / b), 0.1));
+        var S = b * d * d / 6, I = b * d * d * d / 12;
+        var defl = 5 * (snow * trib * 1.5 / 12) * Math.pow(Lin, 4) / (384 * GL.E * I);
+        if (M / S <= GL.Fb * GL.cd * cv && 1.5 * V / (b * d) <= GL.Fv * GL.cd && defl <= Lin / 240) return { b: b, d: d };
+      }
+    }
+    return null;
+  }
+  function designSpan(total, load, superDL, deflLimit, cd, creep, maxSeg) {
+    for (var n = 1; n <= 4; n++) {
+      var span = total / n;
+      if (maxSeg && span > maxSeg) continue;
+      var r = nltDepth(span, load, superDL, deflLimit, cd, creep);
+      if (r) return { segments: n, span: span, lumber: r.lumber, detail: r };
+    }
+    return null;
+  }
+
+  // ---------------- model ----------------
+  function readState() {
+    var lot = currentLot();
+    var loc = lot ? { id: "sample", name: lot.community, juris: lot.jurisdiction, state: lot.state, trpa: true }
+                  : (LOCATIONS.filter(function (l) { return l.id === $("loc").value; })[0] || LOCATIONS[0]);
+    return {
+      loc: loc,
+      lot: lot,
+      lotArea: lot ? lot.lotAreaSqft : Math.max(0, numVal("lotArea", 8000)),
+      existCov: Math.max(0, numVal("existCov", 0)),
+      landClass: LAND_CLASSES.filter(function (c) { return c.id === $("landClass").value; })[0],
+      L: +$("len").value,
+      W: +$("wid").value,
+      H: +radioVal("wh"),
+      floor: radioVal("fd"),
+      roof: radioVal("rf"),
+      pitch: +$("pitch").value,
+      pg: +$("pg").value,
+      system: radioVal("ps"),
+      aNlt: Math.max(0, numVal("aNlt", 1)),
+      sheltered: $("shelt").checked,
+      units: +radioVal("un") || 1,
+      housing: radioVal("ht"),
+      aRest: Math.max(0, numVal("aRest", 225)),
+      aSite: Math.max(0, numVal("aSite", 45000)),
+      utilities: radioVal("ut") || "shared",
+      aSoft: Math.max(0, numVal("aSoft", 8))
+    };
+  }
+
+  function compute(s) {
+    var c = compute0(s);
+    c.place = c.places ? c.places[0] : null;
+    c.place2 = c.places && c.places[1] ? c.places[1] : null;
+    return c;
+  }
+  function compute0(s) {
+    var p = s.roof === "flat" ? 0.25 / 12 : s.pitch / 12;
+    var theta = Math.atan(p);
+    var Ce = s.sheltered ? 1.2 : 1.0;             // ASCE 7-22 Table 7.3-1, Roughness B
+    var Ct = 1.2;                                 // ASCE 7-22 Table 7.3-3 upper end, heated unventilated insulated roof
+    var pf = 0.7 * Ce * Ct * s.pg;                // ASCE 7-22 Eq. 7.3-1 flat roof snow (strength level)
+    var pfASD = 0.7 * pf;                         // D + 0.7S for allowable-stress design
+    var unbal = s.roof === "gable" && s.pitch <= 7; // ASCE 7-22 7.6.1: leeward = pg, windward unloaded
+    var roofSnowASD = unbal ? Math.max(pfASD, 0.7 * s.pg) : pfASD;
+    var gamma = Math.min(0.13 * (0.7 * s.pg) + 14, 30);
+    var snowDepth = pfASD / gamma;                // vertical depth of balanced snow at service level
+
+    // roof structure
+    var roofSpanTotal = s.roof === "gable" ? s.W / 2 : s.W;
+    var roofD = designSpan(roofSpanTotal, roofSnowASD, 12, 240, 1.15, 1.5, 20);
+    var beam = null, needsBeam = !!roofD && (s.roof === "gable" || roofD.segments > 1);
+    if (needsBeam) {
+      var trib = s.roof === "gable" ? s.W / (2 * roofD.segments) : s.W / roofD.segments;
+      var dead = 12 + roofD.lumber.d / 12 * PCF;
+      // prefer a stock-depth beam (24 in or less) with posts; fall back to deeper sections
+      [24, GL.maxD].forEach(function (maxD) {
+        for (var bays = 1; !beam && bays <= Math.floor(s.L / 8); bays++) {
+          var bay = Math.ceil(s.L / bays / MODULE) * MODULE;         // posts land on the 4-ft grid
+          var gs = glulam(bay, trib, roofSnowASD, dead, maxD);
+          if (gs) beam = { b: gs.b, d: gs.d, bays: bays, bay: bay };
+        }
+      });
+    }
+    var floorD = s.floor === "crawl" ? designSpan(s.W, 40, 10, 480, 1.0, 1.0, 16) : null;
+
+    var tRoof = roofD ? roofD.lumber.d / 12 : 0.6;
+    var tFloor = floorD ? floorD.lumber.d / 12 : 0;
+    var y0 = s.floor === "crawl" ? 2.0 + tFloor : 0.67;
+    var rise = s.roof === "gable" ? (s.W / 2) * p : s.W * p;
+    var riseTop = s.roof === "gable" ? rise : (s.W + OVERHANG) * p;   // shed/low-slope keep rising over the high-side overhang
+    var ridge = y0 + s.H + riseTop + tRoof / Math.cos(theta);
+
+    // panels
+    var clt = s.system === "clt";
+    var pw = clt ? 8 : MODULE;
+    var rows = [];
+    function stripsFor(runLen) {
+      // split a run into panel widths of pw, last may be narrower (on the 4-ft module)
+      var out = [], left = runLen;
+      while (left > 0.001) { var w = Math.min(pw, left); out.push(w); left -= w; }
+      return out;
+    }
+    function lengthPieces(len) {
+      var pieces = Math.ceil(len / MAX_PANEL_LEN);
+      return { pieces: pieces, each: Math.ceil((len / pieces) * 2) / 2 };
+    }
+    function addRows(use, runLen, spanLen, planes, lumber) {
+      var widths = stripsFor(runLen);
+      var lp = lengthPieces(spanLen);
+      var groups = {};
+      widths.forEach(function (w) { groups[w] = (groups[w] || 0) + 1; });
+      Object.keys(groups).sort(function (a, b) { return b - a; }).forEach(function (w) {
+        w = +w;
+        var qty = groups[w] * planes * lp.pieces;
+        var row = { use: use, qty: qty, w: w, len: lp.each, lumber: lumber, clt: clt };
+        if (!clt && lumber) {
+          var boards = w * 12 / 1.5;
+          row.bfEach = boards * (2 * lumber.nomD / 12) * lp.each;
+          row.volEach = w * lp.each * lumber.d / 12;                 // ft3 actual
+          row.lbEach = row.volEach * PCF;
+        }
+        rows.push(row);
+      });
+    }
+    var roofRun = s.L + 2 * OVERHANG;
+    if (s.roof === "gable") addRows("Roof", roofRun, (s.W / 2 + OVERHANG) / Math.cos(theta), 2, roofD && roofD.lumber);
+    else addRows("Roof", roofRun, (s.W + 2 * OVERHANG) / Math.cos(theta), 1, roofD && roofD.lumber);
+    if (s.floor === "crawl") addRows("Floor", s.L, s.W, 1, floorD && floorD.lumber);
+
+    var n = s.units || 1;
+    rows.forEach(function (r) { r.qty *= n; });
+    var bf = 0, vol = 0, count = 0;
+    rows.forEach(function (r) { count += r.qty; if (r.bfEach) { bf += r.bfEach * r.qty; vol += r.volEach * r.qty; } });
+    var m3 = vol * 0.0283168;
+    var co2 = m3 * KG_PER_M3 * CO2_PER_KG_WOOD / 1000;
+
+    var area = s.L * s.W, totalArea = area * n;
+    var places = s.lot && s.lot.outline && s.lot.outline.length > 2 ? placeHomes(s.lot, s.L, s.W, n) : null;
+    var hasHouse = !!(s.lot && (s.lot.buildings || []).length);
+    var runFt = 0;
+    for (var u = 0; u < n; u++) { var pu = places && places[u]; runFt += (pu && pu.fits && hasHouse ? Math.min(pu.clear, 80) : 40) + 10; }
+    var siteWork = s.aSite * (1 + 0.5 * (n - 1));           // a second unit shares mobilization
+    // placeholder utility allowances: tie-in vs new meters/laterals, plus $60/ft of shared trench
+    var utilCost = (s.utilities === "separate" ? 22000 : 8000) * n + 60 * runFt;
+    var siteCost = siteWork + utilCost;
+    var panelsCost = clt ? null : bf * s.aNlt;
+    var hard = (panelsCost || 0) + totalArea * s.aRest + siteCost;
+    var mid = hard * (1 + s.aSoft / 100);
+
+    return {
+      p: p, theta: theta, pf: pf, pfASD: pfASD, unbal: unbal, beam: beam, needsBeam: needsBeam, snowDepth: snowDepth, roofD: roofD, floorD: floorD,
+      tRoof: tRoof, tFloor: tFloor, y0: y0, rise: rise, ridge: ridge,
+      rows: rows, bf: bf, co2: co2, count: count, area: area,
+      panelsCost: panelsCost, hard: hard, mid: mid, low: mid * 0.85, high: mid * 1.2, clt: clt,
+      // shell = walls 12% + roofing 10% + windows/doors/siding 16% of "rest of build", plus their share of builder overhead (20% x 38/80)
+      shell: ((panelsCost || 0) + siteCost + totalArea * s.aRest * 0.475) * (1 + s.aSoft / 100),
+      n: n, totalArea: totalArea, siteCost: siteCost,
+      places: places, siteWork: siteWork, utilCost: utilCost, runFt: runFt
+    };
+  }
+
+  // ---------------- render text ----------------
+  function render(s, c) {
+    $("lenOut").textContent = s.L + " ft";
+    $("widOut").textContent = s.W + " ft";
+    $("pitchOut").textContent = s.roof === "flat" ? "¼ in 12" : s.pitch + " in 12";
+    $("pitch").disabled = s.roof === "flat";
+    $("pitchField").style.opacity = s.roof === "flat" ? 0.5 : 1;
+    $("pgOut").textContent = s.pg + " psf";
+    $("len").setAttribute("aria-valuetext", s.L + " feet");
+    $("wid").setAttribute("aria-valuetext", s.W + " feet");
+    $("pitch").setAttribute("aria-valuetext", s.pitch + " in 12");
+    $("pg").setAttribute("aria-valuetext", s.pg + " pounds per square foot");
+    $("dimChip").textContent = s.L + " × " + s.W + " ft · " + fmt(c.area) + " ft²";
+    $("locSub").textContent = s.loc.state + " · " + (s.loc.trpa ? "Inside the Tahoe Basin, so TRPA rules apply" : "Outside the Tahoe Basin, so TRPA coverage rules don't apply");
+    $("lcField").hidden = !s.loc.trpa || !!s.lot;
+    var liveMode = radioVal("lotMode") === "live";
+    $("sampleBox").hidden = !s.lot || liveMode;
+    $("liveBox").hidden = !liveMode;
+    $("locField").hidden = !!s.lot || liveMode;
+    $("lotAreaField").hidden = !!s.lot || liveMode;
+    $("liveFacts").innerHTML = "";
+    if (s.lot) {
+      var L0 = s.lot, facts = [["Community", L0.community + " (" + L0.jurisdiction + ")"], ["Lot size", fmt(L0.lotAreaSqft) + " ft² · " + fmt(L0.lotAreaSqft / 43560, 2) + " acres"]];
+      if (L0.planName || L0.zoning) facts.push(["Plan area", [L0.planName, L0.zoning].filter(Boolean).join(" · ")]);
+      if (L0.coverageBasis === "IPES" && L0.ipesScore != null) facts.push(["Coverage basis", "IPES score " + fmt(L0.ipesScore) + (L0.baseCoveragePct != null ? " · " + fmt(L0.baseCoveragePct, 1) + "% base" : "")]);
+      else if (L0.landCapabilityClass) facts.push(["Coverage basis", "Land capability class " + L0.landCapabilityClass + (L0.baseCoveragePct != null ? " · " + fmt(L0.baseCoveragePct, 1) + "% base" : "")]);
+      if (L0.allowedCoverageSqft != null) facts.push(["Allowed coverage", fmt(L0.allowedCoverageSqft) + " ft² (TRPA estimate)"]);
+      if (L0.existingCoverageSqft != null) facts.push(["Existing coverage", "≈ " + fmt(L0.existingCoverageSqft) + " ft² (" + (String(L0.id).indexOf("snap-") === 0 ? "TRPA estimate" : "2019 impervious map") + ")"]);
+      if (L0.elevationFt != null) facts.push(["Elevation", fmt(L0.elevationFt) + " ft"]);
+      $(liveMode ? "liveFacts" : "lotFacts").innerHTML = facts.map(function (f) { return "<dt>" + esc(f[0]) + "</dt><dd>" + esc(f[1]) + "</dd>"; }).join("");
+    }
+    $("cltBanner").hidden = !c.clt;
+
+    // summary
+    var fits = c.area >= 650 ? "Fits 1–2 bedrooms" : c.area >= 450 ? "Fits 1 bedroom" : c.area >= 300 ? "Fits a studio" : "Fits a studio or office";
+    var roofTxt = c.clt ? "CLT, pending" : c.roofD ? c.roofD.lumber.nom + " NLT" : "Needs engineer";
+    var roofSub = c.clt ? "8-ft panels on the 4-ft grid" : c.roofD ? (c.needsBeam ? beamText(s, c) : "Clear span, no beams") : "Over this demo's range";
+    $("summary").innerHTML =
+      stat("Floor area", (c.n > 1 ? c.n + " × " : "") + fmt(c.area) + " ft²", c.n > 1 ? fmt(c.totalArea) + " ft² total · " + fits.toLowerCase() + " each" : fits) +
+      stat("Roof panels", roofTxt, roofSub) +
+      stat("Panels", fmt(c.count), c.clt ? "CLT layout preview" : fmt(c.bf) + " board ft of local lumber") +
+      stat("Carbon stored", c.clt ? "Pending" : "≈ " + fmt(c.co2, 1) + " t CO₂e", c.clt ? "Needs certified panel data" : "Held in the wood for the building's life") +
+      stat("Move-in ready", c.clt ? "Pending" : "from " + money(c.low), c.clt ? "Waiting on CLT panel pricing" : "Weathertight shell from " + money(c.shell * 0.85) + (c.n > 1 ? " · both homes" : "")) +
+      stat("Design roof snow", fmt(c.pf) + " psf", "≈ " + fmt(c.snowDepth, 1) + " ft of settled snow at service level");
+    // checks
+    var checks = [];
+    if (c.n > 1) {
+      checks.push(["info", "Two homes on one lot", "TRPA's code (section 21.3.2) allows up to two ADUs on a parcel with a single-family or multi-family home. Each unit needs its own development right or bonus unit."]);
+      if (c.place && c.place.fits && c.place2) {
+        if (c.place2.fits) checks.push(["ok", "Both homes fit", "The second home also clears the lot lines, the existing house and the first home."]);
+        else checks.push(["warn", "Only one home fits at this size", "There isn't room for a second home with these setbacks and separations. Try a smaller footprint."]);
+      }
+    }
+    if (s.housing === "work") checks.push(["info", "Workforce unit", "A deed restriction to achievable, moderate or affordable incomes can let a unit use a TRPA residential bonus unit instead of a scarce allocation. Some deed-restricted units also get coverage and density incentives. Eligibility depends on the parcel, so confirm with TRPA."]);
+    else if (s.loc.trpa) checks.push(["info", "Development right needed", "A market-rate ADU in the basin needs a TRPA residential allocation or a development right. Allocations are capped each year in every jurisdiction. Switch to Workforce to see the deed-restricted path."]);
+    if (s.loc.state === "CA" && c.area < 750) checks.push(["ok", "Under 750 ft²: no impact fees", "California ADU law bars impact fees on ADUs under 750 ft². Utility and district capacity charges can still apply."]);
+    if (c.place) {
+      if (c.place.fits) checks.push(["ok", "Fits on this lot", "The planner found a spot at least " + SETBACK + " ft from every lot line and " + fmt(Math.min(c.place.clear, 60)) + " ft from the existing house. Setbacks here are placeholders until local setbacks are connected."]);
+      else checks.push(["warn", "Doesn't fit on this lot at this size", "No spot keeps " + SETBACK + " ft from the lot lines and " + SEPARATION + " ft from the existing house. Try a smaller footprint or a different shape. The 3D view shows the home at the lot's center for reference."]);
+    }
+    if (s.lot && s.lot.allowedCoverageSqft != null) {
+      var remainingT = s.lot.allowedCoverageSqft - s.existCov, fpT = s.L * s.W * c.n;
+      if (fpT <= remainingT) checks.push(["ok", "Land coverage fits", "This home covers " + fmt(fpT) + " ft². TRPA estimates " + fmt(s.lot.allowedCoverageSqft) + " ft² of allowed coverage for this parcel, and about " + fmt(s.existCov) + " ft² is already used, leaving " + fmt(remainingT) + " ft². Coverage is only an estimate until TRPA verifies the site."]);
+      else checks.push(["warn", "Over allowed land coverage", "This home covers " + fmt(fpT) + " ft², but only about " + fmt(Math.max(0, remainingT)) + " ft² of TRPA's estimated allowed coverage is left. Options include a smaller footprint, removing old coverage, or buying and transferring coverage through TRPA."]);
+    } else if (s.loc.trpa) {
+      var allowed = s.lotArea * s.landClass.pct / 100;
+      var remaining = allowed - s.existCov;
+      var fp = s.L * s.W * c.n;
+      if (fp <= remaining) checks.push(["ok", "Land coverage fits", "This home covers " + fmt(fp) + " ft². Your lot has " + fmt(remaining) + " ft² of base coverage left (" + s.landClass.pct + "% of " + fmt(s.lotArea) + " ft², minus " + fmt(s.existCov) + " ft² already used). Driveways and patios count too."]);
+      else checks.push(["warn", "Over base land coverage", "This home covers " + fmt(fp) + " ft², but only " + fmt(Math.max(0, remaining)) + " ft² of base coverage is left. Options include a smaller footprint, removing old coverage, or buying and transferring coverage through TRPA."]);
+    } else {
+      checks.push(["info", "Local zoning applies", s.loc.juris + " sets lot coverage and setbacks here. TRPA rules don't apply outside the basin."]);
+    }
+    if (s.loc.state === "CA") {
+      if (c.area <= 1200) checks.push(["ok", "Within California's ADU size limit", fmt(c.area) + " ft² is under the 1,200 ft² state maximum for a detached ADU."]);
+      else checks.push(["bad", "Too large for a detached ADU", fmt(c.area) + " ft² is over California's 1,200 ft² maximum. This design would need to be permitted as a separate home."]);
+      var heightAuth = s.loc.trpa ? "TRPA and " + s.loc.juris : s.loc.juris;
+      if (c.ridge <= 16) checks.push(["ok", "Height " + fmt(c.ridge, 1) + " ft", "Within the 16-ft height that state ADU law guarantees for a detached ADU. " + heightAuth + " limits can differ."]);
+      else checks.push(["warn", "Height " + fmt(c.ridge, 1) + " ft", "Taller than the 16-ft height that state ADU law guarantees. Confirm " + heightAuth + " limits, or lower the pitch or wall height."]);
+    } else {
+      checks.push(["info", "Nevada ADU rules", "Nevada has no statewide ADU size or height guarantee. " + s.loc.juris + " code" + (s.loc.trpa ? " and TRPA's height and accessory-dwelling rules" : "") + " set the limits here. The roof peak is " + fmt(c.ridge, 1) + " ft."]);
+    }
+    if (c.clt) checks.push(["info", "Snow design pending for CLT", "Needs Alpenglow's certified panel values. Design snow here is " + fmt(c.pf) + " psf."]);
+    else if (c.roofD && c.needsBeam && !c.beam) checks.push(["warn", "Roof beams need an engineer", c.roofD.lumber.nom + " NLT panels work, but no glulam up to " + GL.maxD + " in deep works with posts 8 ft apart or more at " + fmt(s.pg) + " psf. Try a narrower width, a steeper pitch or a lower snow load."]);
+    else if (c.roofD) checks.push(["ok", "Roof screened for " + fmt(s.pg) + " psf ground snow (ASCE 7-22)", c.roofD.lumber.nom + " NLT spanning " + fmt(c.roofD.span, 1) + " ft" + (c.needsBeam ? ", on " + beamText(s, c).charAt(0).toLowerCase() + beamText(s, c).slice(1) : "") + (c.unbal ? ". Includes unbalanced snow (" + fmt(s.pg) + " psf on the leeward side)" : "") + ". Screening only; an engineer's stamped tables replace this."]);
+    else checks.push(["bad", "Roof beyond this demo's range", "No 2x6–2x12 NLT layout with up to three beam lines works at this snow load and width. An engineer would look at deeper panels or CLT."]);
+    if (s.roof === "flat" && s.pg >= 200) checks.push(["warn", "Low-slope roof in deep snow", "A low-slope roof holds the full snow load all winter and needs careful drainage and ice-dam detailing. Most basin designs use a pitched roof."]);
+    checks.push(["info", "Wildfire zone not yet checked", s.loc.state === "CA" ? "The fire-hazard lookup isn't connected yet. In mapped fire hazard severity zones and wildland-urban interface areas, the California Wildland-Urban Interface Code (Title 24, Part 7) applies. It replaced CBC Chapter 7A and CRC R337 in 2026." : "The fire-hazard lookup isn't connected yet. Nevada counties apply their adopted wildland-urban interface code."]);
+    $("checks").innerHTML = checks.map(function (k) {
+      var lab = { ok: "Fits", warn: "Check", bad: "Blocked", info: "Note" }[k[0]];
+      return '<li class="check"><span class="badge ' + k[0] + '">' + lab + '</span><span><b>' + esc(k[1]) + '</b><span class="sub">' + esc(k[2]) + '</span></span></li>';
+    }).join("");
+
+    // cost
+    var soft = c.hard * s.aSoft / 100;
+    var TIERS = [
+      ["Timber kit", "Local NLT roof and floor panels, cut to the 4-ft grid and ready to deliver. Glulam beams are quoted separately.", (c.panelsCost || 0) * 0.9, (c.panelsCost || 0) * 1.1, false],
+      ["Weathertight shell", "The kit plus site work, utilities, foundation, walls, insulated roof, windows, doors and fire-rated siding, with design and permits. You or your builder finish the inside.", c.shell * 0.85, c.shell * 1.2, false],
+      ["Move-in ready", "Everything in the shell plus heating, plumbing, electrical, kitchen, bath, " + ({ basic: "rental-grade (durable, minimum residential or commercial fittings)", standard: "standard", premium: "premium" }[radioVal("fl")] || "rental-grade") + " interior finishes and builder overhead." + (radioVal("fl") === "basic" ? " The NLT ceiling stays exposed as the finished ceiling." : ""), c.low, c.high, true]
+    ];
+    $("tiers").innerHTML = TIERS.map(function (t) {
+      var price = c.clt ? "Pending<small>needs CLT pricing</small>" : "from " + money(t[2]) + "<small>" + money(t[2]) + "–" + money(t[3]) + " · from $" + fmt(t[2] / c.totalArea) + "/ft²</small>";
+      return '<li class="tier' + (t[4] ? " main" : "") + '"><h3>' + esc(t[0]) + (c.n > 1 ? " · 2 homes" : "") + '</h3><span class="from">' + price + "</span><p>" + esc(t[1]) + "</p></li>";
+    }).join("");
+    $("costLines").innerHTML =
+      line(c.clt ? "CLT panels (pending pricing)" : "NLT panels (" + fmt(c.bf) + " bd ft)", c.clt ? "—" : money(c.panelsCost)) +
+      line("Rest of build (" + fmt(c.totalArea) + " ft² × $" + fmt(s.aRest) + ")", money(c.totalArea * s.aRest)) +
+      line("Site work and foundation" + (c.n > 1 ? " (2 homes)" : ""), money(c.siteWork)) +
+      line((s.utilities === "separate" ? "Separate utility hookups" : "Utilities tied into the main house") + " (about " + fmt(c.runFt) + " ft of trench)", money(c.utilCost)) +
+      line("Design, engineering, permits (" + fmt(s.aSoft) + "%)", money(soft)) +
+      '<div class="cost-line total"><span>' + (c.clt ? "Range without CLT panels" : "Estimated range") + "</span><span>" + money(c.low) + " – " + money(c.high) + "</span></div>";
+
+    var REST = [
+      ["Walls, beams and hardware", 12, "Wall framing or panels, sheathing, glulam beams and posts, connectors, crane and erection labor"],
+      ["Roofing and insulation", 10, "Rigid insulation over the NLT deck (Climate Zone 16 levels), metal or membrane roofing, snow guards"],
+      ["Windows, doors and siding", 16, "Wildfire-code compliant windows and doors, noncombustible siding, trim and flashing"],
+      ["Mechanical, electrical, plumbing", 20, "Heat-pump heating and cooling, heat-pump water heater, wiring and panel, plumbing, and fire sprinklers where required"],
+      ["Interior finishes", 22, "Drywall, flooring, cabinets, counters, tile, appliances, paint"],
+      ["Builder overhead and profit", 20, "Supervision, insurance, winter protection, cleanup, overhead and profit"]
+    ];
+    var restTotal = c.totalArea * s.aRest;
+    $("restBody").innerHTML = REST.map(function (r) {
+      return '<div class="cost-line"><span><b>' + esc(r[0]) + "</b> · " + r[1] + '%<br><span class="sub">' + esc(r[2]) + "</span></span><span>" + money(restTotal * r[1] / 100) + "</span></div>";
+    }).join("");
+
+    // Tahoe-specific savings, chosen by state, jurisdiction, size and housing type
+    var SV = [], J = s.loc.juris || "", CA = s.loc.state === "CA", work = s.housing === "work";
+    var add = function (kind, title, text, url) { SV.push([kind, title, text, url]); };
+    if (CA) {
+      if (c.area < 750) add("ok", "No impact fees", "California bars impact fees on ADUs under 750 ft². Placer puts the saving at about $15,000 per unit.", "https://www.placer.ca.gov/6348/Placer-exempts-some-ADU-fees");
+      if (c.area <= 499) add("ok", "No school fees", "ADUs of 499 ft² or less are exempt from school impact fees starting in 2026 (SB 543).", "https://www.dwkesq.com/sb-543-exempts-certain-accessory-dwelling-units-from-school-impact-fees/");
+      else if (c.area <= 640) add("info", "Trim to 499 ft² to skip school fees", "At " + fmt(c.area) + " ft² this home pays school fees. At 499 ft² or less it wouldn't (SB 543, 2026).", "https://www.dwkesq.com/sb-543-exempts-certain-accessory-dwelling-units-from-school-impact-fees/");
+      add("info", "At most one parking space", "California limits ADU parking to one space, and none within ½ mile of transit.", "https://www.hcd.ca.gov/sites/default/files/docs/policy-and-research/adu-handbook-update.pdf");
+      add("info", "Solar may be waived", "New detached ADUs need solar in California, but heavily shaded lots and high-snow-load sites can be exempt. Panels can also be added to the main house's system instead.", "https://www.nevadacountyca.gov/DocumentCenter/View/40777/Solar-PV-High-Snow-Load-Exception-Handout-PDF");
+    }
+    if (J.indexOf("South Lake Tahoe") !== -1) {
+      add("ok", "Free development right from the City", "South Lake Tahoe gives a free TRPA development right for any new ADU. On the market a right costs $3,000–$30,000.", "https://www.cityofslt.gov/1247/Development-Incentive-Programs");
+      add("info", "Free pre-approved plans coming", "The City expects its free pre-approved ADU plans, including 2 prefab options, by late fall 2026.", "https://www.cityofslt.gov/2592/Accessory-Dwelling-Units-ADU");
+    }
+    if (J.indexOf("South Lake Tahoe") !== -1 || J.indexOf("El Dorado") !== -1)
+      add("ok", "No water or sewer connection fees (South Tahoe PUD)", "South Tahoe PUD adopted no connection or capacity fees for ADUs in 2022, where a typical home pays about $11,000 for sewer capacity alone. Confirm the policy is still current and that your lot is in its service area.", "https://www.tahoedailytribune.com/news/south-tahoe-pud-adopts-new-rates-adu-requirements/");
+    if (J.indexOf("El Dorado") !== -1) add("ok", "No traffic impact fees; pre-reviewed plan", "El Dorado County charges no traffic impact fees on ADUs and offers one pre-reviewed ADU plan set.", "https://www.eldoradocounty.ca.gov/Land-Use/Planning-and-Building/Building-Division/ADU/Pre-Reviewed-ADU");
+    if (J.indexOf("Placer") !== -1) {
+      add("ok", "Free pre-approved plans with snow engineering", "Placer County's free ADU plans save about $6,000–$10,000 in design and engineering.", "https://www.placer.ca.gov/6650/Pre-Approved-Accessory-Dwelling-Unit-Pla");
+      add("ok", "ADU Accelerator subsidy", "The Tahoe Housing Hub ADU Accelerator in eastern Placer offers a $3,200 feasibility fund and about $28,000 per unit of subsidy. Terms vary by project.", "https://www.northtahoecommunityalliance.com/project/accessory-dwelling-unit-accelerator-pilot-program/");
+      add("info", "Lease to Locals", "Placer pays owners up to $4,500 per local worker tenant on a 12-month lease.", "https://www.placer.ca.gov/8627/Lease-to-Locals");
+      if (work) add("ok", "Workforce Housing Preservation Program", "Placer pays 16% of market value, up to $150,000, for a 55-year workforce deed restriction. Homes with ADUs are eligible.", "https://www.placer.ca.gov/7130/Workforce-Housing-Preservation-Program");
+    }
+    if (s.loc.trpa && work) {
+      add("ok", "Free TRPA bonus unit", "A deed-restricted unit within ½ mile of transit, a town center or multi-family zoning can use a free TRPA bonus unit instead of buying a development right ($3,000–$30,000).", "https://www.trpa.gov/adus/");
+      add("ok", "TRPA application fee waived", "Bonus-unit projects skip TRPA's application fee ($1.71/ft², $862 minimum). The water-quality fee still applies.", "https://www.trpa.gov/wp-content/uploads/documents/FILING_FEE_SCHEDULE.pdf");
+    }
+    if (J.indexOf("Douglas") !== -1) add(s.lotArea < 43560 ? "warn" : "info", "Check lot-size eligibility", "Douglas County has required at least 1 acre for an ADU, and TRPA's Nevada rules have included a similar limit unless the unit is deed-restricted under a certified program. Confirm with the county before designing.", "https://trpa.gov/wp-content/uploads/documents/2021-08-Ordinance-Housing-Code-Amendments-NEW.pdf");
+    if (J.indexOf("Washoe") !== -1) add("info", "Check lot-size eligibility", "Sources conflict on Washoe's minimum lot size for an ADU at Incline Village. Confirm with Washoe County and TRPA before designing.", "https://www.trpa.gov/adus/");
+    add("info", "Don't count on heat-pump rebates", "In 2026 most rebates don't cover new ADUs. TECH Clean California is fully reserved, and Liberty's rebate only covers replacements.", "https://techcleanca.com/incentives/single-family-incentives/");
+    if (CA) add("info", "Keep a 5-ft noncombustible strip", "California's new Zone 0 wildfire rules call for gravel or other noncombustible ground within 5 ft of the home, with no attached wood fencing.", "https://www.publicceo.com/2026/09/california-board-of-forestry-adopts-emergency-zone-0-regulations-under-ab-3074/");
+    $("savings").innerHTML = SV.map(function (k) {
+      var lab = { ok: "Saves", warn: "Check", info: "Tip" }[k[0]];
+      return '<li class="check"><span class="badge ' + k[0] + '">' + lab + '</span><span><b>' + esc(k[1]) + '</b><span class="sub">' + esc(k[2]) + ' <a href="' + k[3] + '" target="_blank" rel="noopener">Source</a></span></span></li>';
+    }).join("");
+
+    // one short, debounced screen-reader update
+    var flags = checks.filter(function (k) { return k[0] === "warn" || k[0] === "bad"; }).map(function (k) { return k[1]; });
+    var msg = s.L + " by " + s.W + " feet, " + fmt(c.area) + " square feet. Roof " + roofTxt + ". " + (c.clt ? "Cost pending." : "Move-in ready from " + money(c.low) + ", weathertight shell from " + money(c.shell * 0.85) + ".") + (flags.length ? " " + flags.join(". ") + "." : "");
+    if (lastMsg === null) lastMsg = msg;
+    clearTimeout(liveT);
+    liveT = setTimeout(function () { if (msg !== lastMsg) { lastMsg = msg; $("liveStatus").textContent = msg; } }, 600);
+
+    // schedule
+    $("schedNote").textContent = c.clt
+      ? "CLT preview: 8-ft-wide panels laid out on the 4-ft grid. Thickness, weight and board feet will come from Alpenglow's certified panel data."
+      : "Every panel is 4 ft wide, which is 32 laminations of 1½-in lumber. Lengths are rounded up to the next 6 in, and panels over " + MAX_PANEL_LEN + " ft are split. Roof lengths include a " + OVERHANG + "-ft overhang.";
+    $("schedBody").innerHTML = c.rows.map(function (r) {
+      var build = r.clt ? "CLT, thickness pending" : r.lumber ? r.lumber.nom + " NLT (" + fmt(r.lumber.d, 2) + " in)" : "Needs engineer";
+      return "<tr><td>" + r.use + '</td><td class="r num">' + r.qty + '</td><td class="num">' + fmt(r.w) + " × " + fmt(r.len, 1) + " ft</td><td>" + build +
+        '</td><td class="r num">' + (r.bfEach ? fmt(r.bfEach * r.qty) : "—") + '</td><td class="r num">' + (r.lbEach ? fmt(Math.round(r.lbEach / 10) * 10) : "—") + "</td></tr>";
+    }).join("");
+    $("schedFoot").innerHTML = "<tr><td>Total</td><td class=\"r num\">" + c.count + "</td><td></td><td></td><td class=\"r num\">" + (c.clt ? "—" : fmt(c.bf)) + "</td><td></td></tr>";
+
+    // status
+    var st = [
+      ["ok", "4-ft panel grid, panel list and 3D model", "Working now, with every dimension snapping to the plywood module."],
+      ["ok", "TRPA base coverage by land capability class", "Uses TRPA's base percentages by land capability class. IPES-scored parcels, coverage transfers, exemptions and newer ADU provisions aren't modeled yet."],
+      ["warn", "Ground snow load", "One placeholder value for now. Next step is looking up each parcel's ASCE 7-22 value by address. That includes the elevation-matching method Tahoe Truckee engineers have recommended, because the Hazard Tool maps values at half-mile resolution."],
+      ["warn", "Panel depths, beams and posts", "Theoretical screening math on plywood-size panels, to show the method. It will be replaced by an engineer's stamped span tables."],
+      ["warn", "Prices", "NLT uses an early local estimate. Other prices are placeholders until builders price real designs."],
+      ["info", "Parcel lookup by address", "Planned: TRPA and county parcel data, fire-hazard maps and setbacks."],
+      ["info", "Drawings", "Planned: preliminary plans and elevations first, then pre-approved plan sets for chosen designs."],
+      ["info", "CLT", "Planned: Alpenglow Timber panel data once the mill's product is certified."]
+    ];
+    $("statusList").innerHTML = st.map(function (k) {
+      var lab = { ok: "Working", warn: "Placeholder", info: "Planned" }[k[0]];
+      return '<li class="check"><span class="badge ' + k[0] + '">' + lab + '</span><span><b>' + esc(k[1]) + '</b><span class="sub">' + esc(k[2]) + "</span></span></li>";
+    }).join("");
+  }
+  function inches(v) { return String(Math.round(v * 1000) / 1000); }
+  function beamText(s, c) {
+    var n = c.roofD.segments - 1;
+    var t = s.roof === "gable" ? (n === 0 ? "Glulam ridge beam" : "Ridge beam + " + (2 * n) + " glulam purlins") : n + " glulam beam line" + (n > 1 ? "s" : "");
+    if (!c.beam) return t + ", size not found";
+    return t + ", " + inches(c.beam.b) + " × " + inches(c.beam.d) + " in" + (c.beam.bays > 1 ? ", posts about every " + c.beam.bay + " ft" : "");
+  }
+  function stat(k, v, d) { return '<div class="stat"><span class="k">' + esc(k) + '</span><span class="v num">' + esc(v) + '</span><span class="d">' + esc(d) + "</span></div>"; }
+  function line(a, b) { return '<div class="cost-line"><span>' + esc(a) + "</span><span>" + esc(b) + "</span></div>"; }
+
+  // ---------------- 3D ----------------
+  var three = null;
+  var view = { structure: false, snow: false };
+  var liveT = 0, lastMsg = null;
+
+  function makeStripeTexture(cross) {
+    var cv = document.createElement("canvas"); cv.width = 256; cv.height = 256;
+    var g = cv.getContext("2d");
+    var seed = 7; var rnd = function () { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+    var n = 32, w = 256 / n;
+    for (var i = 0; i < n; i++) {
+      var t = 0.9 + rnd() * 0.18;
+      g.fillStyle = "rgb(" + Math.round(214 * t) + "," + Math.round(168 * t) + "," + Math.round(118 * t) + ")";
+      g.fillRect(i * w, 0, w, 256);
+      g.fillStyle = "rgba(90,58,30,0.35)"; g.fillRect(i * w, 0, 1, 256);
+      for (var k = 0; k < 3; k++) { g.fillStyle = "rgba(120,80,40,0.18)"; g.fillRect(i * w + 1 + rnd() * (w - 2), 0, 1, 256); }
+      g.fillStyle = "rgba(60,60,60,0.5)";
+      for (var y = 12; y < 256; y += 48) g.fillRect(i * w + w / 2 - 0.5, y + (i % 2) * 24, 1.2, 1.2);
+    }
+    if (cross) {
+      g.fillStyle = "rgba(90,58,30,0.22)";
+      for (var j = 0; j < 8; j++) g.fillRect(0, j * 32, 256, 1);
+    }
+    var tex = new THREE.CanvasTexture(cv);
+    tex.anisotropy = 4;
+    return tex;
+  }
+
+  function initThree() {
+    if (!window.THREE) return null;
+    var stage = $("stage");
+    var renderer;
+    try { renderer = new THREE.WebGLRenderer({ antialias: true }); } catch (e) { return null; }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    stage.insertBefore(renderer.domElement, stage.firstChild);
+    renderer.domElement.setAttribute("role", "img");
+    renderer.domElement.setAttribute("aria-label", "3D model of the timber home design");
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(38, 1, 0.5, 2000);
+    camera.position.set(52, 34, 58);
+
+    var controls = null;
+    if (THREE.OrbitControls) {
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.target.set(0, 8, 0);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.maxPolarAngle = Math.PI * 0.49;
+      controls.minDistance = 20;
+      controls.maxDistance = 220;
+      controls.enablePan = false;
+      // plain wheel scrolls the page; Ctrl/Cmd + wheel (and trackpad pinch) zooms the model
+      stage.addEventListener("wheel", function (e) { if (!e.ctrlKey && !e.metaKey) e.stopPropagation(); }, { capture: true, passive: true });
+      try {
+        if (window.matchMedia("(pointer: coarse)").matches) {
+          controls.enabled = false;
+          var ot = $("orbitToggle"); ot.hidden = false;
+          $("stageHint").textContent = "Tap Rotate model, then drag to orbit · pinch to zoom";
+          ot.addEventListener("click", function () {
+            var on = ot.getAttribute("aria-pressed") !== "true";
+            ot.setAttribute("aria-pressed", String(on));
+            controls.enabled = on;
+            stage.classList.toggle("orbit-on", on);
+          });
+        }
+      } catch (e) {}
+    } else {
+      camera.lookAt(0, 8, 0);
+    }
+
+    scene.add(new THREE.HemisphereLight(0xeaf2f4, 0x6d6a5c, 0.75));
+    var sun = new THREE.DirectionalLight(0xfff3e2, 0.85);
+    sun.position.set(40, 70, 30);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    var sc = sun.shadow.camera; sc.left = -110; sc.right = 110; sc.top = 110; sc.bottom = -110; sc.near = 10; sc.far = 200;
+    sun.shadow.bias = -0.0005;
+    scene.add(sun);
+
+    var ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshStandardMaterial({ color: 0xd5ddd8, roughness: 1 }));
+    ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+    var grid = null;
+
+    var mats = {
+      nlt: new THREE.MeshStandardMaterial({ map: makeStripeTexture(false), roughness: 0.78 }),
+      clt: new THREE.MeshStandardMaterial({ map: makeStripeTexture(true), roughness: 0.78 }),
+      glulam: new THREE.MeshStandardMaterial({ color: 0xb07a45, roughness: 0.7 }),
+      wall: new THREE.MeshStandardMaterial({ color: 0x5f7f86, roughness: 0.9, transparent: true, opacity: 1 }),
+      trim: new THREE.MeshStandardMaterial({ color: 0x2b3431, roughness: 0.6, transparent: true, opacity: 1 }),
+      glass: new THREE.MeshStandardMaterial({ color: 0x9cc3d5, roughness: 0.1, metalness: 0.1, transparent: true, opacity: 0.55 }),
+      concrete: new THREE.MeshStandardMaterial({ color: 0xa7a8a2, roughness: 1 }),
+      lot: new THREE.MeshBasicMaterial({ color: 0x8fadb1, transparent: true, opacity: 0.28, depthWrite: false }),
+      lotLine: new THREE.LineBasicMaterial({ color: 0xc98649 }),
+      house: new THREE.MeshStandardMaterial({ color: 0xc9ccc6, roughness: 0.95 }),
+      snow: new THREE.MeshStandardMaterial({ color: 0xf7fbff, roughness: 0.95, transparent: true, opacity: 0.72, side: THREE.DoubleSide })
+    };
+
+    var group = new THREE.Group(); scene.add(group);
+    var site = new THREE.Group(); scene.add(site);
+
+    function applyTheme() {
+      var cs = getComputedStyle(document.documentElement);
+      var bg = cs.getPropertyValue("--stage-bg").trim() || "#e3eaec";
+      var gr = cs.getPropertyValue("--stage-ground").trim() || "#d5ddd8";
+      var g1 = cs.getPropertyValue("--stage-grid-major").trim() || "#8fadb1";
+      var g2 = cs.getPropertyValue("--stage-grid").trim() || "#b3c2c5";
+      scene.background = new THREE.Color(bg);
+      scene.fog = new THREE.Fog(new THREE.Color(bg), 160, 380);
+      ground.material.color.set(gr);
+      if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
+      grid = new THREE.GridHelper(192, 48, new THREE.Color(g1), new THREE.Color(g2));  // 4-ft cells
+      grid.position.y = 0.02;
+      scene.add(grid);
+    }
+    applyTheme();
+    try {
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
+    } catch (e) {}
+    new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+    function resize() {
+      var r = stage.getBoundingClientRect();
+      var w = Math.max(1, r.width), h = Math.max(1, r.height);
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h; camera.updateProjectionMatrix();
+    }
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(stage);
+    window.addEventListener("resize", resize);
+    resize();
+
+    (function loop() {
+      requestAnimationFrame(loop);
+      if (controls) controls.update();
+      renderer.render(scene, camera);
+    })();
+
+    return { scene: scene, group: group, site: site, mats: mats, camera: camera, controls: controls, lastLot: undefined };
+  }
+
+  function box(w, h, d, mat, x, y, z, cast) {
+    var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    m.position.set(x, y, z);
+    m.castShadow = cast !== false; m.receiveShadow = true;
+    return m;
+  }
+
+  function build(s, c) {
+    if (!three) return;
+    if (three.clone) { three.scene.remove(three.clone); three.clone = null; }
+    var g = three.group, M = three.mats, site = three.site;
+    while (site.children.length) {
+      var sc0 = site.children.pop();
+      if (sc0.geometry) sc0.geometry.dispose();
+    }
+    if (s.lot && s.lot.outline && s.lot.outline.length > 2) {
+      var ol = s.lot.outline, lsh = new THREE.Shape();
+      lsh.moveTo(ol[0][0], ol[0][1]);
+      for (var li = 1; li < ol.length; li++) lsh.lineTo(ol[li][0], ol[li][1]);
+      lsh.closePath();
+      var lotMesh = new THREE.Mesh(new THREE.ShapeGeometry(lsh), M.lot);
+      lotMesh.rotation.x = -Math.PI / 2; lotMesh.position.y = 0.04;
+      site.add(lotMesh);
+      var lpts = ol.map(function (q) { return new THREE.Vector3(q[0], 0.1, -q[1]); });
+      site.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(lpts), M.lotLine));
+      (s.lot.buildings || []).forEach(function (bp) {
+        if (bp.length < 3) return;
+        var bsh = new THREE.Shape();
+        bsh.moveTo(bp[0][0], bp[0][1]);
+        for (var bi2 = 1; bi2 < bp.length; bi2++) bsh.lineTo(bp[bi2][0], bp[bi2][1]);
+        bsh.closePath();
+        var hm = new THREE.Mesh(new THREE.ExtrudeGeometry(bsh, { depth: 14, bevelEnabled: false }), M.house);
+        hm.rotation.x = -Math.PI / 2; hm.castShadow = true; hm.receiveShadow = true;
+        site.add(hm);
+      });
+    }
+    var pl0 = c.place && c.place.fits ? c.place : null;
+    g.position.set(pl0 ? pl0.x : 0, 0, pl0 ? -pl0.y : 0);
+    g.rotation.y = c.place ? c.place.angle : 0;
+    while (g.children.length) {
+      var ch = g.children.pop();
+      ch.traverse(function (o) { if (o.geometry) o.geometry.dispose(); });
+    }
+    var L = s.L, W = s.W, H = s.H, y0 = c.y0, yTop = y0 + H, p = c.p, th = c.theta;
+    var T = 0.5; // wall thickness (ft)
+    var panelMat = c.clt ? M.clt : M.nlt;
+    var wallOpacity = view.structure ? 0.12 : 1;
+    M.wall.opacity = wallOpacity; M.wall.depthWrite = !view.structure;
+    M.trim.opacity = view.structure ? 0.15 : 1; M.trim.depthWrite = !view.structure;
+    M.glass.opacity = view.structure ? 0.1 : 0.55;
+
+    // foundation
+    var fh = s.floor === "crawl" ? y0 - c.tFloor : y0;
+    g.add(box(L, fh, 0.67, M.concrete, 0, fh / 2, W / 2 - 0.33));
+    g.add(box(L, fh, 0.67, M.concrete, 0, fh / 2, -W / 2 + 0.33));
+    g.add(box(0.67, fh, W - 1.34, M.concrete, L / 2 - 0.33, fh / 2, 0));
+    g.add(box(0.67, fh, W - 1.34, M.concrete, -L / 2 + 0.33, fh / 2, 0));
+    if (s.floor === "slab") g.add(box(L - 1.34, 0.3, W - 1.34, M.concrete, 0, fh - 0.15, 0, false));
+
+    // floor panels + girders
+    if (s.floor === "crawl") {
+      var ft = c.tFloor || 0.6;
+      for (var x = -L / 2; x < L / 2 - 0.01; x += MODULE) {
+        g.add(box(MODULE - 0.04, ft, W, panelMat, x + MODULE / 2, y0 - ft / 2, 0));
+      }
+      if (c.floorD) for (var k = 1; k < c.floorD.segments; k++) {
+        var zg = -W / 2 + W * k / c.floorD.segments;
+        g.add(box(L - 1.34, 1.0, 0.5, M.glulam, 0, y0 - ft - 0.5, zg));
+        g.add(box(L - 1.34, y0 - ft - 1.0, 0.5, M.concrete, 0, (y0 - ft - 1.0) / 2, zg));
+      }
+    }
+
+    // walls on the 4-ft module
+    function wall(run, alongX, fixed, pattern) {
+      var n = Math.round(run / MODULE);
+      for (var i = 0; i < n; i++) {
+        var a = -run / 2 + i * MODULE + MODULE / 2;
+        var kind = pattern(i, n);
+        var parts = [];
+        if (kind === "solid") parts.push([MODULE - 0.05, H, 0, H / 2, M.wall]);
+        else if (kind === "window") {
+          parts.push([MODULE - 0.05, 3, 0, 1.5, M.wall]);
+          parts.push([MODULE - 0.05, H - 7, 0, 7 + (H - 7) / 2, M.wall]);
+          parts.push([0.5, 4, -1.75, 5, M.wall]); parts.push([0.5, 4, 1.75, 5, M.wall]);
+          parts.push([3, 4, 0, 5, M.glass, 0.1]);
+        } else if (kind === "door") {
+          parts.push([MODULE - 0.05, H - 7, 0, 7 + (H - 7) / 2, M.wall]);
+          parts.push([0.5, 7, -1.75, 3.5, M.wall]); parts.push([0.5, 7, 1.75, 3.5, M.wall]);
+          parts.push([3, 7, 0, 3.5, M.trim, 0.2]);
+        }
+        parts.forEach(function (pt) {
+          var w = pt[0], h = pt[1], off = pt[2], yc = pt[3], mat = pt[4], thick = pt[5] || T;
+          if (h <= 0.01) return;
+          var m = alongX ? box(w, h, thick, mat, a + off, y0 + yc, fixed) : box(thick, h, w, mat, fixed, y0 + yc, a + off);
+          if (mat === M.glass) m.castShadow = false;
+          g.add(m);
+        });
+      }
+    }
+    var nL = Math.round(L / MODULE);
+    wall(L, true, W / 2 - T / 2, function (i, n) { return i === 1 ? "door" : (i % 2 === 1 || i === n - 2) && i !== 0 && i !== n - 1 ? "window" : "solid"; });
+    wall(L, true, -W / 2 + T / 2, function (i, n) { return i % 2 === 1 && i !== n - 1 ? "window" : "solid"; });
+    wall(W, false, L / 2 - T / 2, function (i, n) { return i === Math.floor((n - 1) / 2) ? "window" : "solid"; });
+    wall(W, false, -L / 2 + T / 2, function (i, n) { return i === Math.floor((n - 1) / 2) ? "window" : "solid"; });
+
+    // gable / shed end infill
+    function endInfill(pts) {
+      var shape = new THREE.Shape();
+      shape.moveTo(pts[0][0], pts[0][1]);
+      for (var i = 1; i < pts.length; i++) shape.lineTo(pts[i][0], pts[i][1]);
+      shape.closePath();
+      [L / 2 - T, -L / 2].forEach(function (xp) {
+        var geo = new THREE.ExtrudeGeometry(shape, { depth: T, bevelEnabled: false });
+        var m = new THREE.Mesh(geo, M.wall);
+        m.rotation.y = Math.PI / 2;
+        m.position.set(xp, yTop, 0);
+        m.castShadow = true; m.receiveShadow = true;
+        g.add(m);
+      });
+    }
+    // shape coords: u = -z, v = y above wall top
+    if (s.roof === "gable") endInfill([[W / 2, 0], [-W / 2, 0], [0, c.rise]]);
+    if (s.roof !== "gable" && c.rise > 0.05) {
+      if (s.roof === "shed") endInfill([[-W / 2, 0], [W / 2, 0], [W / 2, c.rise]]);
+      g.add(box(L, c.rise, T, M.wall, 0, yTop + c.rise / 2, -W / 2 + T / 2));
+    }
+
+    // roof underside height at z
+    function yUnder(z) {
+      if (s.roof === "gable") return yTop + (W / 2 - Math.abs(z)) * p;
+      return yTop + (W / 2 - z) * p;
+    }
+    // roof planes: each is list of {zFrom, zTo, dir} where dir=+1 means descending toward +z
+    var planes = s.roof === "gable"
+      ? [{ z0: 0, z1: W / 2 + OVERHANG, sign: 1 }, { z0: 0, z1: -(W / 2 + OVERHANG), sign: -1 }]
+      : [{ z0: -(W / 2 + OVERHANG), z1: W / 2 + OVERHANG, sign: 1 }];
+    var tR = c.tRoof;
+    var pw = c.clt ? 8 : MODULE;
+    var runL = L + 2 * OVERHANG;
+    planes.forEach(function (pl) {
+      var zc = (pl.z0 + pl.z1) / 2;
+      var horiz = Math.abs(pl.z1 - pl.z0);
+      var S = horiz / Math.cos(th);
+      var ang = pl.sign * th;
+      var ny = Math.cos(th), nz = pl.sign * Math.sin(th); // outward normal
+      var ridgeCut = s.roof === "gable";
+      var lineY = function (z) { return yTop + (W / 2 - pl.sign * z) * p; };  // this plane's underside, extended past the ridge
+      var e = ridgeCut ? tR * Math.tan(th) : 0;                                // lengthen at the ridge so top faces meet
+      var zb = zc - pl.sign * (e / 2) * Math.cos(th);
+      var xs = -runL / 2;
+      while (xs < runL / 2 - 0.01) {
+        var w = Math.min(pw, runL / 2 - xs);
+        var m = box(w - 0.04, tR, S + e, panelMat, xs + w / 2, lineY(zb) + ny * tR / 2, zb + nz * tR / 2);
+        m.rotation.x = ang;
+        g.add(m);
+        xs += w;
+      }
+    });
+    if (view.snow) {
+      var hs = c.snowDepth, tv = tR / Math.cos(th), zE = W / 2 + OVERHANG;
+      var yTopAt = function (z) { return yUnder(z) + tv; };
+      var pts = s.roof === "gable" ? [[-zE, yTopAt(-zE)], [0, yTopAt(0)], [zE, yTopAt(zE)]] : [[-zE, yTopAt(-zE)], [zE, yTopAt(zE)]];
+      var sh = new THREE.Shape();
+      sh.moveTo(-pts[0][0], pts[0][1]);
+      for (var si = 1; si < pts.length; si++) sh.lineTo(-pts[si][0], pts[si][1]);
+      for (var sj = pts.length - 1; sj >= 0; sj--) sh.lineTo(-pts[sj][0], pts[sj][1] + hs);
+      sh.closePath();
+      var sm = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: runL, bevelEnabled: false }), M.snow);
+      sm.rotation.y = Math.PI / 2;
+      sm.position.set(-runL / 2, 0, 0);
+      sm.castShadow = false; sm.receiveShadow = true;
+      g.add(sm);
+    }
+
+    // beams
+    if (c.roofD) {
+      var n = c.roofD.segments, zs = [];
+      if (s.roof === "gable") { zs.push(0); for (var k2 = 1; k2 < n; k2++) { zs.push(W / 2 * k2 / n); zs.push(-W / 2 * k2 / n); } }
+      else for (var k3 = 1; k3 < n; k3++) zs.push(-W / 2 + W * k3 / n);
+      var bd = c.beam ? c.beam.d / 12 : 1.25, bb = c.beam ? c.beam.b / 12 : 0.5;
+      zs.forEach(function (z) {
+        var yb = yUnder(z);
+        g.add(box(L - 2 * T, bd, bb, M.glulam, 0, yb - bd / 2, z));
+        if (c.beam) for (var i = 1; i < c.beam.bays; i++) {
+          var xP = -L / 2 + Math.min(i * c.beam.bay, L - MODULE);
+          var ph = yb - bd - y0;
+          if (ph > 0.1) g.add(box(0.5, ph, 0.5, M.glulam, xP, y0 + ph / 2, z));
+        }
+      });
+    }
+
+    // frame the camera target on first build / size change
+    if (c.place2 && c.place2.fits) {
+      var cl = g.clone();
+      cl.position.set(c.place2.x, 0, -c.place2.y);
+      cl.rotation.y = c.place2.angle;
+      three.scene.add(cl);
+      three.clone = cl;
+    }
+    var ty = Math.min((c.ridge + (view.snow ? c.snowDepth : 0)) * 0.45, 14);
+    var lotKey = s.lot ? s.lot.id : null;
+    if (three.controls) {
+      var tgt = new THREE.Vector3(g.position.x, ty, g.position.z);
+      if (three.lastLot !== lotKey) {
+        // new lot: frame the whole parcel
+        var span = 60;
+        if (s.lot) s.lot.outline.forEach(function (q) { span = Math.max(span, Math.abs(q[0]) * 2, Math.abs(q[1]) * 2); });
+        var k = Math.min(Math.max(span / 70, 1), 2.4);
+        three.camera.position.set(tgt.x + 52 * k, 34 * k, tgt.z + 58 * k);
+        three.lastLot = lotKey;
+      }
+      three.controls.target.copy(tgt);
+    }
+  }
+
+  // ---------------- wiring ----------------
+  // coalesce rapid slider/keyboard input into one rebuild per frame
+  var pending = 0;
+  function scheduleUpdate() {
+    if (pending) return;
+    var run = function () { pending = 0; update(); };
+    pending = document.hidden ? setTimeout(run, 0) : requestAnimationFrame(run);
+  }
+  function update() {
+    var s = readState();
+    var c = compute(s);
+    render(s, c);
+    build(s, c);
+  }
+
+  document.querySelectorAll("input, select").forEach(function (el) {
+    el.addEventListener("input", scheduleUpdate);
+  });
+  function setView(btn, key, val) {
+    view[key] = val;
+    var s = readState();
+    build(s, compute(s));
+  }
+  $("viewExterior").addEventListener("click", function () {
+    $("viewExterior").setAttribute("aria-pressed", "true"); $("viewStructure").setAttribute("aria-pressed", "false"); setView(null, "structure", false);
+  });
+  $("viewStructure").addEventListener("click", function () {
+    $("viewStructure").setAttribute("aria-pressed", "true"); $("viewExterior").setAttribute("aria-pressed", "false"); setView(null, "structure", true);
+  });
+  $("viewSnow").addEventListener("click", function () {
+    var on = $("viewSnow").getAttribute("aria-pressed") !== "true";
+    $("viewSnow").setAttribute("aria-pressed", String(on)); setView(null, "snow", on);
+  });
+
+  try { three = initThree(); } catch (e) { three = null; }
+  if (!three) $("stageFallback").hidden = false;
+  update();
+})();
+</script>
