@@ -13,3 +13,5 @@ The public version includes six real sample lots from TRPA's public parcel servi
 The rules, snow loads, panel depths and prices are illustrative placeholders for discussion. They are not code determinations, engineering or quotes.
 
 It's a single static page (`index.html`) that loads three.js from cdnjs/jsDelivr and fonts from Google Fonts.
+
+Also included: `nlt.html`, an NLT producer calculator for prospective panel makers. It covers cost per panel, margin, breakeven and volume, based on Tahoe Wood's draft NLT financials with lumber counted for the whole panel.
