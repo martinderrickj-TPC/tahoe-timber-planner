@@ -15,3 +15,5 @@ The rules, snow loads, panel depths and prices are illustrative placeholders for
 It's a single static page (`index.html`) that loads three.js from cdnjs/jsDelivr and fonts from Google Fonts.
 
 Also included: `nlt.html`, an NLT producer calculator for prospective panel makers. It covers cost per panel, margin, breakeven and volume, based on Tahoe Wood's draft NLT financials with lumber counted for the whole panel.
+
+Also included: `process.html` ("How NLT is made"), an interactive 3D walkthrough of building one 2×10 ft NLT panel, from lumber, moisture check and jig through nailing, trimming and installation.
