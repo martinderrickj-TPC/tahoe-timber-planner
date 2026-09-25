@@ -412,8 +412,17 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
             <input type="radio" name="bm" id="bmGl" value="glulam" checked><label for="bmGl">Glulam<small>longest spans</small></label>
             <input type="radio" name="bm" id="bmLog" value="log"><label for="bmLog">Round log<small>local thinning wood</small></label>
             <input type="radio" name="bm" id="bmNlt" value="nlt"><label for="bmNlt">NLT beam<small>2x12s nailed together</small></label>
+            <input type="radio" name="bm" id="bmClt" value="clt"><label for="bmClt">CLT beam<small>preview, local CLT</small></label>
           </div>
-          <span class="sub">Logs and NLT beams use local wood but span less than glulam, so heavy snow means more posts. The planner adds posts on the 4-ft grid until the beam works.</span>
+          <span class="sub">Logs and NLT beams use local wood but span less than glulam, so heavy snow means more posts. The planner adds posts on a 2-ft half-panel grid until the beam works.</span>
+        </div>
+        <div class="field">
+          <span class="lab" id="spLab">Ridge support</span>
+          <div class="seg" role="radiogroup" aria-labelledby="spLab">
+            <input type="radio" name="sp" id="spPosts" value="posts" checked><label for="spPosts">Posts<small>as few as the beam needs</small></label>
+            <input type="radio" name="sp" id="spWall" value="wall"><label for="spWall">Center bearing wall<small>doubles as a room divider</small></label>
+          </div>
+          <span class="sub">A center bearing wall carries the roof along the beam line with no posts, and a short header spans its doorway. It splits the home lengthwise, for example bedroom and bath on one side and living on the other.</span>
         </div>
       </section>
 
@@ -519,7 +528,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           <li>Snow deflection increased 1.5× for creep, limited to span/240.</li>
           <li>A floor load of 40 psf, limited to span/480, with spans capped at 16 ft.</li>
         </ul>
-        <p class="note">When the roof needs a ridge beam or beam lines, the planner sizes a 24F-V4 glulam (Fb 2,400 psi, E 1.8 million psi) for bending, shear and span/240. Round logs use placeholder values for visually graded local pine or fir (Fb 1,000 psi, E 1.1 million psi) until logs are graded. NLT beams are 3 to 8 plies of 2x12 Hem-Fir No. 2 nailed together. It adds evenly spaced interior posts on the 4-ft grid, each with its own pier or footing, when a single span won't work. The walls are load-bearing. They carry the roof panels and the beam ends, but wall capacity, headers over openings, earthquake and wind bracing, and connections aren't checked. A licensed engineer will replace all of this with stamped span tables.</p>
+        <p class="note">When the roof needs a ridge beam or beam lines, the planner sizes a 24F-V4 glulam (Fb 2,400 psi, E 1.8 million psi) for bending, shear and span/240. Round logs use placeholder values for visually graded local pine or fir (Fb 1,000 psi, E 1.1 million psi) until logs are graded. NLT beams are 3 to 8 plies of 2x12 Hem-Fir No. 2 nailed together. CLT beams are a preview. They use a 5-ply, 6⅞-in panel on edge with generic PRG 320 E1 values (Fb 1,950 psi with a 0.85 reduction, E 1.7 million psi) until Alpenglow's panels are certified. It adds evenly spaced interior posts on a 2-ft half-panel grid, each with its own pier or footing, when a single span won't work. The walls are load-bearing. They carry the roof panels and the beam ends, but wall capacity, headers over openings, earthquake and wind bracing, and connections aren't checked. A licensed engineer will replace all of this with stamped span tables.</p>
       </div>
     </details>
 
@@ -929,6 +938,19 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     }
     return null;
   }
+  // CLT beam on edge: 5-ply 6-7/8 in panel, 3 lengthwise layers carry bending; generic PRG 320 E1 values with a 0.85 placeholder reduction
+  var CLTB = { Fb: 1950, Fv: 180, E: 1.7e6, cd: 1.15, k: 0.85, t: 6.875, beff: 4.125, depths: [12, 16, 20, 24, 30, 36, 42] };
+  function cltBeam(clear, trib, snow, dead, maxD) {
+    for (var i = 0; i < CLTB.depths.length && CLTB.depths[i] <= maxD; i++) {
+      var d = CLTB.depths[i], Lin = clear * 12;
+      var w = (snow + dead) * trib + CLTB.t * d / 144 * 32;
+      var M = w * clear * clear / 8 * 12, V = w * clear / 2;
+      var S = CLTB.beff * d * d / 6, I = CLTB.beff * d * d * d / 12;
+      var defl = 5 * (snow * trib * 1.5 / 12) * Math.pow(Lin, 4) / (384 * CLTB.E * I);
+      if (M / S <= CLTB.Fb * CLTB.cd * CLTB.k && 1.5 * V / (CLTB.t * d) <= CLTB.Fv * CLTB.cd && defl <= Lin / 240) return { d: d, b: CLTB.t };
+    }
+    return null;
+  }
   function designSpan(total, load, superDL, deflLimit, cd, creep, maxSeg) {
     for (var n = 1; n <= 4; n++) {
       var span = total / n;
@@ -962,6 +984,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       sheltered: $("shelt").checked,
       clearSpan: $("clearSpan").checked,
       beamType: radioVal("bm") || "glulam",
+      support: radioVal("sp") || "posts",
       units: +radioVal("un") || 1,
       housing: radioVal("ht"),
       exterior: radioVal("ex") || "live",
@@ -999,18 +1022,24 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       var dead = 12 + roofD.lumber.d / 12 * PCF;
       // prefer a stock-depth beam (24 in or less) with posts; fall back to deeper sections
       var postsFor = function (bays) {                                // evenly spaced, snapped to the 4-ft grid
-        var xs = []; for (var i = 1; i < bays; i++) xs.push(-s.L / 2 + Math.round(i * s.L / bays / MODULE) * MODULE);
+        var xs = [], g2 = MODULE / 2; for (var i = 1; i < bays; i++) xs.push(-s.L / 2 + Math.round(i * s.L / bays / g2) * g2);
         return xs;
       };
       var maxBays = s.clearSpan ? 1 : Math.floor(s.L / 4);
       // first pass prefers stock sizes (glulam <= 24 in deep, logs <= 16 in) with more posts; second pass allows bigger members
-      var passes = s.beamType === "nlt" ? [0] : s.beamType === "log" ? (s.clearSpan ? [24] : [16, 24]) : (s.clearSpan ? [GL.maxD] : [24, GL.maxD]);
+      var passes = s.support === "wall" ? [] : s.beamType === "nlt" ? [0] : s.beamType === "log" ? (s.clearSpan ? [24] : [16, 24]) : s.beamType === "clt" ? (s.clearSpan ? [42] : [24, 42]) : (s.clearSpan ? [GL.maxD] : [24, GL.maxD]);
+      if (s.support === "wall") {
+        // continuous support: the member on the wall is a nominal top beam that spans the doorway only
+        var nom = { glulam: [5.125, 12], log: [10, 10], nlt: [4.5, 11.25], clt: [6.875, 12] }[s.beamType] || [5.125, 12];
+        beam = { type: "wall", beamType: s.beamType, b: nom[0], d: nom[1], bays: 1, bay: s.L, posts: [] };
+      }
       passes.forEach(function (maxD) {
         for (var bays = 1; !beam && bays <= maxBays; bays++) {
           var xs = postsFor(bays), pts = [-s.L / 2].concat(xs, [s.L / 2]), bay = 0;
           for (var k = 1; k < pts.length; k++) bay = Math.max(bay, pts[k] - pts[k - 1]);
           var gs = s.beamType === "log" ? logBeam(bay, trib, roofSnowASD, dead, maxD)
                  : s.beamType === "nlt" ? nltBeam(bay, trib, roofSnowASD, dead)
+                 : s.beamType === "clt" ? cltBeam(bay, trib, roofSnowASD, dead, maxD)
                  : glulam(bay, trib, roofSnowASD, dead, maxD);
           if (gs) beam = { b: gs.b, d: gs.d, plies: gs.plies, type: s.beamType, bays: bays, bay: bay, posts: xs };
         }
@@ -1180,10 +1209,10 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       checks.push(["info", "Nevada ADU rules", "Nevada has no statewide ADU size or height guarantee. " + s.loc.juris + " code" + (s.loc.trpa ? " and TRPA's height and accessory-dwelling rules" : "") + " set the limits here. The roof peak is " + fmt(c.ridge, 1) + " ft."]);
     }
     if (c.clt) checks.push(["info", "Snow design pending for CLT", "Needs Alpenglow's certified panel values. Design snow here is " + fmt(c.pf) + " psf."]);
-    else if (c.roofD && c.needsBeam && !c.beam) checks.push(["warn", "Roof beams need an engineer", c.roofD.lumber.nom + " NLT panels work, but no " + ({ glulam: "glulam up to " + GL.maxD + " in deep", log: "log up to 24 in diameter", nlt: "NLT beam up to 8 plies of 2x12" }[s.beamType] || "beam") + " works" + (s.clearSpan ? " as a clear span" : " with posts 8 ft apart or more") + " at " + fmt(s.pg) + " psf. " + (s.clearSpan ? "Allow interior posts, or narrow the home." : "Try a narrower width, a steeper pitch or a lower snow load.")]);
+    else if (c.roofD && c.needsBeam && !c.beam) checks.push(["warn", "Roof beams need an engineer", c.roofD.lumber.nom + " NLT panels work, but no " + ({ glulam: "glulam up to " + GL.maxD + " in deep", log: "log up to 24 in diameter", nlt: "NLT beam up to 8 plies of 2x12", clt: "CLT beam up to 42 in deep" }[s.beamType] || "beam") + " works" + (s.clearSpan ? " as a clear span" : " with posts 8 ft apart or more") + " at " + fmt(s.pg) + " psf. " + (s.clearSpan ? "Allow interior posts, or narrow the home." : "Try a narrower width, a steeper pitch or a lower snow load.")]);
     else if (c.roofD) checks.push(["ok", "Roof screened for " + fmt(s.pg) + " psf ground snow (ASCE 7-22)", c.roofD.lumber.nom + " NLT spanning " + fmt(c.roofD.span, 1) + " ft" + (c.needsBeam ? ", on " + beamText(s, c).charAt(0).toLowerCase() + beamText(s, c).slice(1) : "") + (c.unbal ? ". Includes unbalanced snow (" + fmt(s.pg) + " psf on the leeward side)" : "") + ". The walls carry the roof, and wall capacity, headers, bracing and connections aren't checked. Screening only; an engineer's stamped tables replace this."]);
     else checks.push(["bad", "Roof beyond this demo's range", "No 2x6–2x12 NLT layout with up to three beam lines works at this snow load and width. An engineer would look at deeper panels or CLT."]);
-    if (c.beam && c.beam.posts.length >= 4) checks.push(["info", "Consider a center bearing wall", "With posts about every " + fmt(c.beam.bay) + " ft, a wall along the beam line may be simpler. It can double as the wall between rooms, and the beam then only needs to span door openings."]);
+    if (c.beam && c.beam.posts.length >= 4) checks.push(["info", "Consider a center bearing wall", "With posts about every " + fmt(c.beam.bay) + " ft, a wall along the beam line may be simpler. Choose Center bearing wall under Ridge support to see it. It can double as the wall between rooms, and the beam then only needs to span door openings."]);
     if (s.roof === "flat" && s.pg >= 200) checks.push(["warn", "Low-slope roof in deep snow", "A low-slope roof holds the full snow load all winter and needs careful drainage and ice-dam detailing. Most basin designs use a pitched roof."]);
     if (s.exterior !== "siding") checks.push(["warn", "Wood exterior needs a wildfire-code path", s.loc.state === "CA" ? "In mapped fire hazard zones, California's Wildland-Urban Interface Code limits exposed wood cladding. The usual routes are fire-retardant-treated wood, a tested wall assembly, or noncombustible cladding on the most exposed walls. Confirm with the building department." : "Nevada counties' wildland-urban interface codes limit exposed wood cladding. Fire-retardant-treated wood or a tested assembly is the usual route. Confirm with the county."]);
     checks.push(["info", "Wildfire zone not yet checked", s.loc.state === "CA" ? "The fire-hazard lookup isn't connected yet. In mapped fire hazard severity zones and wildland-urban interface areas, the California Wildland-Urban Interface Code (Title 24, Part 7) applies. It replaced CBC Chapter 7A and CRC R337 in 2026." : "The fire-hazard lookup isn't connected yet. Nevada counties apply their adopted wildland-urban interface code."]);
@@ -1300,8 +1329,11 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var t = s.roof === "gable" ? (n === 0 ? "Ridge beam" : "Ridge beam + " + (2 * n) + " purlins") : n + " beam line" + (n > 1 ? "s" : "");
     if (!c.beam) return t + ", size not found";
     var np = c.beam.posts.length;
+    var names = { glulam: "glulam", log: "log", nlt: "NLT", clt: "CLT" };
+    if (c.beam.type === "wall") return (s.roof === "gable" ? "Center bearing wall under the ridge" : "Bearing wall on each beam line") + ", with " + ({ glulam: "a glulam", log: "a log", nlt: "an NLT", clt: "a CLT" }[c.beam.beamType] || "a") + " header over the doorway";
     var size = c.beam.type === "log" ? inches(c.beam.d) + " in diameter log"
              : c.beam.type === "nlt" ? c.beam.plies + "-ply 2x12 NLT beam (" + inches(c.beam.b) + " × 11¼ in)"
+             : c.beam.type === "clt" ? "6⅞ × " + inches(c.beam.d) + " in CLT beam (preview)"
              : inches(c.beam.b) + " × " + inches(c.beam.d) + " in glulam";
     return t + ", " + size + (np ? ", " + np + " post" + (np > 1 ? "s" : "") + " on the beam line" : ", clear span");
   }
@@ -1678,19 +1710,27 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       var bd = c.beam ? c.beam.d / 12 : 1.25, bb = c.beam ? c.beam.b / 12 : 0.5;
       zs.forEach(function (z) {
         var yb = yUnder(z);
-        var btype = c.beam ? c.beam.type : "glulam";
+        var btype = c.beam ? (c.beam.type === "wall" ? c.beam.beamType : c.beam.type) : "glulam";
+        if (c.beam && c.beam.type === "wall") {
+          var wt = yb - bd - y0, half = 1.5, segL = (L - 2 * T) / 2 - half;
+          if (wt > 0.1) [-1, 1].forEach(function (sg) {
+            g.add(box(segL, wt, 0.5, M.nlt, sg * (half + segL / 2), y0 + wt / 2, z));
+          });
+          if (s.floor === "crawl") { var fh3 = y0 - (c.tFloor || 0.6); if (fh3 > 0.1) g.add(box(L - 1.34, fh3, 0.67, M.concrete, 0, fh3 / 2, z)); }
+          else g.add(box(L - 1.34, 0.9, 2, M.concrete, 0, 0.2, z, false));
+        }
         if (btype === "log") {
           var lg = new THREE.Mesh(new THREE.CylinderGeometry(bd / 2, bd / 2, L - 2 * T, 20), M.log);
           lg.rotation.z = Math.PI / 2; lg.position.set(0, yb - bd / 2, z); lg.castShadow = true; lg.receiveShadow = true;
           g.add(lg);
-        } else g.add(box(L - 2 * T, bd, bb, btype === "nlt" ? M.nlt : M.glulam, 0, yb - bd / 2, z));
+        } else g.add(box(L - 2 * T, bd, bb, btype === "nlt" ? M.nlt : btype === "clt" ? M.clt : M.glulam, 0, yb - bd / 2, z));
         if (c.beam) c.beam.posts.forEach(function (xP) {
           var ph = yb - bd - y0;
           if (ph > 0.1) {
             if (btype === "log") {
               var pl = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.5, ph, 16), M.log);
               pl.position.set(xP, y0 + ph / 2, z); pl.castShadow = true; g.add(pl);
-            } else g.add(box(btype === "nlt" ? 0.75 : 0.5, ph, btype === "nlt" ? 0.75 : 0.5, btype === "nlt" ? M.nlt : M.glulam, xP, y0 + ph / 2, z));
+            } else g.add(box(btype === "nlt" || btype === "clt" ? 0.75 : 0.5, ph, btype === "nlt" || btype === "clt" ? 0.75 : 0.5, btype === "nlt" ? M.nlt : btype === "clt" ? M.clt : M.glulam, xP, y0 + ph / 2, z));
           }
           // load path to the ground: a pier in the crawlspace, or a thickened footing under the slab
           if (s.floor === "crawl") { var fh2 = y0 - (c.tFloor || 0.6); if (fh2 > 0.1) g.add(box(1.5, fh2, 1.5, M.concrete, xP, fh2 / 2, z)); }
