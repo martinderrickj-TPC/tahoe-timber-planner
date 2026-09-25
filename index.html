@@ -403,6 +403,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           <label for="pg">Ground snow load, ASCE 7-22 <output id="pgOut" class="num" aria-live="off">600 psf</output></label>
           <input type="range" id="pg" min="100" max="1000" step="10" value="600">
           <label class="check-inline" for="shelt"><input type="checkbox" id="shelt"> Lot tight among tall conifers (sheltered roof, more snow stays on)</label>
+          <label class="check-inline" for="clearSpan"><input type="checkbox" id="clearSpan"> Clear span with no interior posts (takes a deeper beam)</label>
           <span class="sub">Placeholder value. Since the 2025 California Building Code took effect on January 1, 2026, each site's snow load comes from the ASCE 7-22 Hazard Tool. Those values are strength-level and much higher than the old county tables. One example: 842 psf at a 6,881-ft site in Placer County. The planner will look this up by address.</span>
         </div>
       </section>
@@ -509,7 +510,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           <li>Snow deflection increased 1.5× for creep, limited to span/240.</li>
           <li>A floor load of 40 psf, limited to span/480, with spans capped at 16 ft.</li>
         </ul>
-        <p class="note">When the roof needs a ridge beam or beam lines, the planner sizes a 24F-V4 glulam (Fb 2,400 psi, E 1.8 million psi) for bending, shear and span/240. It adds interior posts on the 4-ft grid when a single span won't work. A licensed engineer will replace all of this with stamped span tables.</p>
+        <p class="note">When the roof needs a ridge beam or beam lines, the planner sizes a 24F-V4 glulam (Fb 2,400 psi, E 1.8 million psi) for bending, shear and span/240. It adds evenly spaced interior posts on the 4-ft grid, each with its own pier or footing, when a single span won't work. The walls are load-bearing. They carry the roof panels and the beam ends, but wall capacity, headers over openings, earthquake and wind bracing, and connections aren't checked. A licensed engineer will replace all of this with stamped span tables.</p>
       </div>
     </details>
 
@@ -925,6 +926,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       system: radioVal("ps"),
       aNlt: Math.max(0, numVal("aNlt", 1)),
       sheltered: $("shelt").checked,
+      clearSpan: $("clearSpan").checked,
       units: +radioVal("un") || 1,
       housing: radioVal("ht"),
       exterior: radioVal("ex") || "live",
@@ -961,11 +963,17 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       var trib = s.roof === "gable" ? s.W / (2 * roofD.segments) : s.W / roofD.segments;
       var dead = 12 + roofD.lumber.d / 12 * PCF;
       // prefer a stock-depth beam (24 in or less) with posts; fall back to deeper sections
-      [24, GL.maxD].forEach(function (maxD) {
-        for (var bays = 1; !beam && bays <= Math.floor(s.L / 8); bays++) {
-          var bay = Math.ceil(s.L / bays / MODULE) * MODULE;         // posts land on the 4-ft grid
+      var postsFor = function (bays) {                                // evenly spaced, snapped to the 4-ft grid
+        var xs = []; for (var i = 1; i < bays; i++) xs.push(-s.L / 2 + Math.round(i * s.L / bays / MODULE) * MODULE);
+        return xs;
+      };
+      var maxBays = s.clearSpan ? 1 : Math.floor(s.L / 8);
+      [s.clearSpan ? GL.maxD : 24, GL.maxD].forEach(function (maxD) {
+        for (var bays = 1; !beam && bays <= maxBays; bays++) {
+          var xs = postsFor(bays), pts = [-s.L / 2].concat(xs, [s.L / 2]), bay = 0;
+          for (var k = 1; k < pts.length; k++) bay = Math.max(bay, pts[k] - pts[k - 1]);
           var gs = glulam(bay, trib, roofSnowASD, dead, maxD);
-          if (gs) beam = { b: gs.b, d: gs.d, bays: bays, bay: bay };
+          if (gs) beam = { b: gs.b, d: gs.d, bays: bays, bay: bay, posts: xs };
         }
       });
     }
@@ -1133,8 +1141,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       checks.push(["info", "Nevada ADU rules", "Nevada has no statewide ADU size or height guarantee. " + s.loc.juris + " code" + (s.loc.trpa ? " and TRPA's height and accessory-dwelling rules" : "") + " set the limits here. The roof peak is " + fmt(c.ridge, 1) + " ft."]);
     }
     if (c.clt) checks.push(["info", "Snow design pending for CLT", "Needs Alpenglow's certified panel values. Design snow here is " + fmt(c.pf) + " psf."]);
-    else if (c.roofD && c.needsBeam && !c.beam) checks.push(["warn", "Roof beams need an engineer", c.roofD.lumber.nom + " NLT panels work, but no glulam up to " + GL.maxD + " in deep works with posts 8 ft apart or more at " + fmt(s.pg) + " psf. Try a narrower width, a steeper pitch or a lower snow load."]);
-    else if (c.roofD) checks.push(["ok", "Roof screened for " + fmt(s.pg) + " psf ground snow (ASCE 7-22)", c.roofD.lumber.nom + " NLT spanning " + fmt(c.roofD.span, 1) + " ft" + (c.needsBeam ? ", on " + beamText(s, c).charAt(0).toLowerCase() + beamText(s, c).slice(1) : "") + (c.unbal ? ". Includes unbalanced snow (" + fmt(s.pg) + " psf on the leeward side)" : "") + ". Screening only; an engineer's stamped tables replace this."]);
+    else if (c.roofD && c.needsBeam && !c.beam) checks.push(["warn", "Roof beams need an engineer", c.roofD.lumber.nom + " NLT panels work, but no glulam up to " + GL.maxD + " in deep works" + (s.clearSpan ? " as a clear span" : " with posts 8 ft apart or more") + " at " + fmt(s.pg) + " psf. " + (s.clearSpan ? "Allow interior posts, or narrow the home." : "Try a narrower width, a steeper pitch or a lower snow load.")]);
+    else if (c.roofD) checks.push(["ok", "Roof screened for " + fmt(s.pg) + " psf ground snow (ASCE 7-22)", c.roofD.lumber.nom + " NLT spanning " + fmt(c.roofD.span, 1) + " ft" + (c.needsBeam ? ", on " + beamText(s, c).charAt(0).toLowerCase() + beamText(s, c).slice(1) : "") + (c.unbal ? ". Includes unbalanced snow (" + fmt(s.pg) + " psf on the leeward side)" : "") + ". The walls carry the roof, and wall capacity, headers, bracing and connections aren't checked. Screening only; an engineer's stamped tables replace this."]);
     else checks.push(["bad", "Roof beyond this demo's range", "No 2x6–2x12 NLT layout with up to three beam lines works at this snow load and width. An engineer would look at deeper panels or CLT."]);
     if (s.roof === "flat" && s.pg >= 200) checks.push(["warn", "Low-slope roof in deep snow", "A low-slope roof holds the full snow load all winter and needs careful drainage and ice-dam detailing. Most basin designs use a pitched roof."]);
     if (s.exterior !== "siding") checks.push(["warn", "Wood exterior needs a wildfire-code path", s.loc.state === "CA" ? "In mapped fire hazard zones, California's Wildland-Urban Interface Code limits exposed wood cladding. The usual routes are fire-retardant-treated wood, a tested wall assembly, or noncombustible cladding on the most exposed walls. Confirm with the building department." : "Nevada counties' wildland-urban interface codes limit exposed wood cladding. Fire-retardant-treated wood or a tested assembly is the usual route. Confirm with the county."]);
@@ -1251,7 +1259,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var n = c.roofD.segments - 1;
     var t = s.roof === "gable" ? (n === 0 ? "Glulam ridge beam" : "Ridge beam + " + (2 * n) + " glulam purlins") : n + " glulam beam line" + (n > 1 ? "s" : "");
     if (!c.beam) return t + ", size not found";
-    return t + ", " + inches(c.beam.b) + " × " + inches(c.beam.d) + " in" + (c.beam.bays > 1 ? ", posts about every " + c.beam.bay + " ft" : "");
+    var np = c.beam.posts.length;
+    return t + ", " + inches(c.beam.b) + " × " + inches(c.beam.d) + " in" + (np ? ", " + np + " post" + (np > 1 ? "s" : "") + " on the beam line" : ", clear span");
   }
   function stat(k, v, d) { return '<div class="stat"><span class="k">' + esc(k) + '</span><span class="v num">' + esc(v) + '</span><span class="d">' + esc(d) + "</span></div>"; }
   function line(a, b) { return '<div class="cost-line"><span>' + esc(a) + "</span><span>" + esc(b) + "</span></div>"; }
@@ -1626,11 +1635,13 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       zs.forEach(function (z) {
         var yb = yUnder(z);
         g.add(box(L - 2 * T, bd, bb, M.glulam, 0, yb - bd / 2, z));
-        if (c.beam) for (var i = 1; i < c.beam.bays; i++) {
-          var xP = -L / 2 + Math.min(i * c.beam.bay, L - MODULE);
+        if (c.beam) c.beam.posts.forEach(function (xP) {
           var ph = yb - bd - y0;
           if (ph > 0.1) g.add(box(0.5, ph, 0.5, M.glulam, xP, y0 + ph / 2, z));
-        }
+          // load path to the ground: a pier in the crawlspace, or a thickened footing under the slab
+          if (s.floor === "crawl") { var fh2 = y0 - (c.tFloor || 0.6); if (fh2 > 0.1) g.add(box(1.5, fh2, 1.5, M.concrete, xP, fh2 / 2, z)); }
+          else g.add(box(2.5, 0.9, 2.5, M.concrete, xP, 0.2, z, false));
+        });
       });
     }
 
