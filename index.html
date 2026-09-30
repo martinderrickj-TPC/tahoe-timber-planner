@@ -308,14 +308,14 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         <h2 id="h-lot"><span class="step">1</span> Your lot</h2>
         <div class="seg" role="radiogroup" aria-label="Lot source" id="lotModeSeg">
           <input type="radio" name="lotMode" id="lmSample" value="sample" checked><label for="lmSample">Real Tahoe lot<small>TRPA parcel data</small></label>
-          <input type="radio" name="lotMode" id="lmLive" value="live" hidden><label for="lmLive" id="lmLiveLab" hidden>Any address<small>36,991 basin homes</small></label>
+          <input type="radio" name="lotMode" id="lmLive" value="live" hidden><label for="lmLive" id="lmLiveLab" hidden>Any address<small>live TRPA lookup</small></label>
           <input type="radio" name="lotMode" id="lmOwn" value="own"><label for="lmOwn">My own numbers<small>type them in</small></label>
         </div>
         <div class="field" id="liveBox" hidden>
           <label for="addrQ">Street address in the Tahoe Basin</label>
           <input type="search" id="addrQ" placeholder="Street number and name" autocomplete="off">
           <ul class="results" id="addrResults"></ul>
-          <span class="sub" id="liveStatusMsg">Type at least 4 characters. The search covers a built-in snapshot of TRPA's 36,991 residential parcels, taken 2026-09-24. It works even if TRPA's service is down. Nothing you type is stored or sent anywhere.</span>
+          <span class="sub" id="liveStatusMsg">Type at least 4 characters. Results come straight from TRPA's public parcel service, one search at a time. Nothing you type is stored.</span>
           <dl class="facts" id="liveFacts"></dl>
         </div>
         <div class="field" id="sampleBox">
@@ -349,12 +349,20 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       <section class="card" aria-labelledby="h-shape">
         <h2 id="h-shape"><span class="step">2</span> Size and shape</h2>
         <div class="field">
+          <span class="lab" id="useLab">Use</span>
+          <div class="seg" role="radiogroup" aria-labelledby="useLab">
+            <input type="radio" name="use" id="useAdu" value="adu" checked><label for="useAdu">Home (ADU)<small>lived in</small></label>
+            <input type="radio" name="use" id="useWork" value="workshop"><label for="useWork">Workshop or studio<small>not lived in</small></label>
+            <input type="radio" name="use" id="useShed" value="shed"><label for="useShed">Small shed<small>120 ft² or less</small></label>
+          </div>
+        </div>
+        <div class="field">
           <label for="len">Length <output id="lenOut" class="num" aria-live="off">28 ft</output></label>
-          <input type="range" id="len" min="16" max="48" step="4" value="28">
+          <input type="range" id="len" min="8" max="48" step="4" value="28">
         </div>
         <div class="field">
           <label for="wid">Width <output id="widOut" class="num" aria-live="off">24 ft</output></label>
-          <input type="range" id="wid" min="12" max="28" step="4" value="24">
+          <input type="range" id="wid" min="8" max="28" step="4" value="24">
           <span class="sub">Both snap to the 4-ft panel module: one plywood sheet width, or 32 boards of 1½-in lumber.</span>
         </div>
         <div class="field">
@@ -370,6 +378,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           <div class="seg" role="radiogroup" aria-labelledby="fdLab">
             <input type="radio" name="fd" id="fdCrawl" value="crawl" checked><label for="fdCrawl">NLT floor<small>over crawlspace</small></label>
             <input type="radio" name="fd" id="fdSlab" value="slab"><label for="fdSlab">Slab<small>no floor panels</small></label>
+            <input type="radio" name="fd" id="fdSkids" value="skids"><label for="fdSkids">Skids<small>no permanent foundation</small></label>
           </div>
         </div>
         <div class="field">
@@ -681,6 +690,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
   function thin(r, max) { if (r.length <= max) return r; var k = Math.ceil(r.length / max); return r.filter(function (_, i) { return i % k === 0; }); }
   function probeLive() {
     if (document.getElementById("parcelData")) { $("lmLive").hidden = false; $("lmLiveLab").hidden = false; return; }
+    if (!window.__snapshotFiles) { tryLive(); return; }   // public site: search TRPA live, no built-in address list
     fetch("parcels.json").then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (d) {
       SNAP = d; $("lmLive").hidden = false; $("lmLiveLab").hidden = false;
       return fetch("buildings.json").then(function (r) { return r.ok ? r.json() : null; }).then(function (b) {
@@ -831,6 +841,13 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     if (!e || e.target.id === "preapp") $("aSoft").value = $("preapp").checked ? 8 : 15;
   }
   ["flBasic", "flStd", "flPrem", "preapp"].forEach(function (id) { $(id).addEventListener("input", syncCostPresets); });
+  // "Small shed" jumps to 8 x 12 ft on skids; leaving it restores a home-sized default
+  ["useAdu", "useWork", "useShed"].forEach(function (id) {
+    $(id).addEventListener("input", function () {
+      if ($("useShed").checked) { $("len").value = 12; $("wid").value = 8; $("fdSkids").checked = true; $("un1").checked = true; }
+      else if (+$("len").value * +$("wid").value <= 120) { $("len").value = 28; $("wid").value = 24; $("fdCrawl").checked = true; }
+    });
+  });
 
   // ---------------- siting: place the home inside the lot ----------------
   var SETBACK = 5, SEPARATION = 10;
@@ -1013,6 +1030,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       support: radioVal("sp") || "posts",
       units: +radioVal("un") || 1,
       housing: radioVal("ht"),
+      use: radioVal("use") || "adu",
       exterior: radioVal("ex") || "live",
       aRest: Math.max(0, numVal("aRest", 225)),
       aSite: Math.max(0, numVal("aSite", 45000)),
@@ -1083,11 +1101,11 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         }
       });
     }
-    var floorD = s.floor === "crawl" ? designSpan(s.W, 40, 10, 480, 1.0, 1.0, 16) : null;
+    var floorD = (s.floor === "crawl" || s.floor === "skids") ? designSpan(s.W, 40, 10, 480, 1.0, 1.0, 16) : null;
 
     var tRoof = roofD ? roofD.lumber.d / 12 : 0.6;
     var tFloor = floorD ? floorD.lumber.d / 12 : 0;
-    var y0 = s.floor === "crawl" ? 2.0 + tFloor : 0.67;
+    var y0 = s.floor === "crawl" ? 2.0 + tFloor : s.floor === "skids" ? 0.5 + tFloor : 0.67;
     var rise = s.roof === "gable" ? (s.W / 2) * p : s.W * p;
     var riseTop = s.roof === "gable" ? rise : (s.W + OVERHANG) * p;   // shed/low-slope keep rising over the high-side overhang
     var ridge = y0 + s.H + riseTop + tRoof / Math.cos(theta);
@@ -1127,7 +1145,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var roofRun = s.L + 2 * OVERHANG;
     if (s.roof === "gable") addRows("Roof", roofRun, (s.W / 2 + OVERHANG) / Math.cos(theta), 2, roofD && roofD.lumber);
     else addRows("Roof", roofRun, (s.W + 2 * OVERHANG) / Math.cos(theta), 1, roofD && roofD.lumber);
-    if (s.floor === "crawl") addRows("Floor", s.L, s.W, 1, floorD && floorD.lumber);
+    if (s.floor === "crawl" || s.floor === "skids") addRows("Floor", s.L, s.W, 1, floorD && floorD.lumber);
     if (s.exterior === "live") addRows("Walls", 2 * (s.L + s.W), s.H, 1, LUMBER[0]);   // 2x6 NLT wall panels, 4 ft x wall height
 
     var n = s.units || 1;
@@ -1142,9 +1160,10 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var hasHouse = !!(s.lot && (s.lot.buildings || []).length);
     var runFt = 0;
     for (var u = 0; u < n; u++) { var pu = places && places[u]; runFt += (pu && pu.fits && hasHouse ? Math.min(pu.clear, 80) : 40) + 10; }
-    var siteWork = s.aSite * (1 + 0.5 * (n - 1));           // a second unit shares mobilization
+    // a second unit shares mobilization; sheds and workshops need far less site work (placeholders)
+    var siteWork = s.aSite * (1 + 0.5 * (n - 1)) * (s.use === "shed" ? (s.floor === "skids" ? 0.03 : 0.25) : s.use === "workshop" ? 0.6 : 1);
     // placeholder utility allowances: tie-in vs new meters/laterals, plus $60/ft of shared trench
-    var utilCost = (s.utilities === "separate" ? 22000 : 8000) * n + 60 * runFt;
+    var utilCost = s.use === "shed" ? 0 : s.use === "workshop" ? 3000 * n + 30 * runFt : (s.utilities === "separate" ? 22000 : 8000) * n + 60 * runFt;   // workshop: power only
     var siteCost = siteWork + utilCost;
     // lumber is about 56% of panel cost for a 6-in panel, so deeper panels scale that share with lumber volume
     var panelSf = 0, panelsCost = clt ? null : rows.reduce(function (sum, r) {
@@ -1153,9 +1172,11 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       return sum + sf * s.aNlt * (0.56 * r.lumber.nomD / 6 + 0.44);
     }, 0);
     // placeholder: NLT walls replace wall framing and local live-edge boards are cheap; plywood is cheaper than fiber cement
-    var restRate = s.aRest * ({ live: 0.94, ply: 0.97, siding: 1 }[s.exterior] || 1);
+    var restRate = s.aRest * ({ live: 0.94, ply: 0.97, siding: 1 }[s.exterior] || 1)
+                 * ({ adu: 1, workshop: 0.5, shed: 0.3 }[s.use] || 1);   // no plumbing or kitchen in a workshop; a shed is mostly envelope
     var hard = (panelsCost || 0) + totalArea * restRate + siteCost;
-    var mid = hard * (1 + s.aSoft / 100);
+    var softPct = s.aSoft * (s.use === "shed" ? (area <= 120 ? 0.2 : 0.5) : s.use === "workshop" ? 0.7 : 1);
+    var mid = hard * (1 + softPct / 100);
 
     return {
       p: p, theta: theta, pf: pf, pfASD: pfASD, unbal: unbal, beam: beam, needsBeam: needsBeam, snowDepth: snowDepth, roofD: roofD, floorD: floorD,
@@ -1163,7 +1184,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       rows: rows, bf: bf, co2: co2, count: count, area: area,
       panelsCost: panelsCost, hard: hard, mid: mid, low: mid * 0.85, high: mid * 1.2, clt: clt,
       // shell = walls 12% + roofing 10% + windows/doors/siding 16% of "rest of build", plus their share of builder overhead (20% x 38/80)
-      shell: ((panelsCost || 0) + siteCost + totalArea * restRate * 0.475) * (1 + s.aSoft / 100), restRate: restRate,
+      shell: ((panelsCost || 0) + siteCost + totalArea * restRate * 0.475) * (1 + softPct / 100), restRate: restRate, softPct: softPct,
       n: n, totalArea: totalArea, siteCost: siteCost, panelSf: panelSf,
       places: places, siteWork: siteWork, utilCost: utilCost, runFt: runFt
     };
@@ -1181,6 +1202,9 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     $("wid").setAttribute("aria-valuetext", s.W + " feet");
     $("pitch").setAttribute("aria-valuetext", s.pitch + " in 12");
     $("pg").setAttribute("aria-valuetext", s.pg + " pounds per square foot");
+    var adu = s.use === "adu";
+    $("htLab").parentNode.hidden = !adu;
+    $("unLab").textContent = adu ? "Homes on this lot" : "Buildings on this lot";
     $("dimChip").textContent = s.L + " × " + s.W + " ft · " + fmt(c.area) + " ft²";
     $("locSub").textContent = s.loc.state + " · " + (s.loc.trpa ? "Inside the Tahoe Basin, so TRPA rules apply" : "Outside the Tahoe Basin, so TRPA coverage rules don't apply");
     $("lcField").hidden = !s.loc.trpa || !!s.lot;
@@ -1211,25 +1235,32 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       stat("Roof panels", roofTxt, roofSub) +
       stat("Panels", fmt(c.count), c.clt ? "CLT layout preview" : fmt(c.bf) + " board ft of local lumber") +
       stat("Carbon stored", c.clt ? "Pending" : "≈ " + fmt(c.co2, 1) + " t CO₂e", c.clt ? "Needs certified panel data" : "Held in the wood for the building's life") +
-      stat("Move-in ready", c.clt ? "Pending" : "from " + money(c.low), c.clt ? "Waiting on CLT panel pricing" : "Weathertight shell from " + money(c.shell * 0.85) + (c.n > 1 ? " · both homes" : "")) +
+      stat(s.use === "shed" ? "Weathertight shed" : s.use === "workshop" ? "Finished workshop" : "Move-in ready", c.clt ? "Pending" : "from " + money(s.use === "shed" ? c.shell * 0.85 : c.low),
+           c.clt ? "Waiting on CLT panel pricing" : (s.use === "shed" ? "Timber kit from " + money((c.panelsCost || 0) * 0.9) : "Weathertight shell from " + money(c.shell * 0.85)) + (c.n > 1 ? " · both" : "")) +
       stat("Design roof snow", fmt(c.pf) + " psf", "≈ " + fmt(c.snowDepth, 1) + " ft of settled snow at service level");
     // checks
     var checks = [];
     if (c.n > 1) {
-      checks.push(["info", "Two homes on one lot", "TRPA's code (section 21.3.2) allows up to two ADUs on a parcel with a single-family or multi-family home. Each unit needs its own development right or bonus unit."]);
+      checks.push(adu ? ["info", "Two homes on one lot", "TRPA's code (section 21.3.2) allows up to two ADUs on a parcel with a single-family or multi-family home. Each unit needs its own development right or bonus unit."]
+                        : ["info", "Two buildings on one lot", "Both count toward land coverage and setbacks. ADU unit limits don't apply to sheds or workshops."]);
       if (c.place && c.place.fits && c.place2) {
         if (c.place2.fits) checks.push(["ok", "Both homes fit", "The second home also clears the lot lines, the existing house and the first home."]);
         else checks.push(["warn", "Only one home fits at this size", "There isn't room for a second home with these setbacks and separations. Try a smaller footprint."]);
       }
     }
-    if (s.housing === "work") checks.push(["info", "Workforce unit", "A deed restriction to achievable, moderate or affordable incomes can let a unit use a TRPA residential bonus unit instead of a scarce allocation. Some deed-restricted units also get coverage and density incentives. Eligibility depends on the parcel, so confirm with TRPA."]);
+    if (!adu) { /* housing-type notes apply to homes only */ } else if (s.housing === "work") checks.push(["info", "Workforce unit", "A deed restriction to achievable, moderate or affordable incomes can let a unit use a TRPA residential bonus unit instead of a scarce allocation. Some deed-restricted units also get coverage and density incentives. Eligibility depends on the parcel, so confirm with TRPA."]);
     else if (s.loc.trpa) checks.push(["info", "Development right needed", "A market-rate ADU in the basin needs a TRPA residential allocation or a development right. Allocations are capped each year in every jurisdiction. Switch to Workforce to see the deed-restricted path."]);
-    if (s.loc.state === "CA" && c.area < 750) checks.push(["ok", "Under 750 ft²: no impact fees", "California ADU law bars impact fees on ADUs under 750 ft². Utility and district capacity charges can still apply."]);
+    if (adu && s.loc.state === "CA" && c.area < 750) checks.push(["ok", "Under 750 ft²: no impact fees", "California ADU law bars impact fees on ADUs under 750 ft². Utility and district capacity charges can still apply."]);
     if (c.place) {
       if (c.place.fits) checks.push(["ok", "Fits on this lot", "The planner found a spot at least " + SETBACK + " ft from every lot line and " + fmt(Math.min(c.place.clear, 60)) + " ft from the existing house. Setbacks here are placeholders until local setbacks are connected."]);
       else checks.push(["warn", "Doesn't fit on this lot at this size", "No spot keeps " + SETBACK + " ft from the lot lines and " + SEPARATION + " ft from the existing house. Try a smaller footprint or a different shape. The 3D view shows the home at the lot's center for reference."]);
     }
-    if (s.lot && s.lot.allowedCoverageSqft != null) {
+    // TRPA coverage exemption for non-permanent sheds (TRPA land coverage exemptions packet)
+    var nonSensitive = s.lot ? ((s.lot.ipesScore != null && s.lot.ipesScore >= 726) || /^[4-7]/.test(String(s.lot.landCapabilityClass || ""))) : !!(s.landClass && /^[4-7]/.test(s.landClass.id));
+    var covExempt = s.use === "shed" && s.floor === "skids" && s.loc.trpa && c.area <= 120 && c.area * c.n <= 0.02 * s.lotArea && nonSensitive;
+    if (s.use === "shed" && s.loc.trpa && !covExempt) checks.push(["info", "Counts toward land coverage", s.floor !== "skids" ? "On a permanent foundation a shed counts toward TRPA land coverage. On skids it may qualify for an exemption." : c.area > 120 ? "Over 120 ft², so TRPA's coverage exemption for sheds doesn't apply." : "TRPA's shed exemption needs non-sensitive land (capability classes 4–7 or IPES 726 and up), and the shed can't exceed 2% of it."]);
+    if (covExempt) checks.push(["ok", "May be exempt from TRPA land coverage", "A shed on skids with no permanent foundation, up to 120 ft² and no more than 2% of the parcel's non-sensitive land, can be exempt from land coverage on capability classes 4–7 or IPES 726 and up. It still goes through TRPA's exemption declaration."]);
+    else if (s.lot && s.lot.allowedCoverageSqft != null) {
       var remainingT = s.lot.allowedCoverageSqft - s.existCov, fpT = s.L * s.W * c.n;
       if (fpT <= remainingT) checks.push(["ok", "Land coverage fits", "This home covers " + fmt(fpT) + " ft². TRPA estimates " + fmt(s.lot.allowedCoverageSqft) + " ft² of allowed coverage for this parcel, and about " + fmt(s.existCov) + " ft² is already used, leaving " + fmt(remainingT) + " ft². Coverage is only an estimate until TRPA verifies the site."]);
       else checks.push(["warn", "Over allowed land coverage", "This home covers " + fmt(fpT) + " ft², but only about " + fmt(Math.max(0, remainingT)) + " ft² of TRPA's estimated allowed coverage is left. Options include a smaller footprint, removing old coverage, or buying and transferring coverage through TRPA."]);
@@ -1242,7 +1273,11 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     } else {
       checks.push(["info", "Local zoning applies", s.loc.juris + " sets lot coverage and setbacks here. TRPA rules don't apply outside the basin."]);
     }
-    if (s.loc.state === "CA") {
+    if (!adu) {
+      if (s.use === "shed" && c.area <= 120) checks.push(s.loc.state === "CA" ? ["ok", "No building permit needed", "California's residential code exempts one-story detached sheds up to 120 ft² from a building permit. Zoning, setbacks and snow loads still apply."] : ["info", "Shed permit exemption", "Nevada counties exempt small sheds from building permits up to a size set in county code. Confirm with " + s.loc.juris + "."]);
+      else checks.push(["info", "Building permit needed", (s.use === "shed" ? "Over 120 ft², so this shed needs a building permit. " : "") + "As a non-habitable accessory structure it needs a building permit with snow-load engineering, and local size and height limits for accessory structures apply. It can't be lived in. Converting it to an ADU later means meeting ADU code for insulation, egress and energy. Permitting it as an ADU from the start and building in phases avoids re-permitting."]);
+      checks.push(["info", "Height " + fmt(c.ridge, 1) + " ft", "Height limits for accessory structures vary and are often lower than for ADUs. Confirm " + (s.loc.trpa ? "TRPA and " : "") + s.loc.juris + " limits."]);
+    } else if (s.loc.state === "CA") {
       if (c.area <= 1200) checks.push(["ok", "Within California's ADU size limit", fmt(c.area) + " ft² is under the 1,200 ft² state maximum for a detached ADU."]);
       else checks.push(["bad", "Too large for a detached ADU", fmt(c.area) + " ft² is over California's 1,200 ft² maximum. This design would need to be permitted as a separate home."]);
       var heightAuth = s.loc.trpa ? "TRPA and " + s.loc.juris : s.loc.juris;
@@ -1270,12 +1305,14 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     }).join("");
 
     // cost
-    var soft = c.hard * s.aSoft / 100;
+    var soft = c.hard * c.softPct / 100;
     var TIERS = [
       ["Timber kit", "Local NLT roof and floor panels, cut to the 4-ft grid and ready to deliver. Beams and posts are quoted separately.", (c.panelsCost || 0) * 0.9, (c.panelsCost || 0) * 1.1, false],
       ["Weathertight shell", "The kit plus site work, utilities, foundation, walls, insulated roof, windows, doors and fire-rated siding, with design and permits. You or your builder finish the inside.", c.shell * 0.85, c.shell * 1.2, false],
       ["Move-in ready", "Everything in the shell plus heating, plumbing, electrical, kitchen, bath, " + ({ basic: "rental-grade (durable, minimum residential or commercial fittings)", standard: "standard", premium: "premium" }[radioVal("fl")] || "rental-grade") + " interior finishes and builder overhead." + (radioVal("fl") === "basic" ? " The NLT ceiling stays exposed as the finished ceiling." : ""), c.low, c.high, true]
     ];
+    if (s.use === "shed") { TIERS.pop(); TIERS[1][4] = true; }
+    else if (s.use === "workshop") TIERS[2] = ["Finished workshop", "Everything in the shell plus power, lighting, a basic interior and builder overhead. Not for living in.", c.low, c.high, true];
     $("tiers").innerHTML = TIERS.map(function (t) {
       var price = c.clt ? "Pending<small>needs CLT pricing</small>" : "from " + money(t[2]) + "<small>" + money(t[2]) + "–" + money(t[3]) + " · from $" + fmt(t[2] / c.totalArea) + "/ft²</small>";
       return '<li class="tier' + (t[4] ? " main" : "") + '"><h3>' + esc(t[0]) + (c.n > 1 ? " · 2 homes" : "") + '</h3><span class="from">' + price + "</span><p>" + esc(t[1]) + "</p></li>";
@@ -1285,7 +1322,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       line("Rest of build (" + fmt(c.totalArea) + " ft² × $" + fmt(c.restRate) + ")", money(c.totalArea * c.restRate)) +
       line("Site work and foundation" + (c.n > 1 ? " (2 homes)" : ""), money(c.siteWork)) +
       line((s.utilities === "separate" ? "Separate utility hookups" : "Utilities tied into the main house") + " (about " + fmt(c.runFt) + " ft of trench)", money(c.utilCost)) +
-      line("Design, engineering, permits (" + fmt(s.aSoft) + "%)", money(soft)) +
+      line("Design, engineering, permits (" + fmt(c.softPct, c.softPct % 1 ? 1 : 0) + "%)", money(soft)) +
       '<div class="cost-line total"><span>' + (c.clt ? "Range without CLT panels" : "Estimated range") + "</span><span>" + money(c.low) + " – " + money(c.high) + "</span></div>";
 
     // ---- rough material takeoff (quantities only; a builder's takeoff from real drawings replaces this)
@@ -1320,19 +1357,19 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       toAdd("Walls", "2x6 plates", Math.ceil(perim * 3) * nU, "lin ft", "bottom plate and double top plate");
       if (s.exterior === "siding") toAdd("Walls", "Wall sheathing, 4×8 plywood", sheets(netWall) * nU, "sheets");
     }
-    toAdd("Walls", "Exterior insulation boards, 4×8", sheets(netWall) * nU, "sheets", "continuous insulation behind the cladding");
+    if (s.use !== "shed") toAdd("Walls", "Exterior insulation boards, 4×8", sheets(netWall) * nU, "sheets", "continuous insulation behind the cladding");
     toAdd("Walls", "Weather barrier", Math.ceil(netWall * 1.1) * nU, "ft²");
     toAdd("Walls", { live: "Live-edge wood boards", ply: "Exterior plywood panels", siding: "Fiber cement or metal siding" }[s.exterior] || "Cladding", Math.ceil(netWall * 1.1) * nU, "ft²", fmt(netWall) + " ft² of wall after openings" + (nU > 1 ? " per home" : ""));
     toAdd("Openings", "Windows", op.windows * nU, "windows", "about 3 × 4 ft each");
     toAdd("Openings", "Exterior doors", op.doors * nU, "doors", "about 3 × 7 ft");
     toAdd("Roof", "Metal roofing", Math.ceil(roofArea / 100 * 1.1) * nU, "squares", fmt(roofArea) + " ft² of roof including overhangs" + (nU > 1 ? " per home" : ""));
     toAdd("Roof", "Roof underlayment", Math.ceil(roofArea * 1.1) * nU, "ft²");
-    toAdd("Roof", "Roof insulation boards, 4×8", sheets(roofArea) * 2 * nU, "sheets", "two layers over the NLT deck (placeholder)");
-    toAdd("Interior", "Floor finish", Math.ceil(c.area * 1.1) * nU, "ft²", radioVal("fl") === "basic" ? "rental-grade vinyl plank" : "finish to match the finish level");
-    if (s.exterior !== "live") toAdd("Interior", "Drywall on exterior walls, 4×8", sheets(netWall) * nU, "sheets", "interior partitions not included");
+    if (s.use !== "shed") toAdd("Roof", "Roof insulation boards, 4×8", sheets(roofArea) * 2 * nU, "sheets", "two layers over the NLT deck (placeholder)");
+    if (adu) toAdd("Interior", "Floor finish", Math.ceil(c.area * 1.1) * nU, "ft²", radioVal("fl") === "basic" ? "rental-grade vinyl plank" : "finish to match the finish level");
+    if (adu && s.exterior !== "live") toAdd("Interior", "Drywall on exterior walls, 4×8", sheets(netWall) * nU, "sheets", "interior partitions not included");
     toAdd("Interior", "Ceiling", "", "", "exposed NLT roof panels, no drywall");
-    var cy = s.floor === "crawl" ? perim * (0.67 * 2 + 1.67 * 0.83) / 27 : (c.area * 0.33 + perim * 1 * 1) / 27;
-    toAdd("Foundation", "Concrete", Math.round(cy * nU * 10) / 10, "cu yd", s.floor === "crawl" ? "perimeter stem wall and footing, plus piers" : "4 in slab with thickened edges");
+    if (s.floor === "skids") toAdd("Foundation", "Pressure-treated timber skids", (Math.floor(s.W / 4) + 1) * nU, "pieces", "about " + fmt(s.L) + " ft long, on gravel pads, no concrete");
+    else toAdd("Foundation", "Concrete", Math.round((s.floor === "crawl" ? perim * (0.67 * 2 + 1.67 * 0.83) / 27 : (c.area * 0.33 + perim * 1 * 1) / 27) * nU * 10) / 10, "cu yd", s.floor === "crawl" ? "perimeter stem wall and footing, plus piers" : "4 in slab with thickened edges");
     var lastG = "";
     $("takeoffBody").innerHTML = TO.map(function (r) {
       var head = r[0] !== lastG ? '<tr><td colspan="4" style="font-weight:700;padding-top:12px">' + esc(r[0]) + "</td></tr>" : "";
@@ -1384,6 +1421,10 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     if (J.indexOf("Washoe") !== -1) add("info", "Check lot-size eligibility", "Sources conflict on Washoe's minimum lot size for an ADU at Incline Village. Confirm with Washoe County and TRPA before designing.", "https://www.trpa.gov/adus/");
     add("info", "Don't count on heat-pump rebates", "In 2026 most rebates don't cover new ADUs. TECH Clean California is fully reserved, and Liberty's rebate only covers replacements.", "https://techcleanca.com/incentives/single-family-incentives/");
     if (CA) add("info", "Keep a 5-ft noncombustible strip", "California's new Zone 0 wildfire rules call for gravel or other noncombustible ground within 5 ft of the home, with no attached wood fencing.", "https://www.publicceo.com/2026/09/california-board-of-forestry-adopts-emergency-zone-0-regulations-under-ab-3074/");
+    if (!adu) {
+      SV = [["info", "Most savings here apply to homes", "Fee waivers and housing programs are for ADUs and workforce units. A workshop usually pays standard permit fees, and a small shed often needs no building permit at all.", "https://www.trpa.gov/wp-content/uploads/documents/archive/Coverage_Exemption_Process_Info_Sheet.pdf"]];
+      if (CA) SV.push(["info", "Keep a 5-ft noncombustible strip", "California's new Zone 0 wildfire rules apply around any structure.", "https://www.publicceo.com/2026/09/california-board-of-forestry-adopts-emergency-zone-0-regulations-under-ab-3074/"]);
+    }
     $("savings").innerHTML = SV.map(function (k) {
       var lab = { ok: "Saves", warn: "Check", info: "Tip" }[k[0]];
       return '<li class="check"><span class="badge ' + k[0] + '">' + lab + '</span><span><b>' + esc(k[1]) + '</b><span class="sub">' + esc(k[2]) + ' <a href="' + k[3] + '" target="_blank" rel="noopener">Source</a></span></span></li>';
@@ -1741,20 +1782,25 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     M.glass.opacity = view.structure ? 0.1 : 0.55;
 
     // foundation
-    var fh = s.floor === "crawl" ? y0 - c.tFloor : y0;
-    g.add(box(L, fh, 0.67, M.concrete, 0, fh / 2, W / 2 - 0.33));
-    g.add(box(L, fh, 0.67, M.concrete, 0, fh / 2, -W / 2 + 0.33));
-    g.add(box(0.67, fh, W - 1.34, M.concrete, L / 2 - 0.33, fh / 2, 0));
-    g.add(box(0.67, fh, W - 1.34, M.concrete, -L / 2 + 0.33, fh / 2, 0));
+    var fh = (s.floor === "crawl" || s.floor === "skids") ? y0 - c.tFloor : y0;
+    if (s.floor === "skids") {
+      var nsk = Math.floor(W / 4) + 1;
+      for (var sk = 0; sk < nsk; sk++) g.add(box(L, fh, 0.5, M.glulam, 0, fh / 2, -W / 2 + 0.25 + sk * (W - 0.5) / (nsk - 1)));
+    } else {
+      g.add(box(L, fh, 0.67, M.concrete, 0, fh / 2, W / 2 - 0.33));
+      g.add(box(L, fh, 0.67, M.concrete, 0, fh / 2, -W / 2 + 0.33));
+      g.add(box(0.67, fh, W - 1.34, M.concrete, L / 2 - 0.33, fh / 2, 0));
+      g.add(box(0.67, fh, W - 1.34, M.concrete, -L / 2 + 0.33, fh / 2, 0));
+    }
     if (s.floor === "slab") g.add(box(L - 1.34, 0.3, W - 1.34, M.concrete, 0, fh - 0.15, 0, false));
 
     // floor panels + girders
-    if (s.floor === "crawl") {
+    if (s.floor === "crawl" || s.floor === "skids") {
       var ft = c.tFloor || 0.6;
       for (var x = -L / 2; x < L / 2 - 0.01; x += MODULE) {
         g.add(box(MODULE - 0.04, ft, W, panelMat, x + MODULE / 2, y0 - ft / 2, 0));
       }
-      if (c.floorD) for (var k = 1; k < c.floorD.segments; k++) {
+      if (c.floorD && s.floor === "crawl") for (var k = 1; k < c.floorD.segments; k++) {
         var zg = -W / 2 + W * k / c.floorD.segments;
         g.add(box(L - 1.34, 1.0, 0.5, M.glulam, 0, y0 - ft - 0.5, zg));
         g.add(box(L - 1.34, y0 - ft - 1.0, 0.5, M.concrete, 0, (y0 - ft - 1.0) / 2, zg));
@@ -1886,7 +1932,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           if (wt > 0.1) [-1, 1].forEach(function (sg) {
             g.add(box(segL, wt, 0.5, M.nlt, sg * (half + segL / 2), y0 + wt / 2, z));
           });
-          if (s.floor === "crawl") { var fh3 = y0 - (c.tFloor || 0.6); if (fh3 > 0.1) g.add(box(L - 1.34, fh3, 0.67, M.concrete, 0, fh3 / 2, z)); }
+          if (s.floor === "crawl" || s.floor === "skids") { var fh3 = y0 - (c.tFloor || 0.6); if (fh3 > 0.1) g.add(box(L - 1.34, fh3, 0.67, M.concrete, 0, fh3 / 2, z)); }
           else g.add(box(L - 1.34, 0.9, 2, M.concrete, 0, 0.2, z, false));
         }
         if (btype === "log") {
@@ -1903,7 +1949,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
             } else g.add(box(btype === "nlt" || btype === "clt" ? 0.75 : 0.5, ph, btype === "nlt" || btype === "clt" ? 0.75 : 0.5, btype === "nlt" ? M.nlt : btype === "clt" ? M.clt : M.glulam, xP, y0 + ph / 2, z));
           }
           // load path to the ground: a pier in the crawlspace, or a thickened footing under the slab
-          if (s.floor === "crawl") { var fh2 = y0 - (c.tFloor || 0.6); if (fh2 > 0.1) g.add(box(1.5, fh2, 1.5, M.concrete, xP, fh2 / 2, z)); }
+          if (s.floor === "crawl" || s.floor === "skids") { var fh2 = y0 - (c.tFloor || 0.6); if (fh2 > 0.1) g.add(box(1.5, fh2, 1.5, M.concrete, xP, fh2 / 2, z)); }
           else g.add(box(2.5, 0.9, 2.5, M.concrete, xP, 0.2, z, false));
         });
       });
@@ -1971,6 +2017,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     $("viewSnow").setAttribute("aria-pressed", String(on)); setView(null, "snow", on);
   });
 
+  probeLive();
   try { three = initThree(); } catch (e) { three = null; }
   if (!three) $("stageFallback").hidden = false;
   update();
