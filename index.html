@@ -522,6 +522,19 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       </div>
     </section>
 
+    <details id="takeoffDetails">
+      <summary>Material takeoff (rough quantities)</summary>
+      <div class="body">
+        <p class="note">Rough quantities worked out from the design, for discussion. They're counted for every home on the lot, with about 10% waste on sheet goods and finishes. A builder's takeoff from real drawings replaces this. Prices per line can be added later.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Item</th><th class="r">Qty</th><th>Unit</th><th>Note</th></tr></thead>
+            <tbody id="takeoffBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+
     <details id="assumpDetails">
       <summary>Price and engineering assumptions</summary>
       <div class="body">
@@ -1275,6 +1288,58 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       line("Design, engineering, permits (" + fmt(s.aSoft) + "%)", money(soft)) +
       '<div class="cost-line total"><span>' + (c.clt ? "Range without CLT panels" : "Estimated range") + "</span><span>" + money(c.low) + " – " + money(c.high) + "</span></div>";
 
+    // ---- rough material takeoff (quantities only; a builder's takeoff from real drawings replaces this)
+    var TO = [], nU = c.n || 1, OVH = OVERHANG, perim = 2 * (s.L + s.W);
+    var roofArea = s.roof === "gable" ? 2 * (s.L + 2 * OVH) * ((s.W / 2 + OVH) / Math.cos(c.theta)) : (s.L + 2 * OVH) * ((s.W + 2 * OVH) / Math.cos(c.theta));
+    var infill = s.roof === "gable" ? s.W * c.rise : s.roof === "shed" ? s.W * c.rise + s.L * c.rise : s.L * c.rise;
+    var op = openingCounts(s.L, s.W), netWall = Math.max(0, perim * s.H + infill - op.windows * 12 - op.doors * 21);
+    var sheets = function (a) { return Math.ceil(a / 32 * 1.1); };
+    var toAdd = function (grp, item, qty, unit, note) { TO.push([grp, item, qty, unit, note || ""]); };
+    var panelCount = c.rows.reduce(function (a, r) { return a + r.qty; }, 0);
+    toAdd("Structure", c.clt ? "CLT panels" : "NLT panels", panelCount, "panels", c.clt ? "sizes in the panel list" : fmt(c.panelSf) + " ft² of panel, sizes in the panel list");
+    if (!c.clt) {
+      var nailsTot = c.rows.reduce(function (a, r) { return r.lumber ? a + r.qty * (r.w * 12 / 1.5) * Math.floor(r.len * 12 / 10) * 2 : a; }, 0);
+      toAdd("Structure", "NLT nails", Math.round(nailsTot / 100) * 100, "nails", "2 every 10 in along each board");
+    }
+    if (c.beam) {
+      var segs = c.roofD ? c.roofD.segments : 1, lines = s.roof === "gable" ? 1 + 2 * (segs - 1) : Math.max(1, segs - 1);
+      if (c.beam.type === "ties") {
+        var rods = 0; for (var xr = -s.L / 2 + (c.beam.spacing || 4); xr < s.L / 2 - 0.5; xr += (c.beam.spacing || 4)) rods++;
+        toAdd("Structure", "Steel tie rods" + (c.beam.rod ? ", " + ({ 0.75: "¾", 0.875: "⅞", 1: "1", 1.25: "1¼", 1.5: "1½", 1.75: "1¾", 2: "2" }[c.beam.rod] || inches(c.beam.rod)) + " in" : ""), rods * nU, "rods", "about " + fmt(s.W - 1) + " ft long, with end plates");
+      } else if (c.beam.type === "wall") {
+        toAdd("Structure", "Center bearing wall", Math.round((s.L - 1) * lines * nU), "lin ft", "with a header over the doorway");
+      } else {
+        var bsz = c.beam.type === "log" ? inches(c.beam.d) + " in diameter log" : c.beam.type === "nlt" ? c.beam.plies + "-ply 2x12 NLT beam" : c.beam.type === "clt" ? "6⅞ × " + inches(c.beam.d) + " in CLT beam" : inches(c.beam.b) + " × " + inches(c.beam.d) + " in glulam";
+        toAdd("Structure", "Ridge and beam lines: " + bsz, lines * nU, "pieces", "about " + fmt(s.L - 1) + " ft each");
+        if (c.beam.posts.length) toAdd("Structure", "Posts", c.beam.posts.length * lines * nU, "posts", "about " + fmt(s.H + c.rise) + " ft tall, each on its own pier or footing");
+      }
+    }
+    if (s.exterior === "live") toAdd("Walls", "Wall structure", "", "", "NLT wall panels (in the panel list)");
+    else {
+      toAdd("Walls", "2x6 studs at 16 in", (Math.ceil(perim * 0.75) + 3 * (op.windows + op.doors) + 8) * nU, "pieces", "plus headers over openings");
+      toAdd("Walls", "2x6 plates", Math.ceil(perim * 3) * nU, "lin ft", "bottom plate and double top plate");
+      if (s.exterior === "siding") toAdd("Walls", "Wall sheathing, 4×8 plywood", sheets(netWall) * nU, "sheets");
+    }
+    toAdd("Walls", "Exterior insulation boards, 4×8", sheets(netWall) * nU, "sheets", "continuous insulation behind the cladding");
+    toAdd("Walls", "Weather barrier", Math.ceil(netWall * 1.1) * nU, "ft²");
+    toAdd("Walls", { live: "Live-edge wood boards", ply: "Exterior plywood panels", siding: "Fiber cement or metal siding" }[s.exterior] || "Cladding", Math.ceil(netWall * 1.1) * nU, "ft²", fmt(netWall) + " ft² of wall after openings" + (nU > 1 ? " per home" : ""));
+    toAdd("Openings", "Windows", op.windows * nU, "windows", "about 3 × 4 ft each");
+    toAdd("Openings", "Exterior doors", op.doors * nU, "doors", "about 3 × 7 ft");
+    toAdd("Roof", "Metal roofing", Math.ceil(roofArea / 100 * 1.1) * nU, "squares", fmt(roofArea) + " ft² of roof including overhangs" + (nU > 1 ? " per home" : ""));
+    toAdd("Roof", "Roof underlayment", Math.ceil(roofArea * 1.1) * nU, "ft²");
+    toAdd("Roof", "Roof insulation boards, 4×8", sheets(roofArea) * 2 * nU, "sheets", "two layers over the NLT deck (placeholder)");
+    toAdd("Interior", "Floor finish", Math.ceil(c.area * 1.1) * nU, "ft²", radioVal("fl") === "basic" ? "rental-grade vinyl plank" : "finish to match the finish level");
+    if (s.exterior !== "live") toAdd("Interior", "Drywall on exterior walls, 4×8", sheets(netWall) * nU, "sheets", "interior partitions not included");
+    toAdd("Interior", "Ceiling", "", "", "exposed NLT roof panels, no drywall");
+    var cy = s.floor === "crawl" ? perim * (0.67 * 2 + 1.67 * 0.83) / 27 : (c.area * 0.33 + perim * 1 * 1) / 27;
+    toAdd("Foundation", "Concrete", Math.round(cy * nU * 10) / 10, "cu yd", s.floor === "crawl" ? "perimeter stem wall and footing, plus piers" : "4 in slab with thickened edges");
+    var lastG = "";
+    $("takeoffBody").innerHTML = TO.map(function (r) {
+      var head = r[0] !== lastG ? '<tr><td colspan="4" style="font-weight:700;padding-top:12px">' + esc(r[0]) + "</td></tr>" : "";
+      lastG = r[0];
+      return head + "<tr><td>" + esc(r[1]) + '</td><td class="r num">' + (r[2] === "" ? "" : fmt(r[2], r[2] % 1 ? 1 : 0)) + "</td><td>" + esc(r[3]) + '</td><td style="white-space:normal;color:var(--muted)">' + esc(r[4]) + "</td></tr>";
+    }).join("");
+
     var REST = [
       ["Walls, beams and hardware", 12, "Wall framing or panels, sheathing, glulam beams and posts, connectors, crane and erection labor"],
       ["Roofing and insulation", 10, "Rigid insulation over the NLT deck (Climate Zone 16 levels), metal or membrane roofing, snow guards"],
@@ -1359,6 +1424,15 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     }).join("");
   }
   function inches(v) { return String(Math.round(v * 1000) / 1000); }
+  // door and window counts, matching the 3D wall pattern on the 4-ft module
+  function openingCounts(L, W) {
+    var n = Math.round(L / MODULE), win = 2, doors = 1;          // one window in each end wall
+    for (var i = 0; i < n; i++) {
+      if (i !== 1 && (i % 2 === 1 || i === n - 2) && i !== 0 && i !== n - 1) win++;   // front wall (door at module 1)
+      if (i % 2 === 1 && i !== n - 1) win++;                                          // back wall
+    }
+    return { windows: win, doors: doors };
+  }
   function beamText(s, c) {
     var n = c.roofD.segments - 1;
     var t = s.roof === "gable" ? (n === 0 ? "Ridge beam" : "Ridge beam + " + (2 * n) + " purlins") : n + " beam line" + (n > 1 ? "s" : "");
