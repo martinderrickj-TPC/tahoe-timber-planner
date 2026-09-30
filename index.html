@@ -308,7 +308,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         <h2 id="h-lot"><span class="step">1</span> Your lot</h2>
         <div class="seg" role="radiogroup" aria-label="Lot source" id="lotModeSeg">
           <input type="radio" name="lotMode" id="lmSample" value="sample" checked><label for="lmSample">Real Tahoe lot<small>TRPA parcel data</small></label>
-          <input type="radio" name="lotMode" id="lmLive" value="live" hidden><label for="lmLive" id="lmLiveLab" hidden>Any address<small>live TRPA lookup</small></label>
+          <input type="radio" name="lotMode" id="lmLive" value="live" hidden><label for="lmLive" id="lmLiveLab" hidden>Search an address<small>live TRPA lookup</small></label>
           <input type="radio" name="lotMode" id="lmOwn" value="own"><label for="lmOwn">My own numbers<small>type them in</small></label>
         </div>
         <div class="field" id="liveBox" hidden>
@@ -321,6 +321,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         <div class="field" id="sampleBox">
           <label for="sampleLot">Sample lot</label>
           <select id="sampleLot"></select>
+          <label for="addrQ2" style="margin-top:6px">Or search any Tahoe Basin address</label>
+          <input type="search" id="addrQ2" placeholder="Street number and name" autocomplete="off">
           <dl class="facts" id="lotFacts"></dl>
           <span class="sub">Real parcels from <a href="https://maps.trpa.org/server/rest/services" target="_blank" rel="noopener">TRPA's public parcel service</a>. We've left out addresses and parcel numbers. The planner places the home on the lot at least 5 ft from the lot lines and 10 ft from the existing house, as close to the house as that allows to keep utility runs short. Both distances are placeholders.</span>
         </div>
@@ -690,7 +692,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
   function thin(r, max) { if (r.length <= max) return r; var k = Math.ceil(r.length / max); return r.filter(function (_, i) { return i % k === 0; }); }
   function probeLive() {
     if (document.getElementById("parcelData")) { $("lmLive").hidden = false; $("lmLiveLab").hidden = false; return; }
-    if (!window.__snapshotFiles) { tryLive(); return; }   // public site: search TRPA live, no built-in address list
+    if (!window.__snapshotFiles) { $("lmLive").hidden = false; $("lmLiveLab").hidden = false; return; }   // public site: search TRPA live, no built-in address list
     fetch("parcels.json").then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (d) {
       SNAP = d; $("lmLive").hidden = false; $("lmLiveLab").hidden = false;
       return fetch("buildings.json").then(function (r) { return r.ok ? r.json() : null; }).then(function (b) {
@@ -706,6 +708,17 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     }).catch(function () { /* sandboxed page: keep sample lots only */ });
   }
   var searchT = 0;
+  $("addrQ2").addEventListener("input", function (e) {
+    e.stopPropagation();
+    var v = $("addrQ2").value;
+    if (!v.trim()) return;
+    $("lmLive").hidden = false; $("lmLiveLab").hidden = false;
+    $("lmLive").checked = true;
+    $("addrQ").value = v; $("addrQ2").value = "";
+    scheduleUpdate();
+    $("addrQ").dispatchEvent(new Event("input", { bubbles: true }));
+    setTimeout(function () { $("addrQ").focus(); try { $("addrQ").setSelectionRange(v.length, v.length); } catch (err) {} }, 0);
+  });
   $("addrQ").addEventListener("input", function () {
     clearTimeout(searchT);
     var q = $("addrQ").value.trim().toUpperCase().replace(/[^A-Z0-9 .#-]/g, "");
