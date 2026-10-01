@@ -252,6 +252,13 @@ details > .body { padding: 0 16px 16px; display: grid; gap: 12px; }
 .tier .from { font-family: var(--font-display); font-size: 19px; font-weight: 700; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .tier .from small { display: block; font-family: var(--font-body); font-size: 12px; font-weight: 500; color: var(--muted); }
 .tier p { grid-column: 1 / -1; font-size: 13px; color: var(--muted); }
+.lib { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.lib button { font: inherit; text-align: left; cursor: pointer; background: var(--raised); color: var(--text); border: 1px solid var(--border-strong); border-radius: var(--r-sm); padding: 7px 9px; display: grid; gap: 1px; }
+.lib button b { font-size: 13.5px; }
+.lib button span { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.lib button i { font-style: normal; font-size: 11.5px; font-weight: 700; }
+.lib button i.ok { color: var(--ok); } .lib button i.bad { color: var(--bad); } .lib button i.warn { color: var(--warn); }
+.lib button[aria-pressed="true"] { border-color: var(--seg-on); box-shadow: inset 0 0 0 1px var(--seg-on); }
 .clt-banner { background: var(--info-bg); color: var(--info); border-radius: var(--r-sm); padding: 10px 12px; font-size: 13px; }
 
 .involve { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
@@ -350,6 +357,11 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
 
       <section class="card" aria-labelledby="h-shape">
         <h2 id="h-shape"><span class="step">2</span> Size and shape</h2>
+        <div class="field">
+          <span class="lab">Start from a design</span>
+          <div class="lib" id="designLib"></div>
+          <span class="sub" id="libNote">Standard footprints on the 4-ft module. Pick one to load it, then adjust anything below.</span>
+        </div>
         <div class="field">
           <span class="lab" id="useLab">Use</span>
           <div class="seg" role="radiogroup" aria-labelledby="useLab">
@@ -1443,6 +1455,26 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       return '<li class="check"><span class="badge ' + k[0] + '">' + lab + '</span><span><b>' + esc(k[1]) + '</b><span class="sub">' + esc(k[2]) + ' <a href="' + k[3] + '" target="_blank" rel="noopener">Source</a></span></span></li>';
     }).join("");
 
+    // design library: standard footprints, each checked against the selected lot
+    var DESIGNS = [
+      ["Garden shed", 12, 8, "useShed", "fdSkids"], ["Studio", 20, 16, "useAdu", "fdCrawl"], ["Workshop", 24, 16, "useWork", "fdSlab"],
+      ["Studio plus", 24, 20, "useAdu", "fdCrawl"], ["One bedroom", 28, 24, "useAdu", "fdCrawl"], ["Two bedroom", 36, 20, "useAdu", "fdCrawl"]
+    ];
+    var allowedCov = s.lot && s.lot.allowedCoverageSqft != null ? s.lot.allowedCoverageSqft : (s.loc.trpa && s.landClass ? s.lotArea * s.landClass.pct / 100 : null);
+    $("designLib").innerHTML = DESIGNS.map(function (d, i) {
+      var ft2 = d[1] * d[2], st = "", cls = "";
+      if (s.lot && s.lot.outline && s.lot.outline.length > 2) {
+        var pl = placeHome(s.lot, d[1], d[2], [], "");
+        var shedExempt = d[3] === "useShed" && ft2 <= 120;
+        if (!pl.fits) { st = "Doesn't fit on this lot"; cls = "bad"; }
+        else if (!shedExempt && allowedCov != null && ft2 > allowedCov - s.existCov) { st = "Fits, over coverage"; cls = "warn"; }
+        else { st = "Fits this lot"; cls = "ok"; }
+      } else if (allowedCov != null && d[3] !== "useShed" && ft2 > allowedCov - s.existCov) { st = "Over coverage"; cls = "warn"; }
+      var on = s.L === d[1] && s.W === d[2] && $(d[3]).checked;
+      return '<button type="button" data-i="' + i + '" aria-pressed="' + on + '"><b>' + d[0] + '</b><span>' + d[1] + ' × ' + d[2] + ' ft · ' + fmt(ft2) + ' ft²</span>' + (st ? '<i class="' + cls + '">' + st + '</i>' : '') + '</button>';
+    }).join("");
+    $("designLib").dataset.designs = JSON.stringify(DESIGNS);
+
     // one short, debounced screen-reader update
     var flags = checks.filter(function (k) { return k[0] === "warn" || k[0] === "bad"; }).map(function (k) { return k[1]; });
     var msg = s.L + " by " + s.W + " feet, " + fmt(c.area) + " square feet. Roof " + roofTxt + ". " + (c.clt ? "Cost pending." : "Move-in ready from " + money(c.low) + ", weathertight shell from " + money(c.shell * 0.85) + ".") + (flags.length ? " " + flags.join(". ") + "." : "");
@@ -2025,6 +2057,13 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     $("viewStructure").setAttribute("aria-pressed", "true"); $("viewExterior").setAttribute("aria-pressed", "false"); setView(null, "structure", true);
   });
   $("replayBuild").addEventListener("click", function () { if (three) { three.cancelAnim(); three.playBuild(); } });
+  $("designLib").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-i]"); if (!b) return;
+    var d = JSON.parse($("designLib").dataset.designs)[+b.getAttribute("data-i")];
+    $("len").value = d[1]; $("wid").value = d[2]; $(d[3]).checked = true; $(d[4]).checked = true;
+    $("rfGable").checked = true; $("pitch").value = 4; if (d[3] === "useShed") $("un1").checked = true;
+    scheduleUpdate();
+  });
   $("viewSnow").addEventListener("click", function () {
     var on = $("viewSnow").getAttribute("aria-pressed") !== "true";
     $("viewSnow").setAttribute("aria-pressed", String(on)); setView(null, "snow", on);
