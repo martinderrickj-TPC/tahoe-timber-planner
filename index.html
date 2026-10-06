@@ -322,7 +322,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           <label for="addrQ">Street address in the Tahoe Basin</label>
           <input type="search" id="addrQ" placeholder="Street number and name" autocomplete="off">
           <ul class="results" id="addrResults"></ul>
-          <span class="sub" id="liveStatusMsg">Type at least 4 characters. Results come straight from TRPA's public parcel service, one search at a time. Nothing you type is stored.</span>
+          <span class="sub" id="liveStatusMsg">Type at least 4 characters. Results come straight from TRPA's public parcel service, one search at a time. If TRPA has no match, the address goes to Esri's public geocoder to find where it is. Nothing you type is stored.</span>
           <dl class="facts" id="liveFacts"></dl>
         </div>
         <div class="field" id="sampleBox">
@@ -626,7 +626,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     { id: "kingsbeach", name: "Kings Beach", juris: "Placer County", state: "CA", trpa: true },
     { id: "incline", name: "Incline Village", juris: "Washoe County", state: "NV", trpa: true },
     { id: "zephyr", name: "Zephyr Cove / Stateline", juris: "Douglas County", state: "NV", trpa: true },
-    { id: "truckee", name: "Truckee", juris: "Town of Truckee", state: "CA", trpa: false }
+    { id: "truckee", name: "Truckee", juris: "Town of Truckee", state: "CA", trpa: false },
+    { id: "eastplacer", name: "Olympic Valley / Alpine Meadows / Northstar", juris: "Placer County", state: "CA", trpa: false }
   ];
   // TRPA base allowable land coverage by land capability (Bailey) class
   var LAND_CLASSES = [
@@ -734,12 +735,12 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
   $("addrQ").addEventListener("input", function () {
     clearTimeout(searchT);
     var q = $("addrQ").value.trim().toUpperCase().replace(/[^A-Z0-9 .#-]/g, "");
-    if (q.length < 4) { $("addrResults").innerHTML = ""; return; }
+    if (q.length < 4) { searchSeq++; $("addrResults").innerHTML = ""; return; }
     var snap = snapshot();
     if (snap) {
       var hits = [];
       for (var i = 0; i < snap.p.length && hits.length < 8; i++) if (snap.p[i][0].indexOf(q) !== -1) hits.push(i);
-      $("liveStatusMsg").textContent = hits.length ? "Pick a parcel." : "No residential parcel in the basin matches that. Try the street number and name only.";
+      $("liveStatusMsg").textContent = hits.length ? "Pick a parcel." : "No residential parcel in the Tahoe Basin matches that. Try the street number and name only. For Truckee, Olympic Valley or Northstar, use My own numbers.";
       $("addrResults").innerHTML = hits.map(function (i) {
         var r = snap.p[i];
         return '<li><button type="button" data-idx="' + i + '">' + esc(r[0]) + " · " + esc(snap.juris[r[1]][0]) + "</button></li>";
@@ -747,17 +748,59 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       return;
     }
     searchT = setTimeout(function () {
+      var seq = ++searchSeq;
       $("liveStatusMsg").textContent = "Searching TRPA parcels…";
       trpa("Zoning/MapServer/1/query", { where: "UPPER(APO_ADDRESS) LIKE '%" + q.replace(/'/g, "''") + "%'", outFields: "APN,APO_ADDRESS,JURISDICTION", resultRecordCount: 8, returnGeometry: "false", orderByFields: "APO_ADDRESS" })
         .then(function (d) {
+          if (seq !== searchSeq) return;
           var f = (d.features || []).filter(function (x) { return x.attributes.APN; });
-          $("liveStatusMsg").textContent = f.length ? "Pick a parcel." : "No basin parcel matches that. Try the street number and name only.";
+          if (!f.length) { geocodeFallback(q, seq); return; }
+          $("liveStatusMsg").textContent = "Pick a parcel.";
           $("addrResults").innerHTML = f.map(function (x) {
             var a = x.attributes, j = JURIS[a.JURISDICTION] || [a.JURISDICTION];
             return '<li><button type="button" data-apn="' + esc(a.APN) + '" data-addr="' + esc(a.APO_ADDRESS || "") + '">' + esc(a.APO_ADDRESS || "(no address)") + " · " + esc(j[0]) + "</button></li>";
           }).join("");
         }).catch(function () { $("liveStatusMsg").textContent = "TRPA's service didn't answer. Try again in a moment."; });
     }, 350);
+  });
+  // TRPA has no match: find where the address is, then use the TRPA parcel there or explain it's outside the basin
+  var searchSeq = 0;
+  var GEOCODE = "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates";
+  function geocodeFallback(q, seq) {
+    var noMatch = function () { if (seq === searchSeq) { $("addrResults").innerHTML = ""; $("liveStatusMsg").textContent = "No Tahoe Basin parcel matches that. Try the street number and name only."; } };
+    $("liveStatusMsg").textContent = "TRPA has no parcel under that name. Checking where the address is…";
+    var ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, 12000);
+    fetch(GEOCODE + "?SingleLine=" + encodeURIComponent(q) + "&searchExtent=-120.45,38.65,-119.75,39.45&maxLocations=1&outFields=City,Subregion,Addr_type&outSR=4326&f=json", { signal: ctl.signal })
+      .then(function (r) { clearTimeout(t); return r.json(); })
+      .then(function (d) {
+        var c = (d.candidates || [])[0];
+        if (seq !== searchSeq) return;
+        if (!c || c.score < 90 || !/address/i.test(c.attributes.Addr_type || "")) { noMatch(); return; }
+        return trpa("Parcels/FeatureServer/0/query", { geometry: c.location.x + "," + c.location.y, geometryType: "esriGeometryPoint", inSR: 4326, spatialRel: "esriSpatialRelIntersects", outFields: "APN,APO_ADDRESS", returnGeometry: "false" })
+          .then(function (p) {
+            if (seq !== searchSeq) return;
+            var hit = (p.features || []).filter(function (x) { return x.attributes.APN; })[0];
+            if (hit) {
+              var a = hit.attributes;
+              $("liveStatusMsg").textContent = "TRPA lists the parcel at that spot under a different address. Pick it to load it.";
+              $("addrResults").innerHTML = '<li><button type="button" data-apn="' + esc(a.APN) + '" data-addr="' + esc(a.APO_ADDRESS || q) + '">' + esc(a.APO_ADDRESS || "(no address on file)") + "</button></li>";
+              return;
+            }
+            var city = c.attributes.City || "", county = c.attributes.Subregion || "";
+            var loc = /truckee/i.test(city) ? "truckee" : /placer/i.test(county) ? "eastplacer" : null;
+            $("liveStatusMsg").textContent = (city || "That address") + " is outside the Tahoe Basin, so TRPA has no parcel data for it and TRPA's coverage rules don't apply. " +
+              (loc === "eastplacer" ? "Mailing addresses here can say Tahoe City, but the lot itself is outside the basin. " : "") +
+              (loc ? "You can still plan there by typing in your lot size." : "This planner covers the Tahoe Basin, Truckee and eastern Placer County.");
+            $("addrResults").innerHTML = loc ? '<li><button type="button" data-own="' + loc + '">Use my own numbers for ' + esc(city || "this area") + "</button></li>" : "";
+          });
+      }).catch(noMatch);
+  }
+  $("addrResults").addEventListener("click", function (e) {
+    var bo = e.target.closest("button[data-own]");
+    if (!bo) return;
+    $("loc").value = bo.getAttribute("data-own"); $("lmOwn").checked = true;
+    $("addrResults").innerHTML = "";
+    scheduleUpdate();
   });
   $("addrResults").addEventListener("click", function (e) {
     var bi = e.target.closest("button[data-idx]");
