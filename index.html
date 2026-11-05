@@ -259,6 +259,8 @@ details > .body { padding: 0 16px 16px; display: grid; gap: 12px; }
 .lib button i { font-style: normal; font-size: 11.5px; font-weight: 700; }
 .lib button i.ok { color: var(--ok); } .lib button i.bad { color: var(--bad); } .lib button i.warn { color: var(--warn); }
 .lib button[aria-pressed="true"] { border-color: var(--seg-on); box-shadow: inset 0 0 0 1px var(--seg-on); }
+.handoff { display: grid; gap: 4px; margin: 10px 0; }
+.handoff a { justify-self: start; padding: 9px 14px; border-radius: var(--r-sm); background: var(--brand-fill); color: var(--on-brand); font-weight: 600; text-decoration: none; }
 .clt-banner { background: var(--info-bg); color: var(--info); border-radius: var(--r-sm); padding: 10px 12px; font-size: 13px; }
 
 .involve { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
@@ -500,6 +502,10 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           <span class="sub">All-electric with heat pumps, so there's no gas line or meter. Septic isn't an option in the Tahoe Basin. State law requires sewage to be piped out of the basin, so every home connects to sewer, and most parcels have public water rather than wells. The planner sites the home near the house to keep the utility trench short. Each water and sewer district decides whether a detached ADU may share hookups, and California law requires any ADU connection fee to be proportionate to the unit's size.</span>
         </div>
         <ul class="tiers" id="tiers"></ul>
+        <div class="handoff" id="navHandoff" hidden>
+          <a id="navLink" href="#" target="_blank" rel="noopener">Get my permit checklist</a>
+          <span class="sub">Opens the Tahoe Permit Navigator with this lot and design, including an application report with the forms and fees for each agency. Your address stays in your browser.</span>
+        </div>
         <details id="saveDetails">
           <summary>Ways to lower the cost</summary>
           <div class="body"><ul class="list note">
@@ -684,6 +690,51 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
   $("lmSample").addEventListener("input", syncLotInputs);
   syncLotInputs();
 
+  // ---------------- hand-off to the Tahoe Permit Navigator ----------------
+  // Shown only with ?navigator=1 while the Navigator is limited to team keys. The lot and design travel in the
+  // URL fragment, which is never sent to a server; the Navigator keeps the address and APN in the browser.
+  var NAV_PARAM = new URLSearchParams(location.search).get("navigator");
+  var NAV_URL = NAV_PARAM === "1" ? "http://34.83.148.83/" : /^http:\/\/localhost:\d+\/?$/.test(NAV_PARAM || "") ? NAV_PARAM.replace(/\/?$/, "/") : null;
+  var NAV_AREAS = { "City of South Lake Tahoe": "slt_city", "El Dorado County": "el_dorado_uninc", "Placer County": "placer_uninc", "Town of Truckee": "truckee_town", "Washoe County": "washoe_uninc", "Douglas County": "douglas_uninc" };
+  function handoffUrl(s, c) {
+    var area = NAV_AREAS[s.loc.juris];
+    if (!area) return null;
+    var lot = s.lot, footprint = s.L * s.W, answers = {};
+    var allowed = lot && lot.allowedCoverageSqft != null ? lot.allowedCoverageSqft : (!lot && s.loc.trpa && s.landClass ? s.lotArea * s.landClass.pct / 100 : null);
+    if (s.use === "adu") {
+      answers.adu_size = c.area < 500 ? "under_500" : c.area < 750 ? "from_500_to_749" : "from_750_to_1200";
+      answers.adu_count = s.units === 2 ? "two" : "one";
+      answers.workforce_deed = s.housing === "work" ? "yes" : "no";
+      if (area === "washoe_uninc" || area === "douglas_uninc") answers.lot_size = s.lotArea >= 43560 ? "one_acre_plus" : s.lotArea >= 12000 ? "from_12000" : "under_12000";
+    } else if (s.use === "shed") {
+      answers.shed_size = c.area <= 120 ? "up_to_120" : "over_120";
+      answers.shed_foundation = s.floor === "skids" ? "skids" : "permanent";
+    }
+    if (s.use !== "shed") answers.separate_utilities = s.utilities === "separate" ? "separate" : "shared";
+    if (s.loc.trpa && allowed != null && !(lot && lot.coverageUnknown)) answers.coverage_room = allowed - s.existCov >= footprint * c.n ? "enough" : "short";
+    if (s.loc.trpa && lot) answers.land_verified = lot.coverageBasis === "Estimate" ? "not_verified" : "verified";
+    if (s.loc.trpa && lot && lot.bmpCertificate != null) answers.bmp_status = lot.bmpCertificate ? "certificate" : "none";
+    var project = {
+      use: s.use, length_ft: s.L, width_ft: s.W, floor_area_sqft: c.area, footprint_sqft: footprint, height_ft: Math.round(c.ridge * 10) / 10, stories: 1,
+      foundation: { crawl: "Raised floor over a crawlspace", slab: "Concrete slab", skids: "Skids, no permanent foundation" }[s.floor],
+      roof: s.roof === "flat" ? "Low-slope" : (s.roof === "gable" ? "Gable, " : "Shed, ") + s.pitch + ":12 pitch",
+      ground_snow_load_psf: s.pg, jurisdiction: s.loc.juris, lot_sqft: s.lotArea, coverage_existing_sqft: lot && lot.coverageUnknown ? null : s.existCov, coverage_allowed_sqft: allowed
+    };
+    if (s.use === "adu") project.bedrooms = c.area >= 650 ? "1 to 2" : c.area >= 450 ? "1" : "Studio";
+    if (lot) { project.plan_area = lot.planName; project.zoning = lot.zoning; project.land_capability = lot.landCapabilityClass; project.ipes_score = lot.ipesScore; project.elevation_ft = lot.elevationFt; }
+    if (!c.clt) {
+      project.kit_low = (c.panelsCost || 0) * 0.9; project.kit_high = (c.panelsCost || 0) * 1.1;
+      project.shell_low = c.shell * 0.85; project.shell_high = c.shell * 1.2;
+      if (s.use !== "shed") { project.ready_low = c.low; project.ready_high = c.high; }
+      project.valuation = s.use === "shed" ? c.shell * 0.85 : c.low;
+    }
+    var payload = { v: 1, type: { adu: "build_adu", workshop: "build_workshop", shed: "build_shed" }[s.use], area: area, in_trpa: !!s.loc.trpa, answers: answers, project: project };
+    if (lot && lot.live) { payload.address = lot.community; payload.apn = lot.apn; payload.lat = lot.lat; payload.lon = lot.lon; }
+    var binary = "";
+    new TextEncoder().encode(JSON.stringify(payload)).forEach(function (b) { binary += String.fromCharCode(b); });
+    return NAV_URL + "#permit=" + btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
   // ---------------- live address lookup (works wherever the browser may reach TRPA) ----------------
   var TRPA = "https://maps.trpa.org/server/rest/services/";
   var M2FT = 3.280839895;
@@ -702,7 +753,24 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     return a ? [cx / (3 * a), cy / (3 * a)] : r[0];
   }
   function biggestRing(g) { return (g.rings || []).slice().sort(function (a, b) { return Math.abs(ringArea(b)) - Math.abs(ringArea(a)); })[0]; }
-  function thin(r, max) { if (r.length <= max) return r; var k = Math.ceil(r.length / max); return r.filter(function (_, i) { return i % k === 0; }); }
+  // Reduce a ring to at most max points without changing its shape (Douglas-Peucker). Dropping
+  // every other vertex shrank one complex lot from 87,336 to 38,639 ft2 and lost its buildings.
+  function simplifyRing(r, max) {
+    if (r.length <= max) return r;
+    var far = 0, farD = -1;
+    r.forEach(function (q, i) { var d = Math.hypot(q[0] - r[0][0], q[1] - r[0][1]); if (d > farD) { farD = d; far = i; } });
+    var loop = r.concat([r[0]]), tol = farD / 2000, keep;
+    function chain(from, to) {
+      var best = -1, bestD = tol;
+      for (var i = from + 1; i < to; i++) { var d = segDist(loop[i], loop[from], loop[to]); if (d > bestD) { bestD = d; best = i; } }
+      if (best !== -1) { chain(from, best); keep.push(best); chain(best, to); }
+    }
+    do {
+      keep = [0]; chain(0, far); keep.push(far); chain(far, r.length);
+      tol *= 1.5;
+    } while (keep.length > max);
+    return keep.map(function (i) { return loop[i]; });
+  }
   function probeLive() {
     if (document.getElementById("parcelData")) { $("lmLive").hidden = false; $("lmLiveLab").hidden = false; return; }
     if (!window.__snapshotFiles) { $("lmLive").hidden = false; $("lmLiveLab").hidden = false; return; }   // public site: search TRPA live, no built-in address list
@@ -865,19 +933,21 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         landCapabilityClass: caps.length ? caps.map(function (x) { return x.CAPABILITY + (x.Percent_Type != null && caps.length > 1 ? " (" + Math.round(x.Percent_Type <= 1 ? x.Percent_Type * 100 : x.Percent_Type) + "%)" : ""); }).join(" / ") : null,
         ipesScore: ip ? ip.IPESScore : null, baseCoveragePct: ip ? ip.BaseAllowableCoveragePercent : null,
         allowedCoverageSqft: allowed != null ? Math.round(allowed) : null, existingCoverageSqft: null, elevationFt: null,
-        outline: thin(ring.slice(0, -1), 120).map(toLocal), buildings: [], live: true
+        outline: simplifyRing(ring.slice(0, -1), 120).map(toLocal), buildings: [], live: true, apn: apn, bmpCertificate: null
       };
       liveLot = lot;
+      $("existCov").value = "";   // never carry the last parcel's coverage over to this one
       $("liveStatusMsg").textContent = "Loaded from TRPA. Checking existing buildings and elevation…";
       scheduleUpdate();
       // second pass: existing impervious cover + buildings, and elevation
       var xs = ring.map(function (q) { return q[0]; }), ys = ring.map(function (q) { return q[1]; });
       var env = [Math.min.apply(null, xs), Math.min.apply(null, ys), Math.max.apply(null, xs), Math.max.apply(null, ys)];
       var poly = lot.outline;
-      var big = area > 5 * 43560;
       Promise.all([
-        big ? Promise.resolve({}) : trpa("DataDownloader_Impervious/MapServer/1/query", { resultRecordCount: 300, geometry: env.join(","), geometryType: "esriGeometryEnvelope", inSR: 26910, spatialRel: "esriSpatialRelIntersects", outFields: "Feature", returnGeometry: "true", outSR: 26910 }).catch(function () { return {}; }),
-        trpa("Tahoe_Elevation/MapServer/identify", { geometry: JSON.stringify({ x: c[0], y: c[1], spatialReference: { wkid: 26910 } }), geometryType: "esriGeometryPoint", sr: 26910, layers: "all:1", tolerance: 0, mapExtent: [c[0] - 100, c[1] - 100, c[0] + 100, c[1] + 100].join(","), imageDisplay: "200,200,96", returnGeometry: "false" }).catch(function () { return {}; })
+        trpa("DataDownloader_Impervious/MapServer/1/query", { where: "1=1", resultRecordCount: 2000, geometry: env.join(","), geometryType: "esriGeometryEnvelope", inSR: 26910, spatialRel: "esriSpatialRelIntersects", outFields: "Feature", returnGeometry: "true", outSR: 26910 }).catch(function () { return {}; }),
+        trpa("Tahoe_Elevation/MapServer/identify", { geometry: JSON.stringify({ x: c[0], y: c[1], spatialReference: { wkid: 26910 } }), geometryType: "esriGeometryPoint", sr: 26910, layers: "all:1", tolerance: 0, mapExtent: [c[0] - 100, c[1] - 100, c[0] + 100, c[1] + 100].join(","), imageDisplay: "200,200,96", returnGeometry: "false" }).catch(function () { return {}; }),
+        trpa("BMP_Status/MapServer/5/query", { where: where, outFields: "CertificateIssued", returnGeometry: "false" }).catch(function () { return {}; }),
+        NAV_URL ? trpa("Parcels/FeatureServer/0/query", { where: where, outFields: "APN", returnGeometry: "true", outSR: 4326 }).catch(function () { return {}; }) : Promise.resolve({})
       ]).then(function (r2) {
         if (seq !== liveSeq) return;
         var cov = 0, blds = [];
@@ -886,16 +956,24 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           var loc = rg.map(toLocal);
           if (!pip(ringCentroid(loc), poly)) return;
           cov += Math.abs(ringArea(loc));
-          if (f.attributes.Feature === "Building" && blds.length < 4) blds.push(thin(loc.slice(0, -1), 30));
+          if (f.attributes.Feature === "Building") blds.push(loc.slice(0, -1));
         });
-        lot.existingCoverageSqft = big ? null : Math.round(cov);
-        lot.buildings = blds;
+        // the largest buildings, whatever order the service returned them in
+        blds.sort(function (a, b) { return Math.abs(ringArea(b)) - Math.abs(ringArea(a)); });
+        lot.buildings = blds.slice(0, 8).map(function (b) { return simplifyRing(b, 30); });
+        // a parcel too big for one response gets no coverage figure rather than a partial sum
+        lot.coverageUnknown = !r2[0].features || !!r2[0].exceededTransferLimit;
+        lot.existingCoverageSqft = lot.coverageUnknown ? null : Math.round(cov);
+        var bmp = ((r2[2].features || [])[0] || {}).attributes;
+        lot.bmpCertificate = bmp ? bmp.CertificateIssued === 1 : null;
+        var geo = biggestRing(((r2[3].features || [])[0] || {}).geometry || {});
+        if (geo) { var mid = ringCentroid(geo); lot.lon = mid[0]; lot.lat = mid[1]; }
         var ev = ((r2[1].results || [])[0] || {}).attributes || {};
         var m = parseFloat(ev["Classify.Pixel Value"] || ev["Pixel Value"]);
         lot.elevationFt = isFinite(m) ? Math.round(m * M2FT) : null;
         delete placeCache[lot.id + ":" + readState().L + ":" + readState().W];
         Object.keys(placeCache).forEach(function (k) { if (k.indexOf(lot.id + ":") === 0) delete placeCache[k]; });
-        if (!big) $("existCov").value = Math.round(cov / 10) * 10;
+        if (lot.existingCoverageSqft != null) $("existCov").value = Math.round(lot.existingCoverageSqft / 10) * 10;
         $("liveStatusMsg").textContent = "Loaded from TRPA's public parcel service. Coverage figures are estimates until TRPA verifies the site.";
         scheduleUpdate();
       });
@@ -965,6 +1043,11 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         for (var y = miny; y <= maxy; y += step) {
           var ok = true, pts = rectPts(x, y, ca, sa, L / 2 + SETBACK, W / 2 + SETBACK, 2);
           for (var k = 0; k < pts.length && ok; k++) if (!pip(pts[k], poly)) ok = false;
+          // sampling the edge every 2 ft can step over a notch, so also reject any lot corner inside the setback area
+          for (var pv = 0; pv < poly.length && ok; pv++) {
+            var pu = (poly[pv][0] - x) * ca + (poly[pv][1] - y) * sa, pw = -(poly[pv][0] - x) * sa + (poly[pv][1] - y) * ca;
+            if (Math.abs(pu) < L / 2 + SETBACK && Math.abs(pw) < W / 2 + SETBACK) ok = false;
+          }
           if (!ok) continue;
           var edge = rectPts(x, y, ca, sa, L / 2, W / 2, 2), clear = 60;
           for (var bi = 0; bi < blds.length && ok; bi++) {
@@ -988,6 +1071,23 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var res = best ? { fits: true, x: best.x, y: best.y, angle: best.angle, clear: best.clear } : { fits: false, x: 0, y: 0, angle: ang };
     placeCache[key] = res;
     return res;
+  }
+
+  // TRPA Code 30.4.6.A: a shed on skids is exempt from land coverage only on non-sensitive land
+  // (capability classes 4-7 or IPES 726 and up), at no more than 2% of that land, with BMPs installed.
+  function nonSensitiveShare(s) {
+    if (!s.lot) return s.landClass && /^[4-7]/.test(s.landClass.id) ? 1 : 0;
+    if (s.lot.ipesScore != null && s.lot.ipesScore >= 726) return 1;
+    var parts = String(s.lot.landCapabilityClass || "").split("/"), share = 0;
+    parts.forEach(function (part) {
+      var m = part.trim().match(/^([0-9])[a-z]*(?:\s*\((\d+)%\))?/i);
+      if (m && +m[1] >= 4 && +m[1] <= 7) share += m[2] ? +m[2] / 100 : 1 / parts.length;
+    });
+    return Math.min(1, share);
+  }
+  function shedExemption(s, area, n) {
+    var share = nonSensitiveShare(s);
+    return { eligible: !!s.loc.trpa && share > 0 && area <= 120 && area * n <= 0.02 * s.lotArea * share, bmp: s.lot ? s.lot.bmpCertificate : null };
   }
 
   // ---------------- engineering screening ----------------
@@ -1324,10 +1424,12 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       else checks.push(["warn", "Doesn't fit on this lot at this size", "No spot keeps " + SETBACK + " ft from the lot lines and " + SEPARATION + " ft from the existing house. Try a smaller footprint or a different shape. The 3D view shows the home at the lot's center for reference."]);
     }
     // TRPA coverage exemption for non-permanent sheds (TRPA land coverage exemptions packet)
-    var nonSensitive = s.lot ? ((s.lot.ipesScore != null && s.lot.ipesScore >= 726) || /^[4-7]/.test(String(s.lot.landCapabilityClass || ""))) : !!(s.landClass && /^[4-7]/.test(s.landClass.id));
-    var covExempt = s.use === "shed" && s.floor === "skids" && s.loc.trpa && c.area <= 120 && c.area * c.n <= 0.02 * s.lotArea && nonSensitive;
+    if (s.lot && s.lot.coverageUnknown) checks.push(["warn", "Existing coverage unknown", "TRPA has no existing-coverage estimate for this parcel. Enter your own figure above, or the coverage check here reads as if the lot were empty."]);
+    if (s.lot && s.existCov > s.lotArea) checks.push(["warn", "Existing coverage looks too high", "The mapped coverage is larger than the lot, usually because a paved area crosses a lot line. Enter a better figure above. TRPA verifies the real number."]);
+    var shedRule = shedExemption(s, c.area, c.n);
+    var covExempt = s.use === "shed" && s.floor === "skids" && shedRule.eligible;
     if (s.use === "shed" && s.loc.trpa && !covExempt) checks.push(["info", "Counts toward land coverage", s.floor !== "skids" ? "On a permanent foundation a shed counts toward TRPA land coverage. On skids it may qualify for an exemption." : c.area > 120 ? "Over 120 ft², so TRPA's coverage exemption for sheds doesn't apply." : "TRPA's shed exemption needs non-sensitive land (capability classes 4–7 or IPES 726 and up), and the shed can't exceed 2% of it."]);
-    if (covExempt) checks.push(["ok", "May be exempt from TRPA land coverage", "A shed on skids with no permanent foundation, up to 120 ft² and no more than 2% of the parcel's non-sensitive land, can be exempt from land coverage on capability classes 4–7 or IPES 726 and up. It still goes through TRPA's exemption declaration."]);
+    if (covExempt) checks.push([shedRule.bmp === true ? "ok" : "warn", "May be exempt from TRPA land coverage", "A shed on skids with no permanent foundation, up to 120 ft² and no more than 2% of the parcel's non-sensitive land, can be exempt from land coverage on capability classes 4–7 or IPES 726 and up. TRPA also requires installed BMPs. " + (shedRule.bmp === true ? "TRPA's map shows a BMP certificate on this parcel." : shedRule.bmp === false ? "TRPA's map shows no BMP certificate on this parcel, so plan on installing BMPs first." : "Check whether this parcel has a BMP certificate.") + " It still goes through TRPA's exemption declaration."]);
     else if (s.lot && s.lot.allowedCoverageSqft != null) {
       var remainingT = s.lot.allowedCoverageSqft - s.existCov, fpT = s.L * s.W * c.n;
       if (fpT <= remainingT) checks.push(["ok", "Land coverage fits", "This home covers " + fmt(fpT) + " ft². TRPA estimates " + fmt(s.lot.allowedCoverageSqft) + " ft² of allowed coverage for this parcel, and about " + fmt(s.existCov) + " ft² is already used, leaving " + fmt(remainingT) + " ft². Coverage is only an estimate until TRPA verifies the site."]);
@@ -1462,7 +1564,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var SV = [], J = s.loc.juris || "", CA = s.loc.state === "CA", work = s.housing === "work";
     var add = function (kind, title, text, url) { SV.push([kind, title, text, url]); };
     if (CA) {
-      if (c.area < 750) add("ok", "No impact fees", "California bars impact fees on ADUs under 750 ft². Placer puts the saving at about $15,000 per unit.", "https://www.placer.ca.gov/6348/Placer-exempts-some-ADU-fees");
+      if (c.area < 750) add("ok", "No impact fees", "California bars impact fees on ADUs under 750 ft².", "https://www.hcd.ca.gov/sites/default/files/docs/policy-and-research/adu-handbook-update.pdf");
       if (c.area <= 499) add("ok", "No school fees", "ADUs of 499 ft² or less are exempt from school impact fees starting in 2026 (SB 543).", "https://www.dwkesq.com/sb-543-exempts-certain-accessory-dwelling-units-from-school-impact-fees/");
       else if (c.area <= 640) add("info", "Trim to 499 ft² to skip school fees", "At " + fmt(c.area) + " ft² this home pays school fees. At 499 ft² or less it wouldn't (SB 543, 2026).", "https://www.dwkesq.com/sb-543-exempts-certain-accessory-dwelling-units-from-school-impact-fees/");
       add("info", "At most one parking space", "California limits ADU parking to one space, and none within ½ mile of transit.", "https://www.hcd.ca.gov/sites/default/files/docs/policy-and-research/adu-handbook-update.pdf");
@@ -1488,10 +1590,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     if (J.indexOf("Douglas") !== -1) add(s.lotArea < 43560 ? "warn" : "info", "Check lot-size eligibility", "Douglas County has required at least 1 acre for an ADU, and TRPA's Nevada rules have included a similar limit unless the unit is deed-restricted under a certified program. Confirm with the county before designing.", "https://trpa.gov/wp-content/uploads/documents/2021-08-Ordinance-Housing-Code-Amendments-NEW.pdf");
     if (J.indexOf("Washoe") !== -1) add("info", "Check lot-size eligibility", "Sources conflict on Washoe's minimum lot size for an ADU at Incline Village. Confirm with Washoe County and TRPA before designing.", "https://www.trpa.gov/adus/");
     add("info", "Don't count on heat-pump rebates", "In 2026 most rebates don't cover new ADUs. TECH Clean California is fully reserved, and Liberty's rebate only covers replacements.", "https://techcleanca.com/incentives/single-family-incentives/");
-    if (CA) add("info", "Keep a 5-ft noncombustible strip", "California's new Zone 0 wildfire rules call for gravel or other noncombustible ground within 5 ft of the home, with no attached wood fencing.", "https://www.publicceo.com/2026/09/california-board-of-forestry-adopts-emergency-zone-0-regulations-under-ab-3074/");
     if (!adu) {
       SV = [["info", "Most savings here apply to homes", "Fee waivers and housing programs are for ADUs and workforce units. A workshop usually pays standard permit fees, and a small shed often needs no building permit at all.", "https://www.trpa.gov/wp-content/uploads/documents/archive/Coverage_Exemption_Process_Info_Sheet.pdf"]];
-      if (CA) SV.push(["info", "Keep a 5-ft noncombustible strip", "California's new Zone 0 wildfire rules apply around any structure.", "https://www.publicceo.com/2026/09/california-board-of-forestry-adopts-emergency-zone-0-regulations-under-ab-3074/"]);
     }
     $("savings").innerHTML = SV.map(function (k) {
       var lab = { ok: "Saves", warn: "Check", info: "Tip" }[k[0]];
@@ -1508,15 +1608,22 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       var ft2 = d[1] * d[2], st = "", cls = "";
       if (s.lot && s.lot.outline && s.lot.outline.length > 2) {
         var pl = placeHome(s.lot, d[1], d[2], [], "");
-        var shedExempt = d[3] === "useShed" && ft2 <= 120;
+        var shedLib = d[3] === "useShed" ? shedExemption(s, ft2, 1) : { eligible: false };
         if (!pl.fits) { st = "Doesn't fit on this lot"; cls = "bad"; }
-        else if (!shedExempt && allowedCov != null && ft2 > allowedCov - s.existCov) { st = "Fits, over coverage"; cls = "warn"; }
+        else if (shedLib.eligible) { st = shedLib.bmp === true ? "Fits, may be coverage exempt" : "Fits; exempt only with BMPs"; cls = shedLib.bmp === true ? "ok" : "warn"; }
+        else if (allowedCov != null && ft2 > allowedCov - s.existCov) { st = "Fits, over coverage"; cls = "warn"; }
         else { st = "Fits this lot"; cls = "ok"; }
-      } else if (allowedCov != null && d[3] !== "useShed" && ft2 > allowedCov - s.existCov) { st = "Over coverage"; cls = "warn"; }
+      } else if (allowedCov != null && !(d[3] === "useShed" && shedExemption(s, ft2, 1).eligible) && ft2 > allowedCov - s.existCov) { st = "Over coverage"; cls = "warn"; }
       var on = s.L === d[1] && s.W === d[2] && $(d[3]).checked;
       return '<button type="button" data-i="' + i + '" aria-pressed="' + on + '"><b>' + d[0] + '</b><span>' + d[1] + ' × ' + d[2] + ' ft · ' + fmt(ft2) + ' ft²</span>' + (st ? '<i class="' + cls + '">' + st + '</i>' : '') + '</button>';
     }).join("");
     $("designLib").dataset.designs = JSON.stringify(DESIGNS);
+
+    if (NAV_URL) {
+      var navHref = handoffUrl(s, c);
+      $("navHandoff").hidden = !navHref;
+      if (navHref) $("navLink").href = navHref;
+    }
 
     // one short, debounced screen-reader update
     var flags = checks.filter(function (k) { return k[0] === "warn" || k[0] === "bad"; }).map(function (k) { return k[1]; });
