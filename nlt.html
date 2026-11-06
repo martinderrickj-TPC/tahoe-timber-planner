@@ -7,6 +7,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Sofia+Sans:wght@400;500;600;700&display=swap">
+<script>
+// Shown inside the data bot (?embed=1): its bar holds the page tabs and caveat, so a page link here would
+// put the two out of step. Those open in a new tab instead.
+if (new URLSearchParams(location.search).has("embed")) {
+  document.documentElement.classList.add("embedded");
+  addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('a[href$=".html"], a[href="./"]').forEach(function (a) { a.target = "_blank"; });
+  });
+}
+</script>
 <style>
 :root {
   --tw: #1a4421;
@@ -45,6 +55,8 @@ a { color: var(--accent-text); }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .num { font-variant-numeric: tabular-nums; }
 
+.embedded .sitenav, .embedded header.top { display: none; }
+.embedded .wrap { padding-top: 12px; }
 .top { display: grid; gap: 10px; padding-block: 28px 20px; }
 .sitenav { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding-block: 12px; border-bottom: 1px solid var(--border); }
 .sn-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-family: var(--font-display); font-weight: 700; font-size: 15px; }

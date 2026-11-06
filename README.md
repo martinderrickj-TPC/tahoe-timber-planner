@@ -8,7 +8,7 @@ A working demo from [Tahoe Wood](https://tahoewood.org). You sketch a backyard h
 - shows a tiered price guide (timber kit, weathertight shell, move-in ready)
 - lists the Tahoe-specific savings that apply to the lot
 
-The public version includes six real sample lots from TRPA's public parcel service. Addresses and parcel numbers are left out.
+The public version includes six real sample lots from TRPA's public parcel service, with addresses and parcel numbers left out, plus a live address search that asks TRPA one search at a time.
 
 The rules, snow loads, panel depths and prices are illustrative placeholders for discussion. They are not code determinations, engineering or quotes.
 
