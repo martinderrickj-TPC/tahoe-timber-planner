@@ -505,6 +505,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           </div>
         </div>
         <label class="check-inline" for="preapp"><input type="checkbox" id="preapp" checked> Built from a pre-approved standard plan (lower design and permit costs)</label>
+        <span class="sub">No pre-approved plan exists yet. One is in the works, so this shows what the cost could be once it's ready.</span>
         <div class="field">
           <span class="lab" id="utLab">Utilities</span>
           <div class="seg" role="radiogroup" aria-labelledby="utLab">
@@ -521,13 +522,13 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         <details id="saveDetails">
           <summary>Ways to lower the cost</summary>
           <div class="body"><ul class="list note">
-            <li><b>Stay under 750 ft².</b> California bars impact fees on ADUs that size.</li>
+            <li><b>Stay at 750 ft² or under.</b> California bars local impact fees on ADUs that size.</li>
             <li><b>Keep it a simple rectangle on the 4-ft grid.</b> Panels arrive cut to size, with little waste and a short crane day.</li>
             <li><b>Leave the NLT ceiling exposed.</b> The structure becomes the finished wood ceiling, so there's no drywall or paint overhead.</li>
             <li><b>Use a pre-approved standard plan.</b> It cuts architect, engineering and plan-check time for every home that repeats it.</li>
             <li><b>Tie into the main house's sewer, water and electric</b>, and site the ADU close to the house. The trench stays short and there are no new meters.</li>
             <li><b>Go all-electric with heat pumps.</b> There's no gas line, meter or trench.</li>
-            <li><b>Build two homes at once.</b> They share site work, utility runs and mobilization.</li>
+            <li><b>If local rules allow two homes, build both at once.</b> They share site work, utility runs and mobilization.</li>
             <li><b>Take the weathertight shell and finish the inside yourself</b>, or with a local finish carpenter.</li>
             <li><b>Deed-restrict it as workforce housing.</b> That can open fee waivers, bonus units and housing grants where they're offered.</li>
           </ul></div>
@@ -1447,7 +1448,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     if (s.loc.trpa && knownSensitive) checks.push(["warn", "Sensitive land", "New coverage is generally not allowed on residential lots in land capability 1-3." + (adu ? " TRPA's ADU page says an ADU there must be deed restricted." : "") + " Confirm with TRPA before designing."]);
     var shedRule = shedExemption(s, c.area, c.n);
     var covExempt = s.use === "shed" && s.floor === "skids" && shedRule.eligible;
-    if (s.use === "shed" && s.loc.trpa && !covExempt) checks.push(["info", "Counts toward land coverage", s.floor !== "skids" ? "On a permanent foundation a shed counts toward TRPA land coverage. On skids it may qualify for an exemption." : c.area > 120 ? "Over 120 ft², so TRPA's coverage exemption for sheds doesn't apply." : "TRPA's shed exemption needs non-sensitive land (capability classes 4–7 or IPES 726 and up), and the shed can't exceed 2% of it."]);
+    if (s.use === "shed" && s.loc.trpa && !covExempt) checks.push(["info", "Counts toward land coverage", s.floor !== "skids" ? "On a permanent foundation a shed counts toward TRPA land coverage. On skids it may qualify for an exemption." : c.area * c.n > 120 ? "Over 120 ft² in total on the parcel, so TRPA's coverage exemption for sheds doesn't apply." : "TRPA's shed exemption needs non-sensitive land (capability classes 4–7 or IPES 726 and up), and the shed can't exceed 2% of it."]);
     if (covExempt) checks.push([shedRule.bmp === true ? "ok" : "warn", "May be exempt from TRPA land coverage", "A shed on skids with no permanent foundation, up to 120 ft² and no more than 2% of the parcel's non-sensitive land, can be exempt from land coverage on capability classes 4–7 or IPES 726 and up. TRPA also requires installed BMPs. " + (shedRule.bmp === true ? "TRPA's map shows a BMP certificate on this parcel." : shedRule.bmp === false ? "TRPA's map shows no BMP certificate on this parcel, so plan on installing BMPs first." : "Check whether this parcel has a BMP certificate.") + " It still goes through TRPA's exemption declaration."]);
     else if (s.lot && s.lot.allowedCoverageSqft != null) {
       var remainingT = s.lot.allowedCoverageSqft - s.existCov, fpT = s.L * s.W * c.n;
@@ -1467,6 +1468,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       var nevadaShed = s.use === "shed" && s.loc.state !== "CA" && c.area < 200;
       var askAboutShed = s.loc.state === "CA" && s.loc.trpa && /El Dorado|Placer/.test(s.loc.juris);
       if (nevadaShed) checks.push(["info", "Shed permit exemption", "Douglas and Washoe counties don't require a building permit for a storage shed under about 200 ft² with no utilities. TRPA's rules are separate. Confirm with " + s.loc.juris + "."]);
+      else if (s.use === "shed" && s.loc.juris === "Town of Truckee" && c.area <= 120) checks.push(c.ridge > 10 ? ["info", "Building permit needed", "The Town of Truckee requires a building permit for a shed over 10 ft tall. This one is about " + fmt(c.ridge, 1) + " ft."] : ["ok", "No building permit needed", "The Town of Truckee doesn't require a building permit for a shed up to 120 ft² and 10 ft tall with no utilities. Zoning, setbacks and snow loads still apply."]);
       else if (s.use === "shed" && s.loc.state === "CA" && c.area <= 120) checks.push(askAboutShed ? ["warn", "Ask before relying on the shed permit exemption", "California's residential code exempts one-story sheds up to 120 ft², but El Dorado County's guide says any accessory structure in the basin needs a permit, and Placer's pages are unclear. Call the county's Tahoe building office first."] : ["ok", "No building permit needed", "California's residential code exempts one-story detached sheds up to 120 ft² from a building permit. Zoning, setbacks and snow loads still apply."]);
       else checks.push(["info", "Building permit needed", (s.use === "shed" ? "Over " + (s.loc.state === "CA" ? "120" : "about 200") + " ft², so this shed needs a building permit. " : "") + "As a non-habitable accessory structure it needs a building permit with snow-load engineering, and local size and height limits for accessory structures apply. It can't be lived in. Converting it to an ADU later means meeting ADU code for insulation, egress and energy. Permitting it as an ADU from the start and building in phases avoids re-permitting."]);
       checks.push(["info", "Height " + fmt(c.ridge, 1) + " ft", "Height limits for accessory structures vary and are often lower than for ADUs. Confirm " + (s.loc.trpa ? "TRPA and " : "") + s.loc.juris + " limits."]);
