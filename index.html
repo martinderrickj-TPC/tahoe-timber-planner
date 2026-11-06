@@ -301,7 +301,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
   <header class="top">
     <div class="eyebrow"><span class="pill demo">Working demo · screening numbers only</span></div>
     <h1>Tahoe Timber Planner</h1>
-    <p class="lede">Tahoe's forests are two to four times denser than they should be, and wood from thinning them is trucked 70 to 100 miles away. Tahoe Wood turns that wood into nail-laminated timber (NLT) panels made here. Sketch a backyard home or ADU from those panels. The planner checks what a Tahoe lot allows, sizes the roof for snow, and lists every panel with a price guide and the carbon stored in the wood. Everything snaps to a 4-ft plywood module, so the same grid carries over to local CLT.</p>
+    <p class="lede">A Forest Service silviculturist estimated in 2023 that there are now about 50 to 75 trees per acre, compared with likely about 20 before Comstock-era logging. Other estimates differ. Trees felled in the Tahoe region are typically hauled 70 to over 100 miles away, the Tahoe Daily Tribune reported in October 2026. Tahoe Wood turns that wood into nail-laminated timber (NLT) panels made here. Sketch a backyard home or ADU from those panels. The planner checks what a Tahoe lot allows, sizes the roof for snow, and lists every panel with a price guide and the estimated carbon in the wood. Everything snaps to a 4-ft plywood module, so the same grid carries over to local CLT.</p>
   </header>
 
   <main class="app">
@@ -336,7 +336,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           <label for="addrQ">Street address in the Tahoe Basin</label>
           <input type="search" id="addrQ" placeholder="Street number and name" autocomplete="off">
           <ul class="results" id="addrResults"></ul>
-          <span class="sub" id="liveStatusMsg" role="status">Type at least 4 characters. Results come straight from TRPA's public parcel service, one search at a time. If TRPA has no match, the address goes to Esri's public geocoder to find where it is. Nothing you type is stored.</span>
+          <span class="sub" id="liveStatusMsg" role="status">Type at least 4 characters. Results come straight from TRPA's parcel service, one search at a time. If TRPA has no match, the address goes to Esri's public geocoder to find where it is. Nothing you type is stored.</span>
           <dl class="facts" id="liveFacts"></dl>
         </div>
         <div class="field" id="sampleBox">
@@ -345,7 +345,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           <label for="addrQ2" style="margin-top:6px">Or search any Tahoe Basin address</label>
           <input type="search" id="addrQ2" placeholder="Street number and name" autocomplete="off">
           <dl class="facts" id="lotFacts"></dl>
-          <span class="sub">Real parcels from <a href="https://maps.trpa.org/server/rest/services" target="_blank" rel="noopener">TRPA's public parcel service</a>. We've left out addresses and parcel numbers. The planner places the home on the lot at least 5 ft from the lot lines and 10 ft from the existing house, as close to the house as that allows to keep utility runs short. Both distances are placeholders.</span>
+          <span class="sub">Real parcels from <a href="https://maps.trpa.org/server/rest/services" target="_blank" rel="noopener">TRPA's parcel service</a>. We've left out addresses and parcel numbers. The planner places the home on the lot at least 5 ft from the lot lines and 10 ft from the existing house, as close to the house as that allows to keep utility runs short. Both distances are placeholders.</span>
         </div>
         <div class="field" id="locField">
           <label for="loc">Community</label>
@@ -365,7 +365,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         <div class="field" id="lcField">
           <label for="landClass">TRPA land capability class</label>
           <select id="landClass"></select>
-          <span class="sub">Sets base allowable coverage for parcels rated by land capability (Bailey) class. Many single-family parcels were scored under IPES instead, and their base coverage (1–30%) comes from that score. A searched address uses TRPA's parcel data instead.</span>
+          <span class="sub">Sets base allowable coverage for parcels rated by land capability (Bailey) class. Vacant residential parcels are scored under IPES instead. TRPA says allowable coverage is determined through a Site Assessment or an IPES score. A searched address uses TRPA's parcel data instead.</span>
         </div>
       </section>
 
@@ -413,7 +413,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           <span class="lab" id="unLab">Homes on this lot</span>
           <div class="seg" role="radiogroup" aria-labelledby="unLab">
             <input type="radio" name="un" id="un1" value="1" checked><label for="un1">One<small>single ADU</small></label>
-            <input type="radio" name="un" id="un2" value="2"><label for="un2">Two<small>TRPA's per-lot maximum</small></label>
+            <input type="radio" name="un" id="un2" value="2"><label for="un2">Two<small>TRPA's limit in most areas</small></label>
           </div>
         </div>
         <div class="field">
@@ -430,7 +430,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
             <input type="radio" name="ex" id="exPly" value="ply"><label for="exPly">Plywood<small>panels on the 4-ft grid</small></label>
             <input type="radio" name="ex" id="exSide" value="siding"><label for="exSide">Siding<small>fiber cement or metal</small></label>
           </div>
-          <span class="sub">Each option has continuous insulation behind the cladding to meet California's Climate Zone 16 energy code. All wood adds NLT wall panels, sized 4 ft by the wall height, to the panel list.</span>
+          <span class="sub">Each option shows continuous insulation behind the cladding. <span id="caEnergyNote">The Town of Truckee is in California's Climate Zone 16; other California lots can check their address with <a href="https://www.energy.ca.gov/programs-and-topics/programs/building-energy-efficiency-standards/climate-zone-tool-maps-and" target="_blank" rel="noopener">the state's lookup</a>. </span>Your designer confirms what the energy code requires. All wood adds NLT wall panels, sized 4 ft by the wall height, to the panel list.</span>
         </div>
       </section>
 
@@ -453,7 +453,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           <input type="range" id="pg" min="100" max="1000" step="10" value="600">
           <label class="check-inline" for="shelt"><input type="checkbox" id="shelt"> Lot tight among tall conifers (sheltered roof, more snow stays on)</label>
           <label class="check-inline" for="clearSpan"><input type="checkbox" id="clearSpan"> Clear span with no interior posts (takes a deeper beam)</label>
-          <span class="sub">Placeholder value. Since the 2025 California Building Code took effect on January 1, 2026, each site's snow load comes from the ASCE 7-22 Hazard Tool. Those values are strength-level and much higher than the old county tables. One example: 842 psf at a 6,881-ft site in Placer County. The planner will look this up by address. Nevada counties publish their own tables; Washoe lists 336 psf at 6,500 ft in the basin.</span>
+          <span class="sub">Placeholder value. The 2025 California codes took effect January 1, 2026, and the Town of Truckee says the ASCE 7-22 Hazard Tool can be used from that date. The tool's values use a load factor of 1.0 rather than the older 1.6, so they can't be compared directly with the old county tables. After conversion, new values average about 12% higher nationally, with some locations much higher and others lower. Your building department decides what applies. The planner will look this up by address. Washoe County, in the State of Nevada, lists 336 psf at 6,500 ft in the Lake Tahoe Basin for homes. It also accepts the ASCE Hazard Tool. Check Douglas County's own criteria.</span>
         </div>
         <div class="field">
           <span class="lab" id="bmLab">Ridge beam and posts</span>
@@ -512,7 +512,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
             <input type="radio" name="ut" id="utShared" value="shared" checked><label for="utShared">Tie into the main house<small>shared sewer, water, electric</small></label>
             <input type="radio" name="ut" id="utSep" value="separate"><label for="utSep">Separate hookups<small>new meters and laterals</small></label>
           </div>
-          <span class="sub">All-electric with heat pumps, so there's no gas line or meter. Septic isn't an option in the Tahoe Basin. State law requires sewage to be piped out of the basin, so every home connects to sewer, and most parcels have public water rather than wells. The planner sites the home near the house to keep the utility trench short. Each water and sewer district decides whether a detached ADU may share hookups, and California law requires any ADU connection fee to be proportionate to the unit's size.</span>
+          <span class="sub">All-electric with heat pumps, so there's no gas line or meter. Septic generally isn't an option in the Tahoe Basin. California law sends basin sewage to sewer systems that carry it out of the watershed, with narrow exceptions, and both states ordered sewage exported in the 1960s. Plan on connecting to sewer. Ask your water provider whether your lot has public water or a private well. The planner sites the home near the house to keep the utility trench short. Each water and sewer provider decides whether a detached ADU needs its own connection. California law requires any ADU connection charge to be proportionate to the unit's burden, based on its square footage or plumbing fixtures.</span>
         </div>
         <ul class="tiers" id="tiers"></ul>
         <div class="handoff" id="navHandoff" hidden>
@@ -522,10 +522,10 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         <details id="saveDetails">
           <summary>Ways to lower the cost</summary>
           <div class="body"><ul class="list note">
-            <li><b>Stay at 750 ft² or under.</b> California bars local impact fees on ADUs that size.</li>
+            <li><b>Stay at 750 ft² or under.</b> California bars local impact fees on ADUs with 750 ft² or less of interior living space.</li>
             <li><b>Keep it a simple rectangle on the 4-ft grid.</b> Panels arrive cut to size, with little waste and a short crane day.</li>
             <li><b>Leave the NLT ceiling exposed.</b> The structure becomes the finished wood ceiling, so there's no drywall or paint overhead.</li>
-            <li><b>Use a pre-approved standard plan.</b> It cuts architect, engineering and plan-check time for every home that repeats it.</li>
+            <li><b>Use a pre-approved standard plan once one is ready.</b> None exists for NLT yet, and one is in the works. Repeating a plan should cut architect, engineering and plan-check time.</li>
             <li><b>Tie into the main house's sewer, water and electric</b>, and site the ADU close to the house. The trench stays short and there are no new meters.</li>
             <li><b>Go all-electric with heat pumps.</b> There's no gas line, meter or trench.</li>
             <li><b>If local rules allow two homes, build both at once.</b> They share site work, utility runs and mobilization.</li>
@@ -591,7 +591,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         <ul class="list note">
           <li>Hem-Fir No. 2 lumber with NDS size factors and a 1.15 snow load-duration factor.</li>
           <li>A 0.8 reduction on strength and stiffness for butt joints.</li>
-          <li>ASCE 7-22 flat-roof snow pf = 0.7·Ce·Ct·pg with no slope reduction. Ce = 1.0, or 1.2 when the lot is sheltered among conifers. Ct = 1.2, the upper end of ASCE 7-22 Table 7.3-3 for a heated, insulated, unventilated roof. Loads are applied at 0.7 for allowable-stress design, because ASCE 7-22 ground snow values are strength-level.</li>
+          <li>ASCE 7-22 flat-roof snow pf = 0.7·Ce·Ct·pg with no slope reduction. Ce = 1.0, or 1.2 when the lot is sheltered among conifers. Ct = 1.2, the upper end of ASCE 7-22 Table 7.3-3 for a heated, insulated, unventilated roof. Loads are applied at 0.7 for allowable-stress design, because ASCE 7-22 ground snow values use a load factor of 1.0.</li>
           <li>Gable roofs at 7:12 or flatter are also checked for ASCE 7-22 §7.6.1 unbalanced snow: the full ground snow load on the leeward side, with the windward side unloaded. This is applied to every gable layout as a conservative simplification.</li>
           <li>Snow deflection increased 1.5× for creep, limited to span/240.</li>
           <li>A floor load of 40 psf, limited to span/480, with spans capped at 16 ft.</li>
@@ -645,7 +645,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     { id: "kingsbeach", name: "Kings Beach", juris: "Placer County", state: "CA", trpa: true },
     { id: "incline", name: "Incline Village", juris: "Washoe County", state: "NV", trpa: true },
     { id: "zephyr", name: "Zephyr Cove / Stateline", juris: "Douglas County", state: "NV", trpa: true },
-    { id: "truckee", name: "Truckee", juris: "Town of Truckee", state: "CA", trpa: false },
+    { id: "truckee", name: "Truckee", label: "Truckee (Town of Truckee, Nevada County, California)", juris: "Town of Truckee", state: "CA", trpa: false },
     { id: "eastplacer", name: "Olympic Valley / Alpine Meadows / Northstar", juris: "Placer County", state: "CA", trpa: false }
   ];
   // TRPA base allowable land coverage by land capability (Bailey) class
@@ -672,14 +672,14 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
   var numVal = function (id, fallback) { var v = parseFloat($(id).value); return isFinite(v) ? v : fallback; };
 
   LOCATIONS.forEach(function (l) {
-    var o = document.createElement("option"); o.value = l.id; o.textContent = l.name + " — " + l.juris; $("loc").appendChild(o);
+    var o = document.createElement("option"); o.value = l.id; o.textContent = l.label || l.name + " — " + l.juris; $("loc").appendChild(o);
   });
   LAND_CLASSES.forEach(function (c) {
     var o = document.createElement("option"); o.value = c.id; o.textContent = "Class " + c.id + " — " + c.pct + "% base coverage"; $("landClass").appendChild(o);
   });
   $("landClass").value = "5";
 
-  // ---------------- real sample lots (TRPA public parcel data, anonymized) ----------------
+  // ---------------- real sample lots (TRPA parcel data, anonymized) ----------------
   var SAMPLE_LOTS = /*LOTS*/[{"id":"lot-a","community":"South Lake Tahoe","jurisdiction":"City of South Lake Tahoe","state":"CA","lotAreaSqft":10013,"planName":"Al Tahoe (Plan Area Statement)","zoning":"Al Tahoe Special Area #1","coverageBasis":"Land capability","landCapabilityClass":"7","ipesScore":null,"baseCoveragePct":30.0,"allowedCoverageSqft":3004,"existingCoverageSqft":1841,"elevationFt":6254,"outline":[[41.6,57.4],[-7.8,49.3],[-57.2,41.5],[-41.6,-57.4],[7.8,-49.3],[57.2,-41.5]],"buildings":[[[-34.8,1.1],[-6.6,3.1],[-7.2,38.7],[-21.6,38.0],[-21.3,27.6],[-38.5,26.7],[-41.5,26.5],[-38.1,0.9]],[[-31.0,-27.5],[-31.0,-7.9],[-31.0,-1.9],[-34.4,-1.9],[-41.6,-1.9],[-43.1,-1.9],[-43.1,-4.0],[-43.1,-27.5]]]},{"id":"lot-b","community":"Meyers","jurisdiction":"El Dorado County","state":"CA","lotAreaSqft":10069,"planName":"Tahoe Paradise (TP) Meadowvale (Plan Area Statement)","zoning":"Tahoe Paradise Meadowvale","coverageBasis":"IPES","landCapabilityClass":"4","ipesScore":1009.0,"baseCoveragePct":30.0,"allowedCoverageSqft":3021,"existingCoverageSqft":1683,"elevationFt":6350,"outline":[[-11.9,71.4],[-48.4,26.9],[-72.6,-2.3],[17.1,-69.4],[26.5,-57.3],[34.9,-46.0],[43.8,-35.1],[52.7,-24.2],[62.1,-13.5],[71.5,-2.9]],"buildings":[[[2.7,36.1],[-15.4,16.5],[-18.5,16.5],[-18.5,15.0],[-13.9,11.9],[-13.9,10.4],[-12.4,10.4],[-10.9,10.4],[-4.9,2.9],[16.3,-12.2],[17.8,-16.7],[20.8,-16.7],[26.8,-7.7],[28.3,-7.7],[28.3,-6.2],[32.9,-0.1],[34.4,-0.1],[34.4,1.4],[35.9,1.4],[37.4,5.9]]]},{"id":"lot-c","community":"Dollar Point","jurisdiction":"Placer County","state":"CA","lotAreaSqft":14895,"planName":"Placer County Tahoe Basin Area Plan","zoning":"Residential - Highlands","coverageBasis":"Estimate","landCapabilityClass":"5","ipesScore":null,"baseCoveragePct":25.0,"allowedCoverageSqft":3724,"existingCoverageSqft":1933,"elevationFt":6578,"outline":[[46.5,77.9],[-52.8,71.9],[-46.3,-78.0],[-41.4,-77.7],[52.6,-72.0]],"buildings":[[[-27.5,-6.3],[-10.9,-6.3],[-10.9,-3.3],[-10.9,-1.8],[-10.9,4.3],[-10.9,10.3],[-10.9,37.5],[-10.9,40.5],[-10.9,46.5],[-35.0,46.5],[-35.0,45.0],[-35.0,42.0],[-35.0,2.8],[-35.0,1.2],[-35.0,-6.3]],[[7.3,46.5],[19.3,46.5],[19.3,51.0],[19.3,69.2],[17.8,69.2],[7.3,69.2],[2.7,69.2],[-3.3,69.2],[-3.3,54.1],[-3.3,48.0],[-3.3,46.5]]]},{"id":"lot-d","community":"Kings Beach","jurisdiction":"Placer County","state":"CA","lotAreaSqft":9384,"planName":"Placer County Tahoe Basin Area Plan","zoning":"Residential - Kings Beach Residential","coverageBasis":"IPES","landCapabilityClass":"5","ipesScore":850.0,"baseCoveragePct":25.0,"allowedCoverageSqft":2346,"existingCoverageSqft":1994,"elevationFt":6291,"outline":[[35.7,63.6],[-39.3,61.4],[-35.7,-63.6],[14.3,-62.2],[39.3,-61.4]],"buildings":[[[9.7,-25.6],[8.2,22.7],[8.2,24.2],[5.1,24.2],[0.6,24.2],[0.6,22.7],[-5.4,22.7],[-8.4,22.7],[-8.4,0.1],[-6.9,-25.6]]]},{"id":"lot-e","community":"Incline Village","jurisdiction":"Washoe County","state":"NV","lotAreaSqft":15292,"planName":"Washoe County Tahoe Area Plan","zoning":"Incline Village #4","coverageBasis":"Land capability","landCapabilityClass":"4","ipesScore":null,"baseCoveragePct":20.0,"allowedCoverageSqft":3058,"existingCoverageSqft":1796,"elevationFt":6477,"outline":[[2.2,76.3],[-3.3,71.3],[-9.5,67.3],[-16.3,64.3],[-23.4,62.5],[-30.8,61.9],[-38.2,62.5],[-45.4,64.3],[-63.2,-3.4],[-83.5,-80.8],[-8.5,-52.8],[113.3,-7.3]],"buildings":[[[-1.4,30.5],[-2.9,30.5],[-2.9,29.0],[-36.1,19.9],[-36.1,16.9],[-34.6,16.9],[-34.6,10.8],[-33.1,10.8],[-33.1,4.8],[-31.6,4.8],[-30.1,-7.3],[-25.5,-8.8],[-25.5,-7.3],[-5.9,-2.7],[-5.9,-1.2],[6.1,1.8],[0.1,27.5],[-1.4,27.5]],[[-42.1,-2.7],[-49.7,-4.2],[-49.7,-5.8],[-63.3,-8.8],[-60.3,-22.4],[-58.7,-22.4],[-58.7,-28.4],[-57.2,-28.4],[-55.7,-39.0],[-54.2,-39.0],[-54.2,-40.5],[-51.2,-40.5],[-51.2,-39.0],[-45.2,-39.0],[-45.2,-37.4],[-40.6,-37.4],[-40.6,-35.9],[-34.6,-35.9],[-36.1,-22.4],[-37.6,-22.4]]]},{"id":"lot-f","community":"Zephyr Cove","jurisdiction":"Douglas County","state":"NV","lotAreaSqft":12768,"planName":"Marla Bay/Zephyr Heights (Plan Area Statement)","zoning":"Marla Bay/Zephyr Heights","coverageBasis":"Land capability","landCapabilityClass":"1a (64%) / 2 (36%)","ipesScore":null,"baseCoveragePct":1.0,"allowedCoverageSqft":128,"existingCoverageSqft":1430,"elevationFt":6330,"outline":[[50.0,-21.3],[46.5,63.0],[-53.6,64.9],[-48.4,-56.9],[-14.8,-60.9],[52.1,-71.7]],"buildings":[[[-33.7,0.0],[-35.2,-22.6],[-35.2,-36.2],[1.1,-37.7],[1.1,-22.6],[1.1,-21.1],[2.6,-1.5],[-0.5,-1.5]]]}]/*END*/;
   var LOT_LETTERS = "ABCDEFGHIJ";
   SAMPLE_LOTS.forEach(function (lot, i) {
@@ -988,7 +988,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         delete placeCache[lot.id + ":" + readState().L + ":" + readState().W];
         Object.keys(placeCache).forEach(function (k) { if (k.indexOf(lot.id + ":") === 0) delete placeCache[k]; });
         if (lot.existingCoverageSqft != null) $("existCov").value = Math.round(lot.existingCoverageSqft / 10) * 10;
-        $("liveStatusMsg").textContent = "Loaded from TRPA's public parcel service. Coverage figures are estimates until TRPA verifies the site.";
+        $("liveStatusMsg").textContent = "Loaded from TRPA's parcel service. Coverage figures are estimates until TRPA verifies the site.";
         scheduleUpdate();
       });
     }).catch(function () { if (seq === liveSeq) $("liveStatusMsg").textContent = "Couldn't load that parcel from TRPA. Try another result."; });
@@ -1388,8 +1388,9 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     $("htLab").parentNode.hidden = !adu;
     $("unLab").textContent = adu ? "Homes on this lot" : "Buildings on this lot";
     $("dimChip").textContent = s.L + " × " + s.W + " ft · " + fmt(c.area) + " ft²";
-    $("locSub").textContent = s.loc.state + " · " + (s.loc.trpa ? "Inside the Tahoe Basin, so TRPA rules apply" : "Outside the Tahoe Basin, so TRPA coverage rules don't apply");
+    $("locSub").textContent = s.loc.juris === "Town of Truckee" ? "California. Nevada County, not the State of Nevada. Outside the Tahoe Basin, so TRPA coverage rules don't apply." : s.loc.state + " · " + (s.loc.trpa ? "Inside the Tahoe Basin, so TRPA rules apply" : "Outside the Tahoe Basin, so TRPA coverage rules don't apply");
     $("lcField").hidden = !s.loc.trpa || !!s.lot;
+    $("caEnergyNote").hidden = s.loc.state !== "CA";
     var liveMode = radioVal("lotMode") === "live";
     $("sampleBox").hidden = !s.lot || liveMode;
     $("liveBox").hidden = !liveMode;
@@ -1416,7 +1417,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       stat("Floor area", (c.n > 1 ? c.n + " × " : "") + fmt(c.area) + " ft²", c.n > 1 ? fmt(c.totalArea) + " ft² total · " + fits.toLowerCase() + " each" : fits) +
       stat("Roof panels", roofTxt, roofSub) +
       stat("Panels", fmt(c.count), c.clt ? "CLT layout preview" : fmt(c.bf) + " board ft of local lumber") +
-      stat("Carbon stored", c.clt ? "Pending" : "≈ " + fmt(c.co2, 1) + " t CO₂e", c.clt ? "Needs certified panel data" : "Held in the wood for the building's life") +
+      stat("Carbon stored", c.clt ? "Pending" : "≈ " + fmt(c.co2, 1) + " t CO₂e", c.clt ? "Needs certified panel data" : "Estimated carbon in the wood (volume × assumed density × 50% carbon share). Wood products hold it for as long as they stay in service. Logging, trucking and milling emissions aren't counted.") +
       stat(s.use === "shed" ? "Weathertight shed" : s.use === "workshop" ? "Finished workshop" : "Move-in ready", c.clt ? "Pending" : "from " + money(s.use === "shed" ? c.shell * 0.85 : c.low),
            c.clt ? "Waiting on CLT panel pricing" : (s.use === "shed" ? "Timber kit from " + money((c.panelsCost || 0) * 0.9) : "Weathertight shell from " + money(c.shell * 0.85)) + (c.n > 1 ? " · both" : "")) +
       stat("Design roof snow", fmt(c.pf) + " psf", "≈ " + fmt(c.snowDepth, 1) + " ft of settled snow at service level");
@@ -1424,7 +1425,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var checks = [];
     if (c.n > 1) {
       checks.push(adu ? ["warn", "Two homes on one lot", s.loc.trpa
-          ? "TRPA's code (section 21.3.2) allows up to two ADUs on a parcel with a single-family or multi-family home, and each unit needs its own development right or bonus unit. Local rules can be stricter. South Lake Tahoe and El Dorado County don't list two detached ADUs on a single-family lot, Douglas and Washoe allow one ADU per parcel, and Placer's pages disagree. TRPA describes two as one attached and one detached. Confirm before designing a second home."
+          ? "TRPA allows up to two ADUs on a single-family or multifamily property in most areas. A market-rate ADU needs a residential unit of use, and a deed-restricted ADU can use a bonus unit. TRPA's ADU page describes the two as one attached and one detached. Local rules can be stricter. Washoe allows one ADU per parcel and Placer's pages differ. Douglas, South Lake Tahoe and El Dorado may also limit you. Confirm before designing a second home."
           : "State law changes on January 1, 2027 to require two detached ADUs on a single-family lot, but local code may still say one. Ask before designing a second home."]
                         : ["info", "Two buildings on one lot", "Both count toward land coverage and setbacks. ADU unit limits don't apply to sheds or workshops."]);
       if (c.place && c.place.fits && c.place2) {
@@ -1432,9 +1433,9 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         else checks.push(["warn", "Only one home fits at this size", "There isn't room for a second home with these setbacks and separations. Try a smaller footprint."]);
       }
     }
-    if (!adu) { /* housing-type notes apply to homes only */ } else if (s.housing === "work") checks.push(["info", "Workforce unit", "A deed restriction to achievable, moderate or affordable incomes can let a unit use a TRPA residential bonus unit instead of a scarce allocation. Some deed-restricted units also get coverage and density incentives. Eligibility depends on the parcel, so confirm with TRPA."]);
-    else if (s.loc.trpa) checks.push(["info", "Development right needed", "A market-rate ADU in the basin needs a TRPA residential allocation or a development right. Allocations are capped each year in every jurisdiction. Switch to Workforce to see the deed-restricted path."]);
-    if (adu && s.loc.state === "CA" && c.area < 750) checks.push(["ok", "Under 750 ft²: no local impact fees", "California bars local impact fees on ADUs of 750 ft² or less. That may not cover TRPA's own mitigation fees, and utility connection charges are separate."]);
+    if (!adu) { /* housing-type notes apply to homes only */ } else if (s.housing === "work") checks.push(["info", "Workforce unit", "A deed restriction to achievable, moderate or affordable incomes can let a unit use a TRPA residential bonus unit instead of an allocation. Some deed-restricted units also get coverage and density incentives. Eligibility depends on the parcel, so confirm with TRPA."]);
+    else if (s.loc.trpa) checks.push(["info", "Development right needed", "A market-rate ADU in the basin needs a TRPA residential unit of use, which combines a potential unit of use with a residential allocation. Ask your jurisdiction what's available. Switch to Workforce to see the deed-restricted path."]);
+    if (adu && s.loc.state === "CA" && c.area < 750) checks.push(["ok", "Under 750 ft²: no local impact fees", "California bars local impact fees on ADUs with 750 ft² or less of interior living space. Utility connection charges are separate." + (s.loc.trpa ? " Ask whether TRPA's own mitigation fees are covered." : "")]);
     if (c.place) {
       if (c.place.fits) checks.push(["ok", "Fits on this lot", "The planner found a spot at least " + SETBACK + " ft from every lot line and " + fmt(Math.min(c.place.clear, 60)) + " ft from the existing house. Setbacks here are placeholders until local setbacks are connected."]);
       else checks.push(["warn", "Doesn't fit on this lot at this size", "No spot keeps " + SETBACK + " ft from the lot lines and " + SEPARATION + " ft from the existing house. Try a smaller footprint or a different shape. The 3D view shows the home at the lot's center for reference."]);
@@ -1467,19 +1468,19 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     if (!adu) {
       var nevadaShed = s.use === "shed" && s.loc.state !== "CA" && c.area < 200;
       var askAboutShed = s.loc.state === "CA" && s.loc.trpa && /El Dorado|Placer/.test(s.loc.juris);
-      if (nevadaShed) checks.push(["info", "Shed permit exemption", "Douglas and Washoe counties don't require a building permit for a storage shed under about 200 ft² with no utilities. TRPA's rules are separate. Confirm with " + s.loc.juris + "."]);
+      if (nevadaShed) checks.push(/Washoe/.test(s.loc.juris) ? ["info", "Shed permit exemption", "Washoe County doesn't require a building permit for a small shed under 200 ft² with no utilities, if it meets setbacks. TRPA's rules are separate. Confirm with " + s.loc.juris + "."] : ["info", "Ask about a shed permit exemption", "Ask " + s.loc.juris + " whether a shed this size needs a building permit. TRPA's rules are separate."]);
       else if (s.use === "shed" && s.loc.juris === "Town of Truckee" && c.area <= 120) checks.push(c.ridge > 10 ? ["info", "Building permit needed", "The Town of Truckee requires a building permit for a shed over 10 ft tall. This one is about " + fmt(c.ridge, 1) + " ft."] : ["ok", "No building permit needed", "The Town of Truckee doesn't require a building permit for a shed up to 120 ft² and 10 ft tall with no utilities. Zoning, setbacks and snow loads still apply."]);
-      else if (s.use === "shed" && s.loc.state === "CA" && c.area <= 120) checks.push(askAboutShed ? ["warn", "Ask before relying on the shed permit exemption", "California's residential code exempts one-story sheds up to 120 ft², but El Dorado County's guide says any accessory structure in the basin needs a permit, and Placer's pages are unclear. Call the county's Tahoe building office first."] : ["ok", "No building permit needed", "California's residential code exempts one-story detached sheds up to 120 ft² from a building permit. Zoning, setbacks and snow loads still apply."]);
+      else if (s.use === "shed" && s.loc.state === "CA" && c.area <= 120) checks.push(askAboutShed ? ["warn", "Ask before relying on the shed permit exemption", "California's residential code exempts one-story detached accessory structures up to 120 ft² from a building permit, but the Wildland-Urban Interface Code can still apply. Local rules may be stricter, so call the county's Tahoe building office first."] : ["ok", "No building permit needed", "California's residential code exempts one-story detached accessory structures up to 120 ft² from a building permit, but the Wildland-Urban Interface Code can still apply. Zoning, setbacks and snow loads still apply."]);
       else checks.push(["info", "Building permit needed", (s.use === "shed" ? "Over " + (s.loc.state === "CA" ? "120" : "about 200") + " ft², so this shed needs a building permit. " : "") + "As a non-habitable accessory structure it needs a building permit with snow-load engineering, and local size and height limits for accessory structures apply. It can't be lived in. Converting it to an ADU later means meeting ADU code for insulation, egress and energy. Permitting it as an ADU from the start and building in phases avoids re-permitting."]);
       checks.push(["info", "Height " + fmt(c.ridge, 1) + " ft", "Height limits for accessory structures vary and are often lower than for ADUs. Confirm " + (s.loc.trpa ? "TRPA and " : "") + s.loc.juris + " limits."]);
     } else if (s.loc.state === "CA") {
-      if (c.area <= 1200) checks.push([c.area > 850 ? "warn" : "ok", "Under the 1,200 ft² state ceiling", "1,200 ft² is the state's ceiling where there's no local ADU ordinance. Local limits can be lower: South Lake Tahoe, Truckee on lots under an acre and El Dorado on lots under 20,000 ft² allow 850 ft² with up to one bedroom, or 1,000 ft² with two or more. Confirm with " + s.loc.juris + "."]);
-      else checks.push(["warn", "Over 1,200 ft²", "Most Tahoe ADU limits stop at or below 1,200 ft². El Dorado lists 1,600 ft² at 1 acre or more. Otherwise this would need a permit as a separate home."]);
+      if (c.area <= 1200) checks.push([c.area > 850 ? "warn" : "ok", "Under the 1,200 ft² state ceiling", "1,200 ft² is the limit in state ADU law for a detached unit. State law also says local rules can't set a maximum below 850 ft², or 1,000 ft² for more than one bedroom. Local limits vary, so confirm with " + s.loc.juris + "."]);
+      else checks.push(["warn", "Over 1,200 ft²", "1,200 ft² is the limit in state ADU law for a detached unit. Local limits vary, so confirm with " + s.loc.juris + ". Over the limit, this would need a permit as a separate home."]);
       var heightAuth = s.loc.trpa ? "TRPA and " + s.loc.juris : s.loc.juris;
       if (c.ridge <= 16) checks.push(["ok", "Height " + fmt(c.ridge, 1) + " ft", "Within the 16-ft height that state ADU law guarantees for a detached ADU. " + heightAuth + " limits can differ."]);
       else checks.push(["warn", "Height " + fmt(c.ridge, 1) + " ft", "Taller than the 16-ft height that state ADU law guarantees. Confirm " + heightAuth + " limits, or lower the pitch or wall height."]);
     } else {
-      checks.push(["info", "Nevada ADU rules", "Nevada has no statewide ADU size or height guarantee. " + s.loc.juris + " code" + (s.loc.trpa ? " and TRPA's height and accessory-dwelling rules" : "") + " set the limits here. The roof peak is " + fmt(c.ridge, 1) + " ft."]);
+      checks.push(["info", "State of Nevada ADU rules", "The State of Nevada's 2025 ADU law (AB 396) sets no size or height guarantee, and its ordinance requirement appears not to reach the Tahoe Basin. " + s.loc.juris + " code" + (s.loc.trpa ? " and TRPA's height and accessory-dwelling rules" : "") + " set the limits here. The roof peak is " + fmt(c.ridge, 1) + " ft."]);
     }
     if (c.clt) checks.push(["info", "Snow design pending for CLT", "Needs certified panel values from a local CLT mill. Design snow here is " + fmt(c.pf) + " psf."]);
     else if (c.roofD && c.needsBeam && !c.beam) checks.push(["warn", "Roof beams need an engineer", c.roofD.lumber.nom + " NLT panels work, but no " + ({ glulam: "glulam up to " + GL.maxD + " in deep", log: "log up to 24 in diameter", nlt: "NLT beam up to 8 plies of 2x12", clt: "CLT beam up to 42 in deep" }[s.beamType] || "beam") + " works" + (s.clearSpan ? " as a clear span" : " with posts 8 ft apart or more") + " at " + fmt(s.pg) + " psf. " + (s.clearSpan ? "Allow interior posts, or narrow the home." : "Try a narrower width, a steeper pitch or a lower snow load.")]);
@@ -1491,10 +1492,10 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     }
     if (s.support === "ties" && !(c.beam && c.beam.type === "ties") && c.roofD) checks.push(["info", "Tied rafters not used here", s.roof !== "gable" ? "Tied rafters only work on a gable roof, so the planner uses a beam on posts instead." : "At this width the roof panels can't reach the peak in one span and would need purlins, so the planner uses a beam on posts instead."]);
     if (c.beam && c.beam.posts.length >= 4) checks.push(["info", "Consider a center bearing wall", "With posts about every " + fmt(c.beam.bay) + " ft, a wall along the beam line may be simpler. Choose Center bearing wall under Ridge support to see it. It can double as the wall between rooms, and the beam then only needs to span door openings."]);
-    if (s.roof === "flat" && s.pg >= 200) checks.push(["warn", "Low-slope roof in deep snow", "A low-slope roof holds the full snow load all winter and needs careful drainage and ice-dam detailing. Most basin designs use a pitched roof."]);
-    if (s.exterior !== "siding") checks.push(["warn", "Wood exterior needs a wildfire-code path", s.loc.state === "CA" ? "In mapped fire hazard zones, California's Wildland-Urban Interface Code limits exposed wood cladding. The usual routes are fire-retardant-treated wood, a tested wall assembly, or noncombustible cladding on the most exposed walls. Confirm with the building department." : "Nevada counties' wildland-urban interface codes limit exposed wood cladding. Fire-retardant-treated wood or a tested assembly is the usual route. Confirm with the county."]);
-    checks.push(["info", "Wildfire zone not yet checked", s.loc.state === "CA" ? "The fire-hazard lookup isn't connected yet. In mapped fire hazard severity zones and wildland-urban interface areas, the California Wildland-Urban Interface Code (Title 24, Part 7) applies. It replaced CBC Chapter 7A and CRC R337 in 2026." : "The fire-hazard lookup isn't connected yet. Nevada counties apply their adopted wildland-urban interface code."]);
-    if (adu && s.loc.state === "CA") checks.push(["warn", "30-ft fire setback may apply", "State fire-safe rules call for a 30-ft setback from property lines in State Responsibility Areas and Very High fire zones. State ADU law says 4 ft, and whether the 30 ft applies to an ADU on a built lot is unresolved. Ask your building department and fire district in writing before siting the home."]);
+    if (s.roof === "flat" && s.pg >= 200) checks.push(["warn", "Low-slope roof in deep snow", "A low-slope roof holds the snow load longer and needs careful drainage and ice-dam detailing. Ask your engineer."]);
+    if (s.exterior !== "siding") checks.push(["warn", "Wood exterior needs a wildfire-code path", s.loc.state === "CA" ? "In California's Wildland-Urban Interface areas, exterior walls must use a method listed in the code, or be covered with noncombustible material, ignition-resistant material, or fire-retardant-treated wood labeled for exterior use. Confirm with the building department." : "In the State of Nevada, ask your local fire district what it accepts for wood. Tahoe Douglas Fire requires materials meeting Class 1 Ignition Resistant Construction. Washoe County's guide lists fire-retardant-treated wood labeled for exterior use among allowed wall materials. Incline Village and Crystal Bay have their own locally amended code."]);
+    checks.push(["info", "Wildfire zone not yet checked", s.loc.state === "CA" ? "The fire-hazard lookup isn't connected yet. In mapped fire hazard severity zones and wildland-urban interface areas, the California Wildland-Urban Interface Code (Title 24, Part 7) applies. It took effect January 1, 2026 and took over the CBC Chapter 7A provisions." : "The fire-hazard lookup isn't connected yet. Counties in the State of Nevada (Douglas, Washoe) apply their adopted wildland-urban interface code."]);
+    if (adu && s.loc.state === "CA") checks.push(["warn", "30-ft fire setback may apply", "State fire-safe rules call for a 30-ft setback from property lines in State Responsibility Areas and Very High fire zones, and allow a reduction if another method limits ignition between structures. State ADU law says 4 ft. We haven't found a clear state answer on whether the 30 ft applies to an ADU on a built lot. Ask your building department and fire district in writing before siting the home."]);
     $("checks").innerHTML = checks.map(function (k) {
       var lab = { ok: "Fits", warn: "Check", bad: "Blocked", info: "Note" }[k[0]];
       return '<li class="check"><span class="badge ' + k[0] + '">' + lab + '</span><span><b>' + esc(k[1]) + '</b><span class="sub">' + esc(k[2]) + '</span></span></li>';
@@ -1575,7 +1576,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
 
     var REST = [
       ["Walls, beams and hardware", 12, "Wall framing or panels, sheathing, glulam beams and posts, connectors, crane and erection labor"],
-      ["Roofing and insulation", 10, "Rigid insulation over the NLT deck (Climate Zone 16 levels), metal or membrane roofing, snow guards"],
+      ["Roofing and insulation", 10, "Rigid insulation over the NLT deck" + (s.loc.state === "CA" ? " (Climate Zone 16 levels)" : "") + ", metal or membrane roofing, snow guards"],
       ["Windows, doors and siding", 16, "Wildfire-code compliant windows and doors, noncombustible siding, trim and flashing"],
       ["Mechanical, electrical, plumbing", 20, "Heat-pump heating and cooling, heat-pump water heater, wiring and panel, plumbing, and fire sprinklers where required"],
       ["Interior finishes", 22, "Drywall, flooring, cabinets, counters, tile, appliances, paint"],
@@ -1590,33 +1591,34 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var SV = [], J = s.loc.juris || "", CA = s.loc.state === "CA", work = s.housing === "work";
     var add = function (kind, title, text, url) { SV.push([kind, title, text, url]); };
     if (CA) {
-      if (c.area < 750) add("ok", "No local impact fees", "California bars local impact fees on ADUs of 750 ft² or less. That may not cover TRPA's own mitigation fees, and utility connection charges are separate.", "https://www.hcd.ca.gov/sites/default/files/docs/policy-and-research/adu-handbook-update.pdf");
-      if (c.area <= 499) add("ok", "No school fees", "ADUs of 499 ft² or less are exempt from school impact fees starting in 2026 (SB 543).", "https://www.hcd.ca.gov/sites/default/files/docs/policy-and-research/adu-handbook-update.pdf");
-      else if (c.area <= 640 && J.indexOf("South Lake Tahoe") === -1) add("info", "Trim to 499 ft² to skip school fees", "School districts may charge above 500 ft². At 499 ft² or less this home is exempt (SB 543, 2026).", "https://www.hcd.ca.gov/sites/default/files/docs/policy-and-research/adu-handbook-update.pdf");
-      add("info", "At most one parking space", "California limits ADU parking to one space, and none within ½ mile of transit.", "https://www.hcd.ca.gov/sites/default/files/docs/policy-and-research/adu-handbook-update.pdf");
+      if (c.area < 750) add("ok", "No local impact fees", "California bars local impact fees on ADUs with 750 ft² or less of interior living space. Utility connection charges are separate." + (s.loc.trpa ? " Ask whether TRPA's own mitigation fees are covered." : ""), "https://california.public.law/codes/government_code_section_66311.5");
+      if (c.area <= 499) add("ok", "School fees effectively avoided", "Under a state law in effect since January 1, 2026 (SB 543, Government Code 66311.5), an ADU with less than 500 ft² of interior living space effectively avoids school impact fees. Confirm with your school district.", "https://california.public.law/codes/government_code_section_66311.5");
+      else if (c.area <= 640 && J.indexOf("South Lake Tahoe") === -1) add("info", "Trim to 499 ft² to avoid school fees", "School districts may charge above 500 ft². Under a state law in effect since January 1, 2026 (SB 543, Government Code 66311.5), an ADU with less than 500 ft² of interior living space effectively avoids school impact fees. Confirm with your school district.", "https://california.public.law/codes/government_code_section_66311.5");
+      add("info", "At most one parking space", "California limits ADU parking to one space per unit or per bedroom, whichever is less, and none within a half-mile walk of public transit.", "https://california.public.law/codes/government_code_section_66322");
       add("info", "Solar may be waived", "New detached ADUs need new solar panels in California. An existing system on the main house doesn't count, but new panels can go elsewhere on the lot if your utility allows it. Very shaded lots and some high-snow-load sites can be exempt, so ask your building department.", "https://www.energy.ca.gov/programs-and-topics/programs/building-energy-efficiency-standards/energy-code-support-center-6/2025");
     }
     if (J.indexOf("South Lake Tahoe") !== -1) {
-      add("info", "Ask the City about a free development right", "South Lake Tahoe has a limited pool of free TRPA development rights for new ADUs: 70 units shared with new multifamily rentals, and how many remain isn't published. The City Manager approves each request, and taking one brings a deed restriction against vacation rentals. Other sources cost money: the California Tahoe Conservancy listed $19,155-$31,655 as of May 2026.", "https://www.cityofslt.gov/1247/Development-Incentive-Programs");
-      add("info", "Ask about free pre-approved plans", "The City expected to offer free pre-approved ADU plans, including prefab options, by late fall 2026. Ask whether they're out yet.", "https://www.cityofslt.gov/2592/Accessory-Dwelling-Units-ADU");
+      add("info", "Ask the City about a free development right", "South Lake Tahoe lets applicants request development rights and land coverage at no cost for new ADUs, subject to City Resolution 2023-051. Ask the City what's left and what conditions come with it. Other sources cost money: the California Tahoe Conservancy listed $19,155-$31,655 as of May 2026.", "https://www.cityofslt.gov/1247/Development-Incentive-Programs");
+      add("info", "Ask about free pre-approved plans", "The City says free pre-approved ADU plans, plus two pre-approved prefab options, are expected by late fall 2026. Ask whether they're out yet.", "https://www.cityofslt.gov/2592/Accessory-Dwelling-Units-ADU");
     }
     if (J.indexOf("South Lake Tahoe") !== -1 || J.indexOf("El Dorado") !== -1)
-      add("info", "Ask South Tahoe PUD about connection fees", "News reports say South Tahoe PUD stopped charging connection and capacity fees for ADUs in 2022, and its January 2025 code says so for water. Its current fee page doesn't mention ADUs, so confirm. West Shore lots in El Dorado County are served by Tahoe City PUD instead.", "https://www.tahoedailytribune.com/news/south-tahoe-pud-adopts-new-rates-adu-requirements/");
-    if (J.indexOf("El Dorado") !== -1) add("info", "One free pre-reviewed ADU plan", "El Dorado County offers one free, ready-to-use ADU plan with no changes allowed. County pages don't state its size or snow load, so check it suits your site. You still need site-specific solar and fire sprinkler plans.", "https://www.eldoradocounty.ca.gov/Land-Use/Planning-and-Building/Building-Division/ADU/Pre-Reviewed-ADU");
+      add("info", "Ask South Tahoe PUD about connection fees", "A 2022 Tahoe Daily Tribune report says South Tahoe PUD changed its code to not require new water or sewer connection or capacity fees for ADUs. Its current fee page doesn't mention ADUs, so ask what applies today. West Shore lots in El Dorado County may be in Tahoe City PUD's district instead.", "https://www.tahoedailytribune.com/news/south-tahoe-pud-adopts-new-rates-adu-requirements/");
+    if (J.indexOf("El Dorado") !== -1) add("info", "A pre-reviewed ADU plan", "El Dorado County offers a ready-to-use ADU plan set with no changes allowed. The County's page doesn't state its size or snow load, so check it suits your site. You still need site-specific plans such as solar and fire sprinklers.", "https://www.eldoradocounty.ca.gov/Land-Use/Planning-and-Building/Building-Division/ADU/Pre-Reviewed-ADU");
     if (J.indexOf("Placer") !== -1) {
       add("info", "Ask about pre-approved plans", "Placer County posts pre-approved ADU plans, but its pages conflict on the price: free, $1,200, or bought from the plan's author. Have a designer confirm the plan fits your lot's snow load.", "https://www.placer.ca.gov/6650/Pre-Approved-Accessory-Dwelling-Unit-Pla");
-      add("info", "ADU Accelerator help", "The Tahoe Housing Hub's ADU Accelerator is a pilot with limited funding that offers owners around Truckee and North Lake Tahoe technical help and a feasibility fund. Ask what's still open and what would reach you as an owner.", "https://www.northtahoecommunityalliance.com/project/accessory-dwelling-unit-accelerator-pilot-program/");
-      add("info", "Lease to Locals", "East Placer's program has paid up to $4,500 per qualifying tenant on a 12-month lease, with rent limits and one grant per owner. Ask whether funds remain and whether a new ADU qualifies.", "https://www.placer.ca.gov/8627/Lease-to-Locals");
+      add("info", "ADU Accelerator help", "The Tahoe Housing Hub's ADU pilot offers owners in Truckee and North Lake Tahoe technical help at no cost. It introduced a $3,200 feasibility fund in 2025. Ask whether it's still open.", "https://www.northtahoecommunityalliance.com/project/accessory-dwelling-unit-accelerator-pilot-program/");
+      add("info", "Lease to Locals", "East Placer's Lease to Locals pays owners $4,500 per qualifying tenant on a lease of 12 months or more, up to $18,000, with a $3,500 monthly rent cap and one grant per property. It's funded through June 30, 2027. Ask whether a new ADU qualifies.", "https://placemate.com/easternplacer/");
     }
+    if (J.indexOf("Truckee") !== -1) add("info", "ADU Accelerator help", "The Tahoe Housing Hub's ADU pilot offers owners in Truckee and North Lake Tahoe technical help at no cost. It introduced a $3,200 feasibility fund in 2025. Ask whether it's still open.", "https://www.northtahoecommunityalliance.com/project/accessory-dwelling-unit-accelerator-pilot-program/");
     if (s.loc.trpa && work) {
       add("ok", "Free TRPA bonus unit", "A deed-restricted unit can use a free TRPA bonus unit instead of buying a development right, if the lot is inside TRPA's bonus unit boundary (within ½ mile of transit or a town center, or where multi-family is allowed). The restriction stays with the land for good.", "https://www.trpa.gov/adus/");
-      add("ok", "TRPA application fee waived", "Bonus-unit projects skip TRPA's application fee ($1.71/ft², $862 minimum). The water-quality fee still applies.", "https://www.trpa.gov/wp-content/uploads/documents/FILING_FEE_SCHEDULE.pdf");
+      add("ok", "TRPA application fee waived", "TRPA's ADU page lists its application fee as waived for deed-restricted ADUs, but not the water-quality mitigation fee. That table is labeled 2022, so confirm current amounts.", "https://www.trpa.gov/adus/");
     }
-    if (J.indexOf("Douglas") !== -1) add(s.lotArea < 43560 ? "warn" : "info", "Check lot-size eligibility", "TRPA and the South Shore plan say a Douglas County lot needs at least 1 acre for an ADU, while the county code text we read says 0.5 net acres. TRPA dropped its own Nevada one-acre minimum on February 15, 2026. Confirm with Douglas County Planning before designing.", "https://www.trpa.gov/adus/");
+    if (J.indexOf("Douglas") !== -1) add(s.lotArea < 43560 ? "warn" : "info", "Check lot-size eligibility", "TRPA's ADU page says a Douglas County lot needs at least 1 acre for an ADU, and a TRPA ordinance effective February 15, 2026 appears to remove TRPA's own one-acre minimum for the State of Nevada. County rules may differ, so confirm with Douglas County Planning before designing.", "https://www.trpa.gov/adus/");
     if (J.indexOf("Washoe") !== -1) add("info", "Check lot-size eligibility", "Sources conflict on Washoe's minimum lot size for an ADU at Incline Village. Confirm with Washoe County and TRPA before designing.", "https://www.trpa.gov/adus/");
-    add("info", "Don't count on heat-pump rebates", "In 2026 most rebates don't cover new ADUs. TECH Clean California is fully reserved, and Liberty's rebate only covers replacements.", "https://techcleanca.com/incentives/single-family-incentives/");
+    if (CA) add("info", "Don't count on heat-pump rebates", "HEEHRA single-family rebates on TECH Clean California's site were fully reserved statewide as of February 24, 2026, with later requests waitlisted, and Liberty's program is written for existing homes upgrading electric systems.", "https://techcleanca.com/incentives/single-family-incentives/");
     if (!adu) {
-      SV = [["info", "Most savings here apply to homes", "Fee waivers and housing programs are for ADUs and workforce units. A workshop usually pays standard permit fees, and a small shed often needs no building permit at all.", "https://www.trpa.gov/wp-content/uploads/documents/archive/Coverage_Exemption_Process_Info_Sheet.pdf"]];
+      SV = [["info", "Most savings here apply to homes", "Fee waivers and housing programs are for ADUs and workforce units. A small shed may not need a building permit, depending on your city or county, so ask before you build.", "https://www.washoecounty.gov/building/getting_started/what_requires_a_permit.php"]];
     }
     $("savings").innerHTML = SV.map(function (k) {
       var lab = { ok: "May save", warn: "Check", info: "Tip" }[k[0]];
@@ -1672,7 +1674,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var st = [
       ["ok", "4-ft panel grid, panel list and 3D model", "Working now, with every dimension snapping to the plywood module."],
       ["ok", "TRPA base coverage", "Uses TRPA's parcel figures (land capability or IPES) for looked-up lots, and base percentages for your own numbers. Coverage transfers and newer ADU provisions aren't modeled."],
-      ["warn", "Ground snow load", "One placeholder value for now. Next step is looking up each parcel's ASCE 7-22 value by address. That includes the elevation-matching method Tahoe Truckee engineers have recommended, because the Hazard Tool maps values at half-mile resolution."],
+      ["warn", "Ground snow load", "One placeholder value for now. Next step is looking up each parcel's ASCE 7-22 value by address. That includes elevation matching, a method the Tahoe Truckee Engineers Association has proposed. The Hazard Tool maps values on about a half-mile grid."],
       ["warn", "Panel depths, beams and posts", "Theoretical screening math on plywood-size panels, to show the method. It will be replaced by an engineer's stamped span tables."],
       ["warn", "Prices", "NLT uses an early local estimate. Other prices are placeholders until builders price real designs."],
       ["info", "Parcel lookup by address", "Working for TRPA parcels: size, coverage estimate, buildings and BMP certificate. Planned: county parcel data, fire-hazard maps and local setbacks."],
