@@ -480,9 +480,9 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         <h2 id="h-panel"><span class="step">4</span> Panel system</h2>
         <div class="seg" role="radiogroup" aria-label="Panel system">
           <input type="radio" name="ps" id="psNLT" value="nlt" checked><label for="psNLT">NLT<small>Tahoe Wood, made locally</small></label>
-          <input type="radio" name="ps" id="psCLT" value="clt"><label for="psCLT">CLT preview<small>Alpenglow Timber, planned</small></label>
+          <input type="radio" name="ps" id="psCLT" value="clt"><label for="psCLT">CLT preview<small>A local CLT mill, planned</small></label>
         </div>
-        <p class="clt-banner" id="cltBanner" hidden>CLT preview shows the panel layout on the same 4-ft grid, as 8-ft-wide panels. Panel thickness, cost and carbon will follow once Alpenglow's panels have certified design values (ANSI/APA PRG 320). Until then the cost total leaves the panels out.</p>
+        <p class="clt-banner" id="cltBanner" hidden>CLT preview shows the panel layout on the same 4-ft grid, as 8-ft-wide panels. Panel thickness, cost and carbon will follow once a local CLT mill's panels have certified design values (ANSI/APA PRG 320). Until then the cost total leaves the panels out.</p>
       </section>
     </div>
   </main>
@@ -596,7 +596,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           <li>Snow deflection increased 1.5× for creep, limited to span/240.</li>
           <li>A floor load of 40 psf, limited to span/480, with spans capped at 16 ft.</li>
         </ul>
-        <p class="note">When the roof needs a ridge beam or beam lines, the planner sizes a 24F-V4 glulam (Fb 2,400 psi, E 1.8 million psi) for bending, shear and span/240. Round logs use placeholder values for visually graded local pine or fir (Fb 1,000 psi, E 1.1 million psi) until logs are graded. NLT beams are 3 to 8 plies of 2x12 Hem-Fir No. 2 nailed together. CLT beams are a preview. They use a 5-ply, 6⅞-in panel on edge with generic PRG 320 E1 values (Fb 1,950 psi with a 0.85 reduction, E 1.7 million psi) until Alpenglow's panels are certified. Tied rafters treat the gable as a three-hinged frame. A36 steel rods at wall-top height (allowable 0.33 × 58 ksi on the gross area) take the outward push, H = w·W²/(8·rise), under balanced snow. It adds evenly spaced interior posts on a 2-ft half-panel grid, each with its own pier or footing, when a single span won't work. The walls are load-bearing. They carry the roof panels and the beam ends, but wall capacity, headers over openings, earthquake and wind bracing, and connections aren't checked. A licensed engineer will replace all of this with stamped span tables.</p>
+        <p class="note">When the roof needs a ridge beam or beam lines, the planner sizes a 24F-V4 glulam (Fb 2,400 psi, E 1.8 million psi) for bending, shear and span/240. Round logs use placeholder values for visually graded local pine or fir (Fb 1,000 psi, E 1.1 million psi) until logs are graded. NLT beams are 3 to 8 plies of 2x12 Hem-Fir No. 2 nailed together. CLT beams are a preview. They use a 5-ply, 6⅞-in panel on edge with generic PRG 320 E1 values (Fb 1,950 psi with a 0.85 reduction, E 1.7 million psi) until a local CLT mill's panels are certified. Tied rafters treat the gable as a three-hinged frame. A36 steel rods at wall-top height (allowable 0.33 × 58 ksi on the gross area) take the outward push, H = w·W²/(8·rise), under balanced snow. It adds evenly spaced interior posts on a 2-ft half-panel grid, each with its own pier or footing, when a single span won't work. The walls are load-bearing. They carry the roof panels and the beam ends, but wall capacity, headers over openings, earthquake and wind bracing, and connections aren't checked. A licensed engineer will replace all of this with stamped span tables.</p>
       </div>
     </details>
 
@@ -612,7 +612,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       <div class="roadmap">
         <div><span class="when">Year 1</span><p>Agree a Tahoe NLT panel standard with local makers. Connect TRPA parcel, snow and fire data. Put real pricing into the planner.</p></div>
         <div><span class="when">Year 2</span><p>Turn the most useful configurations into engineered, pre-approved NLT plan sets with partner architects and engineers. Build one pilot if funded.</p></div>
-        <div><span class="when">Year 3</span><p>Add CLT plan variants for Alpenglow Timber's local mill on the same grid, ready when its panels are certified.</p></div>
+        <div><span class="when">Year 3</span><p>Add CLT plan variants for a local CLT mill on the same grid, ready when its panels are certified.</p></div>
       </div>
     </section>
 
@@ -1481,7 +1481,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     } else {
       checks.push(["info", "Nevada ADU rules", "Nevada has no statewide ADU size or height guarantee. " + s.loc.juris + " code" + (s.loc.trpa ? " and TRPA's height and accessory-dwelling rules" : "") + " set the limits here. The roof peak is " + fmt(c.ridge, 1) + " ft."]);
     }
-    if (c.clt) checks.push(["info", "Snow design pending for CLT", "Needs Alpenglow's certified panel values. Design snow here is " + fmt(c.pf) + " psf."]);
+    if (c.clt) checks.push(["info", "Snow design pending for CLT", "Needs certified panel values from a local CLT mill. Design snow here is " + fmt(c.pf) + " psf."]);
     else if (c.roofD && c.needsBeam && !c.beam) checks.push(["warn", "Roof beams need an engineer", c.roofD.lumber.nom + " NLT panels work, but no " + ({ glulam: "glulam up to " + GL.maxD + " in deep", log: "log up to 24 in diameter", nlt: "NLT beam up to 8 plies of 2x12", clt: "CLT beam up to 42 in deep" }[s.beamType] || "beam") + " works" + (s.clearSpan ? " as a clear span" : " with posts 8 ft apart or more") + " at " + fmt(s.pg) + " psf. " + (s.clearSpan ? "Allow interior posts, or narrow the home." : "Try a narrower width, a steeper pitch or a lower snow load.")]);
     else if (c.roofD) checks.push(["ok", "Roof screened for " + fmt(s.pg) + " psf ground snow (ASCE 7-22)", c.roofD.lumber.nom + " NLT spanning " + fmt(c.roofD.span, 1) + " ft" + (c.needsBeam ? (c.beam && c.beam.type === "ties" ? ", with tied rafters instead of a ridge beam" : ", on " + beamText(s, c).charAt(0).toLowerCase() + beamText(s, c).slice(1)) : "") + (c.unbal ? ". Includes unbalanced snow (" + fmt(s.pg) + " psf on the leeward side)" : "") + ". The walls carry the roof, and wall capacity, headers, bracing and connections aren't checked. Screening only; an engineer's stamped tables replace this."]);
     else checks.push(["bad", "Roof beyond this demo's range", "No 2x6–2x12 NLT layout with up to three beam lines works at this snow load and width. An engineer would look at deeper panels or CLT."]);
@@ -1659,7 +1659,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
 
     // schedule
     $("schedNote").textContent = c.clt
-      ? "CLT preview: 8-ft-wide panels laid out on the 4-ft grid. Thickness, weight and board feet will come from Alpenglow's certified panel data."
+      ? "CLT preview: 8-ft-wide panels laid out on the 4-ft grid. Thickness, weight and board feet will come from a local CLT mill's certified panel data."
       : "Every panel is 4 ft wide, which is 32 laminations of 1½-in lumber. Lengths are rounded up to the next 6 in, and panels over " + MAX_PANEL_LEN + " ft are split. Roof lengths include a " + OVERHANG + "-ft overhang.";
     $("schedBody").innerHTML = c.rows.map(function (r) {
       var build = r.clt ? "CLT, thickness pending" : r.lumber ? r.lumber.nom + " NLT (" + fmt(r.lumber.d, 2) + " in)" : "Needs engineer";
@@ -1677,7 +1677,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       ["warn", "Prices", "NLT uses an early local estimate. Other prices are placeholders until builders price real designs."],
       ["info", "Parcel lookup by address", "Working for TRPA parcels: size, coverage estimate, buildings and BMP certificate. Planned: county parcel data, fire-hazard maps and local setbacks."],
       ["info", "Drawings", "Planned: preliminary plans and elevations first, then pre-approved plan sets for chosen designs."],
-      ["info", "CLT", "Planned: Alpenglow Timber panel data once the mill's product is certified."]
+      ["info", "CLT", "Planned: panel data from a local CLT mill once its product is certified."]
     ];
     $("statusList").innerHTML = st.map(function (k) {
       var lab = { ok: "Working", warn: "Placeholder", info: "Planned" }[k[0]];
