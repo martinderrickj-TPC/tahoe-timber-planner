@@ -504,8 +504,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
             <input type="radio" name="fl" id="flPrem" value="premium"><label for="flPrem">Premium<small>custom</small></label>
           </div>
         </div>
-        <label class="check-inline" for="preapp"><input type="checkbox" id="preapp" checked> Built from a pre-approved standard plan (lower design and permit costs)</label>
-        <span class="sub">No pre-approved plan exists yet. One is in the works, so this shows what the cost could be once it's ready.</span>
+        <label class="check-inline" for="preapp"><input type="checkbox" id="preapp"> Built from a pre-approved standard plan (lower design and permit costs)</label>
+        <span class="sub">No pre-approved plan exists yet, and one is in the works. Check this to see what the cost could be once it's ready.</span>
         <div class="field">
           <span class="lab" id="utLab">Utilities</span>
           <div class="seg" role="radiogroup" aria-labelledby="utLab">
@@ -584,7 +584,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           <div class="field"><label for="aNlt">NLT panel price, 6-in panel ($/ft² of panel)</label><input type="number" id="aNlt" min="0" step="0.5" value="15"></div>
           <div class="field"><label for="aRest">Rest of build ($/ft² floor)</label><input type="number" id="aRest" min="0" step="5" value="225"></div>
           <div class="field"><label for="aSite">Site work and foundation ($)</label><input type="number" id="aSite" min="0" step="1000" value="45000"></div>
-          <div class="field"><label for="aSoft">Design, engineering, permits and fees (%)</label><input type="number" id="aSoft" min="0" max="60" step="1" value="8"></div>
+          <div class="field"><label for="aSoft">Design, engineering, permits and fees (%)</label><input type="number" id="aSoft" min="0" max="60" step="1" value="15"></div>
         </div>
         <p class="note">NLT panel pricing follows Tahoe Wood's draft NLT financials: rough-sawn local lumber at about $1 per board foot, plus nails, labor, transport and overhead, comes to about $11–12/ft² of 6-in panel. The $15/ft² default leaves a small producer a margin. Work through the numbers yourself in the <a href="https://martinderrickj-tpc.github.io/tahoe-timber-planner/nlt.html">NLT producer calculator</a>. Deeper roof panels cost more in proportion to their extra lumber. "Rest of build" covers walls, windows, roofing, insulation, mechanical, electrical, plumbing and finishes. The range shown is −15% to +20% around the midpoint.</p>
         <p class="note">Panel depths are a theoretical screening calculation on the plywood-size module, to show the method. They are not an engineering design. For NLT detailing, see Think Wood's <a href="https://info.thinkwood.com/download/nlt-design-and-construction-guide-usa" target="_blank" rel="noopener">NLT Design and Construction Guide</a>. The calculation assumes:</p>
@@ -1217,7 +1217,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       aRest: Math.max(0, numVal("aRest", 225)),
       aSite: Math.max(0, numVal("aSite", 45000)),
       utilities: radioVal("ut") || "shared",
-      aSoft: Math.max(0, numVal("aSoft", 8))
+      aSoft: Math.max(0, numVal("aSoft", 15))
     };
   }
 
