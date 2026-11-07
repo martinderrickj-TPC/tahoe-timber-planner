@@ -8,6 +8,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Sofia+Sans:wght@400;500;600;700&display=swap">
 <script>
+// The site that frames this page can ask for its own theme with ?theme=light or ?theme=dark. Anything else
+// follows the device. It can change the theme later by message, because reloading the frame would lose what's typed.
+(function () {
+  var setTheme = function (t) { if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); };
+  setTheme(new URLSearchParams(location.search).get("theme"));
+  addEventListener("message", function (e) { if (e.source === parent && e.data) setTheme(e.data.tahoeTheme); });
+})();
 // Shown inside the data bot (?embed=1): its bar holds the page tabs and caveat, so a page link here would
 // put the two out of step. Those open in a new tab instead.
 if (new URLSearchParams(location.search).has("embed")) {
@@ -87,7 +94,8 @@ a { color: var(--accent-text); }
 .row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 @media (max-width: 460px) { .row2, .row3 { grid-template-columns: minmax(0, 1fr); } }
-select, input[type="number"] { width: 100%; font: inherit; color: var(--text); background: var(--raised); border: 1px solid var(--border-strong); border-radius: var(--r-sm); padding: 8px 10px; }
+/* 16 px, because iPhones zoom the whole page when a smaller box is tapped */
+select, input[type="number"] { width: 100%; font: inherit; font-size: 16px; color: var(--text); background: var(--raised); border: 1px solid var(--border-strong); border-radius: var(--r-sm); padding: 8px 10px; }
 .seg { display: flex; flex-wrap: wrap; gap: 6px; }
 .seg input { position: absolute; opacity: 0; pointer-events: none; }
 .seg label { flex: 1 1 auto; text-align: center; cursor: pointer; border: 1px solid var(--border-strong); border-radius: var(--r-sm); padding: 7px 10px; font-size: 13.5px; font-weight: 600; background: var(--raised); color: var(--text); }
@@ -236,7 +244,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       </section>
       <section class="card" aria-labelledby="h-sens">
         <h2 id="h-sens">What different prices mean</h2>
-        <div class="table-wrap">
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Prices table">
           <table>
             <thead><tr><th>Price / ft²</th><th>Price / panel</th><th>Margin / panel</th><th>Margin / ft²</th><th>Payback (panels)</th><th>Monthly profit</th></tr></thead>
             <tbody id="sens"></tbody>
@@ -245,7 +253,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       </section>
       <section class="card" aria-labelledby="h-vol">
         <h2 id="h-vol">Volume</h2>
-        <div class="table-wrap">
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Volume table">
           <table>
             <thead><tr><th></th><th>Panels</th><th>Hours</th><th>Revenue</th><th>Costs</th><th>Gross profit</th></tr></thead>
             <tbody id="vol"></tbody>

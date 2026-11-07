@@ -8,6 +8,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Sofia+Sans:wght@400;500;600;700&display=swap">
 <script>
+// The site that frames this page can ask for its own theme with ?theme=light or ?theme=dark. Anything else
+// follows the device. It can change the theme later by message, without reloading the frame.
+(function () {
+  var setTheme = function (t) { if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); };
+  setTheme(new URLSearchParams(location.search).get("theme"));
+  addEventListener("message", function (e) { if (e.source === parent && e.data) setTheme(e.data.tahoeTheme); });
+})();
 // Shown inside the data bot (?embed=1): its bar holds the page tabs and caveat, so a page link here would
 // put the two out of step. Those open in a new tab instead.
 if (new URLSearchParams(location.search).has("embed")) {
@@ -76,6 +83,9 @@ a { color: var(--accent-text); }
 .stage { position: relative; height: min(calc(100vh - 60px), 640px); min-height: 380px; border-radius: var(--r-lg); overflow: hidden; background: var(--stage-bg); border: 1px solid var(--border); }
 @media (max-width: 900px) { .stage { height: 70vw; min-height: 300px; max-height: 480px; } }
 .stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.stage-fallback { pointer-events: none; position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--text); }
+.no-3d .stage { height: auto; min-height: 120px; }
+.no-3d .counters, .no-3d .hint, .no-3d .controls, .no-3d label[for="scrub"], .no-3d #scrub { display: none; }
 .counters { position: absolute; left: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
 .chip { background: var(--raised); color: var(--text); border: 1px solid var(--border); border-radius: 999px; padding: 4px 11px; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .hint { position: absolute; right: 12px; bottom: 12px; font-size: 12px; color: var(--muted); background: var(--raised); border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; }
@@ -88,10 +98,11 @@ a { color: var(--accent-text); }
 .btn[aria-pressed="true"] { border-color: var(--accent-text); color: var(--accent-text); box-shadow: inset 0 0 0 1px var(--accent-text); }
 input[type="range"] { width: 100%; accent-color: var(--tw); }
 .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; counter-reset: s; }
-.steps button { width: 100%; text-align: left; font: inherit; cursor: pointer; background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 8px 10px; display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 8px; align-items: start; }
-.steps button .n { font-family: var(--font-display); font-weight: 700; color: var(--muted); }
-.steps button b { font-weight: 600; font-size: 14.5px; }
-.steps button .t { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+.steps button, .step-static { width: 100%; text-align: left; font: inherit; cursor: pointer; background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 8px 10px; display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 8px; align-items: start; }
+.step-static { cursor: auto; }
+.steps button .n, .step-static .n { font-family: var(--font-display); font-weight: 700; color: var(--muted); }
+.steps button b, .step-static b { font-weight: 600; font-size: 14.5px; }
+.steps button .t, .step-static .t { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
 .steps button[aria-current="step"] { border-color: var(--accent-text); box-shadow: inset 0 0 0 1px var(--accent-text); }
 .steps button[aria-current="step"] .n, .steps button[aria-current="step"] b { color: var(--accent-text); }
 .steps button:not([aria-current="step"]) .t { display: none; }
@@ -120,6 +131,7 @@ footer { margin-top: 24px; font-size: 12.5px; color: var(--muted); max-width: 90
 
   <main class="app">
     <section class="stage" id="stage" aria-label="3D animation of making an NLT panel">
+      <div class="stage-fallback" id="stageFallback" hidden>The 3D view could not start in this browser. The steps still describe the process.</div>
       <div class="counters" aria-hidden="true">
         <span class="chip" id="cBoards">Boards 0 / 12</span>
         <span class="chip" id="cNails">Nails 0</span>
@@ -176,9 +188,18 @@ footer { margin-top: 24px; font-size: 12.5px; color: var(--muted); max-width: 90
   try { reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
   var t = 0, playing = !reduce, speed = 1;
 
-  if (!window.THREE) { $("hint").textContent = "The 3D view could not load. The steps still describe the process."; return; }
+  // Without 3D there's nothing to play, so drop the controls that drive it and show every step's text as plain text.
+  function showWithout3D() {
+    document.documentElement.classList.add("no-3d");
+    $("stageFallback").hidden = false;
+    $("steps").innerHTML = STEPS.map(function (s, i) {
+      return '<li><div class="step-static"><span class="n">' + (i + 1) + '</span><span><b>' + s[1] + '</b><span class="t">' + s[2] + '</span></span></div></li>';
+    }).join("");
+  }
+  if (!window.THREE) { showWithout3D(); return; }
   var stage = $("stage");
-  var renderer = new THREE.WebGLRenderer({ antialias: true });
+  var renderer;
+  try { renderer = new THREE.WebGLRenderer({ antialias: true }); } catch (e) { showWithout3D(); return; }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   stage.insertBefore(renderer.domElement, stage.firstChild);
@@ -205,6 +226,7 @@ footer { margin-top: 24px; font-size: 12.5px; color: var(--muted); max-width: 90
   }
   applyTheme();
   try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme); } catch (e) {}
+  new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
   function box(w, h, d, mat, x, y, z) {
     var m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; return m;

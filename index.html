@@ -8,6 +8,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Sofia+Sans:wght@400;500;600;700&display=swap">
 <script>
+// The site that frames this page can ask for its own theme with ?theme=light or ?theme=dark. Anything else
+// follows the device. It can change the theme later by message, because reloading the frame would lose the lot and design.
+(function () {
+  var setTheme = function (t) { if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); };
+  setTheme(new URLSearchParams(location.search).get("theme"));
+  addEventListener("message", function (e) { if (e.source === parent && e.data) setTheme(e.data.tahoeTheme); });
+})();
 // Shown inside the data bot (?embed=1): its bar holds the page tabs and caveat, so a page link here would
 // put the two out of step. Those open in a new tab instead.
 if (new URLSearchParams(location.search).has("embed")) {
@@ -142,7 +149,7 @@ p { margin: 0; }
 }
 .stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 @media (pointer: coarse) { .stage canvas { touch-action: pan-y; } .stage.orbit-on canvas { touch-action: none; } }
-.stage-fallback { pointer-events: none; position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); }
+.stage-fallback { pointer-events: none; position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--text); }
 .stage-bar {
   position: absolute; left: 12px; right: 12px; top: 12px;
   display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; pointer-events: none;
@@ -170,13 +177,19 @@ p { margin: 0; }
 .field > label, .field > .lab { font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
 .field > label output, .field > .lab output { font-weight: 700; color: var(--accent-text); }
 .sub { font-size: 12.5px; color: var(--muted); }
-.row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
 @media (max-width: 420px) { .row2 { grid-template-columns: minmax(0, 1fr); } }
 
-select, input[type="number"] {
-  width: 100%; font: inherit; color: var(--text); background: var(--raised);
+/* 16 px, because iPhones zoom the whole page when a smaller box is tapped */
+select, input[type="number"], input[type="text"], input[type="search"] {
+  width: 100%; font: inherit; font-size: 16px; color: var(--text); background: var(--raised);
   border: 1px solid var(--border-strong); border-radius: var(--r-sm); padding: 8px 10px;
 }
+select { contain: paint; }   /* a long option otherwise makes the whole page scroll sideways in Safari's engine */
+input[aria-invalid="true"] { border-color: var(--bad); }
+.field-msg:empty { margin-top: -6px; }   /* stays in the page so screen readers hear it when it fills in */
+.field-msg.bad { color: var(--bad); font-weight: 600; }
+.field-msg button { display: inline-block; font: inherit; color: var(--accent-text); background: none; border: 0; padding: 4px 0; text-decoration: underline; cursor: pointer; }
 input[type="range"] { width: 100%; accent-color: var(--tw); }
 .check-inline { display: flex; gap: 8px; align-items: center; font-size: 13.5px; font-weight: 500; cursor: pointer; }
 .check-inline input { width: 16px; height: 16px; accent-color: var(--tw); margin: 0; }
@@ -354,12 +367,14 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         </div>
         <div class="row2">
           <div class="field" id="lotAreaField">
-            <label for="lotArea">Lot size (ft²)</label>
-            <input type="number" id="lotArea" min="1000" max="200000" step="100" value="8000">
+            <label for="lotArea">Lot size (ft² or acres)</label>
+            <input type="text" inputmode="decimal" id="lotArea" value="8000" autocomplete="off" spellcheck="false" aria-describedby="lotAreaMsg">
+            <span class="sub field-msg" id="lotAreaMsg" aria-live="polite" tabindex="-1"></span>
           </div>
           <div class="field">
             <label for="existCov">Existing coverage (ft²)</label>
-            <input type="number" id="existCov" min="0" max="200000" step="50" value="1200">
+            <input type="text" inputmode="decimal" id="existCov" value="1200" autocomplete="off" spellcheck="false" aria-describedby="existCovMsg">
+            <span class="sub field-msg" id="existCovMsg" aria-live="polite" tabindex="-1"></span>
           </div>
         </div>
         <div class="field" id="lcField">
@@ -517,7 +532,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         <ul class="tiers" id="tiers"></ul>
         <div class="handoff" id="navHandoff" hidden>
           <a id="navLink" href="#" target="_blank" rel="noopener">Get my permit checklist</a>
-          <span class="sub">Opens the Tahoe Permit Navigator with this lot and design, including an application report with the forms and fees for each agency. Your street address and parcel number stay in your browser. The lot's map point, size and design go to the Navigator to build the list, and aren't stored.</span>
+          <span class="sub">Opens Business Permitting with this lot and design, including an application report with the forms and fees for each agency. Your street address and parcel number stay in your browser. The lot's map point, size and design go to Business Permitting to build the list, and aren't stored.</span>
         </div>
         <details id="saveDetails">
           <summary>Ways to lower the cost</summary>
@@ -555,7 +570,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     <section class="card" aria-labelledby="h-sched">
       <h2 id="h-sched">Panel list</h2>
       <p class="note" id="schedNote"></p>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Panel list table">
         <table>
           <thead><tr><th>Use</th><th class="r">Qty</th><th>Size</th><th>Build-up</th><th class="r">Board ft</th><th class="r">Each (lb)</th></tr></thead>
           <tbody id="schedBody"></tbody>
@@ -568,7 +583,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       <summary>Material takeoff (rough quantities)</summary>
       <div class="body">
         <p class="note">Rough quantities worked out from the design, for discussion. They're counted for every home on the lot, with about 10% waste on sheet goods and finishes. A builder's takeoff from real drawings replaces this. Prices per line can be added later.</p>
-        <div class="table-wrap">
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Material takeoff table">
           <table>
             <thead><tr><th>Item</th><th class="r">Qty</th><th>Unit</th><th>Note</th></tr></thead>
             <tbody id="takeoffBody"></tbody>
@@ -671,6 +686,52 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
   var radioVal = function (name) { var el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : null; };
   var numVal = function (id, fallback) { var v = parseFloat($(id).value); return isFinite(v) ? v : fallback; };
 
+  // ---------------- lot size and existing coverage boxes ----------------
+  // Plain text boxes, not number boxes. For "12,500" a number box in Firefox or Safari hands the page an empty
+  // value, and the planner then ran on a default with no warning. A box it can't read now gives no number at all.
+  var ACRE_SQFT = 43560;
+  var SQFT_UNIT = /^(?:sq(?:uare)?\.?\s*(?:ft|feet|foot)\.?|sqft|sf|(?:ft|feet|foot)\.?\s*(?:²|\^?2))$/;
+  var ACRE_UNIT = /^(?:acres?|ac\.?)$/;
+  var FRACTIONS = { "¼": "1/4", "½": "1/2", "¾": "3/4", "⅓": "1/3", "⅔": "2/3", "⅛": "1/8", "⅜": "3/8", "⅝": "5/8", "⅞": "7/8" };
+  // A bare number smaller than this is more likely acres than square feet, so ask rather than assume.
+  var AREA_FLOOR = { lotArea: 100, existCov: 1 };
+  function readNumber(t) {
+    var m = t.match(/^(?:(\d+)[\s-]+)?(\d+)\s*\/\s*(\d+)$/);   // 1/4, 1 1/2, 1-1/2
+    if (m) return +m[3] > 0 ? (+m[1] || 0) + m[2] / m[3] : null;
+    // A comma only counts where it separates thousands. "12,50" might mean 12.5, so it isn't read at all.
+    return /^(?:(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d*)?|\.\d+)$/.test(t) ? parseFloat(t.replace(/,/g, "")) : null;
+  }
+  // { sqft } when it can be read. Otherwise sqft is null, with empty or small set when that's the reason.
+  function parseArea(text, floor) {
+    var t = String(text).toLowerCase().replace(/[¼½¾⅓⅔⅛⅜⅝⅞]/g, function (f) { return " " + FRACTIONS[f]; }).trim();
+    if (!t) return { sqft: null, empty: true };
+    var at = t.search(/[a-z²]/), unit = at < 0 ? "" : t.slice(at).trim();
+    var n = readNumber((at < 0 ? t : t.slice(0, at)).replace(/[\s-]+$/, ""));
+    if (n === null) return { sqft: null };
+    if (unit && !SQFT_UNIT.test(unit) && !ACRE_UNIT.test(unit)) return { sqft: null };
+    if (!unit && n > 0 && n < floor) return { sqft: null, small: n };
+    var sqft = Math.round(ACRE_UNIT.test(unit) ? n * ACRE_SQFT : n);
+    if (!sqft && floor > 1) return { sqft: null };   // a lot can't be zero; existing coverage can
+    return { sqft: sqft, acres: ACRE_UNIT.test(unit) };
+  }
+  var areaVal = function (id) { return parseArea($(id).value, AREA_FLOOR[id]).sqft; };
+  var AREA_EMPTY = { lotArea: "Enter a lot size, such as 12,500 or 1/4 acre.", existCov: "Enter a number, or 0 if nothing is built yet." };
+  function paintAreaBox(id) {
+    var el = $(id), box = $(id + "Msg"), raw = el.value.trim(), r = parseArea(raw, AREA_FLOOR[id]), html = "";
+    var bad = r.sqft === null && el.dataset.settled === "1";
+    if (r.acres) html = "Read as " + fmt(r.sqft) + " ft².";
+    else if (bad && r.empty) html = AREA_EMPTY[id];
+    else if (bad && r.small != null) {
+      // A button, because an iPhone's number pad has no letters to type "acres" with.
+      var asAcres = raw + (r.small === 1 || (r.small < 1 && raw.indexOf("/") !== -1) ? " acre" : " acres");
+      html = "Only " + esc(raw) + " ft²? If you meant acres: <button type=\"button\" data-use=\"" + esc(asAcres) + "\">Use " + esc(asAcres) + "</button>";
+    } else if (bad) html = "Can't read that. Try 12,500 or 1/4 acre.";
+    if (bad) el.setAttribute("aria-invalid", "true"); else el.removeAttribute("aria-invalid");
+    box.classList.toggle("bad", bad);
+    // Only when it changes, so a click on the button isn't lost to a redraw.
+    if (box.dataset.html !== html) { box.dataset.html = html; box.innerHTML = html; }
+  }
+
   LOCATIONS.forEach(function (l) {
     var o = document.createElement("option"); o.value = l.id; o.textContent = l.label || l.name + " — " + l.juris; $("loc").appendChild(o);
   });
@@ -714,18 +775,18 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var area = NAV_AREAS[s.loc.juris];
     if (!area) return null;
     var lot = s.lot, footprint = s.L * s.W, answers = {};
-    var allowed = lot && lot.allowedCoverageSqft != null ? lot.allowedCoverageSqft : (!lot && s.loc.trpa && s.landClass ? s.lotArea * s.landClass.pct / 100 : null);
+    var allowed = lot && lot.allowedCoverageSqft != null ? lot.allowedCoverageSqft : (!lot && s.loc.trpa && s.landClass && s.lotArea != null ? s.lotArea * s.landClass.pct / 100 : null);
     if (s.use === "adu") {
       answers.adu_size = c.area < 500 ? "under_500" : c.area < 750 ? "from_500_to_749" : "from_750_to_1200";
       answers.adu_count = s.units === 2 ? "two" : "one";
       answers.workforce_deed = s.housing === "work" ? "yes" : "no";
-      if (area === "washoe_uninc" || area === "douglas_uninc") answers.lot_size = s.lotArea >= 43560 ? "one_acre_plus" : s.lotArea >= 12000 ? "from_12000" : "under_12000";
+      if ((area === "washoe_uninc" || area === "douglas_uninc") && s.lotArea != null) answers.lot_size = s.lotArea >= 43560 ? "one_acre_plus" : s.lotArea >= 12000 ? "from_12000" : "under_12000";
     } else if (s.use === "shed") {
       answers.shed_size = c.area <= 120 ? "up_to_120" : "over_120";
       answers.shed_foundation = s.floor === "skids" ? "skids" : "permanent";
     }
     if (s.use !== "shed") answers.separate_utilities = s.utilities === "separate" ? "separate" : "shared";
-    if (s.loc.trpa && allowed != null && !(lot && lot.coverageUnknown)) answers.coverage_room = allowed - s.existCov >= footprint * c.n ? "enough" : "short";
+    if (s.loc.trpa && allowed != null && s.existCov != null && !(lot && lot.coverageUnknown)) answers.coverage_room = allowed - s.existCov >= footprint * c.n ? "enough" : "short";
     if (s.loc.trpa && lot) answers.land_verified = lot.coverageBasis === "Estimate" ? "not_verified" : "verified";
     if (s.loc.trpa && lot && lot.bmpCertificate != null) answers.bmp_status = lot.bmpCertificate ? "certificate" : "none";
     var project = {
@@ -951,6 +1012,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       };
       liveLot = lot;
       $("existCov").value = "";   // never carry the last parcel's coverage over to this one
+      delete $("existCov").dataset.settled;   // no "enter a number" message while the figure is still loading
       $("liveStatusMsg").textContent = "Loaded from TRPA. Checking existing buildings and elevation…";
       scheduleUpdate();
       // second pass: existing impervious cover + buildings, and elevation
@@ -1194,8 +1256,9 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     return {
       loc: loc,
       lot: lot,
-      lotArea: lot ? lot.lotAreaSqft : Math.max(0, numVal("lotArea", 8000)),
-      existCov: Math.max(0, numVal("existCov", 0)),
+      // null when the box can't be read. Every check that uses these has to say so rather than guess.
+      lotArea: lot ? lot.lotAreaSqft : areaVal("lotArea"),
+      existCov: areaVal("existCov"),
       landClass: LAND_CLASSES.filter(function (c) { return c.id === $("landClass").value; })[0],
       L: +$("len").value,
       W: +$("wid").value,
@@ -1396,6 +1459,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     $("liveBox").hidden = !liveMode;
     $("locField").hidden = !!s.lot || liveMode;
     $("lotAreaField").hidden = !!s.lot || liveMode;
+    paintAreaBox("lotArea"); paintAreaBox("existCov");
     $("liveFacts").innerHTML = "";
     if (s.lot) {
       var L0 = s.lot, facts = [["Community", L0.community + " (" + L0.jurisdiction + ")"], ["Lot size", fmt(L0.lotAreaSqft) + " ft² · " + fmt(L0.lotAreaSqft / 43560, 2) + " acres"]];
@@ -1449,13 +1513,17 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     if (s.loc.trpa && knownSensitive) checks.push(["warn", "Sensitive land", "New coverage is generally not allowed on residential lots in land capability 1-3." + (adu ? " TRPA's ADU page says an ADU there must be deed restricted." : "") + " Confirm with TRPA before designing."]);
     var shedRule = shedExemption(s, c.area, c.n);
     var covExempt = s.use === "shed" && s.floor === "skids" && shedRule.eligible;
-    if (s.use === "shed" && s.loc.trpa && !covExempt) checks.push(["info", "Counts toward land coverage", s.floor !== "skids" ? "On a permanent foundation a shed counts toward TRPA land coverage. On skids it may qualify for an exemption." : c.area * c.n > 120 ? "Over 120 ft² in total on the parcel, so TRPA's coverage exemption for sheds doesn't apply." : "TRPA's shed exemption needs non-sensitive land (capability classes 4–7 or IPES 726 and up), and the shed can't exceed 2% of it."]);
+    var shedNeedsLot = s.lotArea == null && s.floor === "skids" && c.area * c.n <= 120;   // the 2% limit depends on the lot
+    if (s.use === "shed" && s.loc.trpa && !covExempt && !shedNeedsLot) checks.push(["info", "Counts toward land coverage", s.floor !== "skids" ? "On a permanent foundation a shed counts toward TRPA land coverage. On skids it may qualify for an exemption." : c.area * c.n > 120 ? "Over 120 ft² in total on the parcel, so TRPA's coverage exemption for sheds doesn't apply." : "TRPA's shed exemption needs non-sensitive land (capability classes 4–7 or IPES 726 and up), and the shed can't exceed 2% of it."]);
     if (covExempt) checks.push([shedRule.bmp === true ? "ok" : "warn", "May be exempt from TRPA land coverage", "A shed on skids with no permanent foundation, up to 120 ft² and no more than 2% of the parcel's non-sensitive land, can be exempt from land coverage on capability classes 4–7 or IPES 726 and up. TRPA also requires installed BMPs. " + (shedRule.bmp === true ? "TRPA's map shows a BMP certificate on this parcel." : shedRule.bmp === false ? "TRPA's map shows no BMP certificate on this parcel, so plan on installing BMPs first." : "Check whether this parcel has a BMP certificate.") + " It still goes through TRPA's exemption declaration."]);
     else if (s.lot && s.lot.allowedCoverageSqft != null) {
       var remainingT = s.lot.allowedCoverageSqft - s.existCov, fpT = s.L * s.W * c.n;
-      if (s.lot.coverageUnknown && !s.existCov) checks.push(["warn", "Coverage can't be checked yet", "This home covers " + fmt(fpT) + " ft² and TRPA estimates " + fmt(s.lot.allowedCoverageSqft) + " ft² of allowed coverage, but how much is already used isn't known. Enter your own figure above."]);
+      if (s.existCov == null || (s.lot.coverageUnknown && !s.existCov)) checks.push(["warn", "Coverage can't be checked yet", "This home covers " + fmt(fpT) + " ft² and TRPA estimates " + fmt(s.lot.allowedCoverageSqft) + " ft² of allowed coverage, but how much is already used isn't known. Enter your own figure above."]);
       else if (fpT <= remainingT) checks.push(["ok", "Land coverage fits", "This home covers " + fmt(fpT) + " ft². TRPA estimates " + fmt(s.lot.allowedCoverageSqft) + " ft² of allowed coverage for this parcel, and about " + fmt(s.existCov) + " ft² is already used, leaving " + fmt(remainingT) + " ft². Coverage is only an estimate until TRPA verifies the site."]);
       else checks.push(["warn", "Over allowed land coverage", "This home covers " + fmt(fpT) + " ft², but only about " + fmt(Math.max(0, remainingT)) + " ft² of TRPA's estimated allowed coverage is left. Options include a smaller footprint, removing old coverage, or buying and transferring coverage through TRPA."]);
+    } else if (s.loc.trpa && (s.lotArea == null || s.existCov == null)) {
+      var unread = s.lotArea != null ? "the existing coverage" : s.existCov != null ? "the lot size" : "the lot size and existing coverage";
+      checks.push(["warn", "Coverage can't be checked yet", "Enter " + unread + " above to see how much coverage is left."]);
     } else if (s.loc.trpa) {
       var allowed = s.lotArea * s.landClass.pct / 100;
       var remaining = allowed - s.existCov;
@@ -1630,7 +1698,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       ["Garden shed", 12, 8, "useShed", "fdSkids"], ["Studio", 20, 16, "useAdu", "fdCrawl"], ["Workshop", 24, 16, "useWork", "fdSlab"],
       ["Studio plus", 24, 20, "useAdu", "fdCrawl"], ["One bedroom", 28, 24, "useAdu", "fdCrawl"], ["Two bedroom", 36, 20, "useAdu", "fdCrawl"]
     ];
-    var allowedCov = s.lot && s.lot.allowedCoverageSqft != null ? s.lot.allowedCoverageSqft : (s.loc.trpa && s.landClass ? s.lotArea * s.landClass.pct / 100 : null);
+    var allowedCov = s.lot && s.lot.allowedCoverageSqft != null ? s.lot.allowedCoverageSqft : (s.loc.trpa && s.landClass && s.lotArea != null ? s.lotArea * s.landClass.pct / 100 : null);
+    var covLeft = allowedCov != null && s.existCov != null ? allowedCov - s.existCov : null;
     $("designLib").innerHTML = DESIGNS.map(function (d, i) {
       var ft2 = d[1] * d[2], st = "", cls = "";
       if (s.lot && s.lot.outline && s.lot.outline.length > 2) {
@@ -1638,9 +1707,9 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         var shedLib = d[3] === "useShed" ? shedExemption(s, ft2, 1) : { eligible: false };
         if (!pl.fits) { st = "Doesn't fit on this lot"; cls = "bad"; }
         else if (shedLib.eligible) { st = shedLib.bmp === true ? "Fits, may be coverage exempt" : "Fits; exempt only with BMPs"; cls = shedLib.bmp === true ? "ok" : "warn"; }
-        else if (allowedCov != null && ft2 > allowedCov - s.existCov) { st = "Fits, over coverage"; cls = "warn"; }
+        else if (covLeft != null && ft2 > covLeft) { st = "Fits, over coverage"; cls = "warn"; }
         else { st = "Fits this lot"; cls = "ok"; }
-      } else if (allowedCov != null && !(d[3] === "useShed" && shedExemption(s, ft2, 1).eligible) && ft2 > allowedCov - s.existCov) { st = "Over coverage"; cls = "warn"; }
+      } else if (covLeft != null && !(d[3] === "useShed" && shedExemption(s, ft2, 1).eligible) && ft2 > covLeft) { st = "Over coverage"; cls = "warn"; }
       var on = s.L === d[1] && s.W === d[2] && $(d[3]).checked;
       return '<button type="button" data-i="' + i + '" aria-pressed="' + on + '"><b>' + d[0] + '</b><span>' + d[1] + ' × ' + d[2] + ' ft · ' + fmt(ft2) + ' ft²</span>' + (st ? '<i class="' + cls + '">' + st + '</i>' : '') + '</button>';
     }).join("");
@@ -2221,6 +2290,20 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
 
   document.querySelectorAll("input, select").forEach(function (el) {
     el.addEventListener("input", scheduleUpdate);
+  });
+  ["lotArea", "existCov"].forEach(function (id) {
+    var el = $(id), timer = 0;
+    // No message while someone is mid-typing, such as "1/" on the way to "1/4 acre".
+    el.addEventListener("input", function () {
+      delete el.dataset.settled; clearTimeout(timer);
+      timer = setTimeout(function () { el.dataset.settled = "1"; paintAreaBox(id); }, 900);
+    });
+    el.addEventListener("blur", function () { clearTimeout(timer); el.dataset.settled = "1"; paintAreaBox(id); });
+    $(id + "Msg").addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-use]"); if (!b) return;
+      // The button goes away, so focus moves to its message. Not to the box, which would reopen a phone's keyboard.
+      el.value = b.getAttribute("data-use"); this.focus(); scheduleUpdate();
+    });
   });
   function setView(btn, key, val) {
     view[key] = val;
