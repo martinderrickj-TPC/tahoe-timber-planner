@@ -181,7 +181,7 @@ p { margin: 0; }
 @media (max-width: 420px) { .row2 { grid-template-columns: minmax(0, 1fr); } }
 
 /* 16 px, because iPhones zoom the whole page when a smaller box is tapped */
-select, input[type="number"], input[type="text"], input[type="search"] {
+select, input[type="text"], input[type="search"] {
   width: 100%; font: inherit; font-size: 16px; color: var(--text); background: var(--raised);
   border: 1px solid var(--border-strong); border-radius: var(--r-sm); padding: 8px 10px;
 }
@@ -259,7 +259,7 @@ details > summary::-webkit-details-marker { display: none; }
 details > summary::after { content: "+"; font-size: 18px; color: var(--muted); line-height: 1; }
 details[open] > summary::after { content: "–"; }
 details > .body { padding: 0 16px 16px; display: grid; gap: 12px; }
-.assump { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.assump { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: start; }
 .note { font-size: 13px; color: var(--muted); max-width: 72ch; }
 .list { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
 .status-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
@@ -529,6 +529,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           </div>
           <span class="sub">All-electric with heat pumps, so there's no gas line or meter. Septic generally isn't an option in the Tahoe Basin. California law sends basin sewage to sewer systems that carry it out of the watershed, with narrow exceptions, and both states ordered sewage exported in the 1960s. Plan on connecting to sewer. Ask your water provider whether your lot has public water or a private well. The planner sites the home near the house to keep the utility trench short. Each water and sewer provider decides whether a detached ADU needs its own connection. California law requires any ADU connection charge to be proportionate to the unit's burden, based on its square footage or plumbing fixtures.</span>
         </div>
+        <p class="sub field-msg bad" id="priceGap" hidden></p>
         <ul class="tiers" id="tiers"></ul>
         <div class="handoff" id="navHandoff" hidden>
           <a id="navLink" href="#" target="_blank" rel="noopener">Get my permit checklist</a>
@@ -596,10 +597,10 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       <summary>Price and engineering assumptions</summary>
       <div class="body">
         <div class="assump">
-          <div class="field"><label for="aNlt">NLT panel price, 6-in panel ($/ft² of panel)</label><input type="number" id="aNlt" min="0" step="0.5" value="15"></div>
-          <div class="field"><label for="aRest">Rest of build ($/ft² floor)</label><input type="number" id="aRest" min="0" step="5" value="225"></div>
-          <div class="field"><label for="aSite">Site work and foundation ($)</label><input type="number" id="aSite" min="0" step="1000" value="45000"></div>
-          <div class="field"><label for="aSoft">Design, engineering, permits and fees (%)</label><input type="number" id="aSoft" min="0" max="60" step="1" value="15"></div>
+          <div class="field"><label for="aNlt">NLT panel price, 6-in panel ($/ft² of panel)</label><input type="text" inputmode="decimal" id="aNlt" value="15" autocomplete="off" spellcheck="false" aria-describedby="aNltMsg"><span class="sub field-msg" id="aNltMsg" aria-live="polite"></span></div>
+          <div class="field"><label for="aRest">Rest of build ($/ft² floor)</label><input type="text" inputmode="decimal" id="aRest" value="225" autocomplete="off" spellcheck="false" aria-describedby="aRestMsg"><span class="sub field-msg" id="aRestMsg" aria-live="polite"></span></div>
+          <div class="field"><label for="aSite">Site work and foundation ($)</label><input type="text" inputmode="decimal" id="aSite" value="45000" autocomplete="off" spellcheck="false" aria-describedby="aSiteMsg"><span class="sub field-msg" id="aSiteMsg" aria-live="polite"></span></div>
+          <div class="field"><label for="aSoft">Design, engineering, permits and fees (%)</label><input type="text" inputmode="decimal" id="aSoft" value="15" autocomplete="off" spellcheck="false" aria-describedby="aSoftMsg"><span class="sub field-msg" id="aSoftMsg" aria-live="polite"></span></div>
         </div>
         <p class="note">NLT panel pricing follows Tahoe Wood's draft NLT financials: rough-sawn local lumber at about $1 per board foot (a verbal local quote from about May 2026), plus nails, labor, transport and overhead, comes to about $11–12/ft² of 6-in panel. The $15/ft² default leaves a small producer a margin. Work through the numbers yourself in the <a href="https://martinderrickj-tpc.github.io/tahoe-timber-planner/nlt.html">NLT producer calculator</a>. Deeper roof panels cost more in proportion to their extra lumber. "Rest of build" covers walls, windows, roofing, insulation, mechanical, electrical, plumbing and finishes. The range shown is −15% to +20% around the midpoint.</p>
         <p class="note">Panel depths are a theoretical screening calculation on the plywood-size module, to show the method. They are not an engineering design. For NLT detailing, see Think Wood's <a href="https://info.thinkwood.com/download/nlt-design-and-construction-guide-usa" target="_blank" rel="noopener">NLT Design and Construction Guide</a>. The calculation assumes:</p>
@@ -681,10 +682,11 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
   // ---------------- dom helpers ----------------
   var $ = function (id) { return document.getElementById(id); };
   var fmt = function (n, d) { return Number(n).toLocaleString("en-US", { maximumFractionDigits: d || 0, minimumFractionDigits: d || 0 }); };
-  var money = function (n) { return "$" + fmt(Math.round(n / 1000) * 1000); };
+  // A price that can't be worked out prints as a dash. null would otherwise round to $0, which reads as free.
+  var money = function (n) { return n == null ? "—" : "$" + fmt(Math.round(n / 1000) * 1000); };
+  var times = function (a, b) { return a == null || b == null ? null : a * b; };   // JavaScript reads null * 5 as 0
   var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
   var radioVal = function (name) { var el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : null; };
-  var numVal = function (id, fallback) { var v = parseFloat($(id).value); return isFinite(v) ? v : fallback; };
 
   // ---------------- lot size and existing coverage boxes ----------------
   // Plain text boxes, not number boxes. For "12,500" a number box in Firefox or Safari hands the page an empty
@@ -695,11 +697,12 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
   var FRACTIONS = { "¼": "1/4", "½": "1/2", "¾": "3/4", "⅓": "1/3", "⅔": "2/3", "⅛": "1/8", "⅜": "3/8", "⅝": "5/8", "⅞": "7/8" };
   // A bare number smaller than this is more likely acres than square feet, so ask rather than assume.
   var AREA_FLOOR = { lotArea: 100, existCov: 1 };
+  // A comma only counts where it separates thousands. "12,50" might mean 12.5, so it isn't read at all.
+  function readDecimal(t) { return /^(?:(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d*)?|\.\d+)$/.test(t) ? parseFloat(t.replace(/,/g, "")) : null; }
   function readNumber(t) {
     var m = t.match(/^(?:(\d+)[\s-]+)?(\d+)\s*\/\s*(\d+)$/);   // 1/4, 1 1/2, 1-1/2
     if (m) return +m[3] > 0 ? (+m[1] || 0) + m[2] / m[3] : null;
-    // A comma only counts where it separates thousands. "12,50" might mean 12.5, so it isn't read at all.
-    return /^(?:(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d*)?|\.\d+)$/.test(t) ? parseFloat(t.replace(/,/g, "")) : null;
+    return readDecimal(t);
   }
   // { sqft } when it can be read. Otherwise sqft is null, with empty or small set when that's the reason.
   function parseArea(text, floor) {
@@ -730,6 +733,51 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     box.classList.toggle("bad", bad);
     // Only when it changes, so a click on the button isn't lost to a redraw.
     if (box.dataset.html !== html) { box.dataset.html = html; box.innerHTML = html; }
+  }
+  // No message while someone is mid-typing, such as "1/" on the way to "1/4 acre".
+  function watchBox(id, paint) {
+    var el = $(id), timer = 0;
+    el.addEventListener("input", function () {
+      delete el.dataset.settled; clearTimeout(timer);
+      timer = setTimeout(function () { el.dataset.settled = "1"; paint(id); }, 900);
+    });
+    el.addEventListener("blur", function () { clearTimeout(timer); el.dataset.settled = "1"; paint(id); });
+  }
+
+  // ---------------- price boxes ----------------
+  // Text boxes for the same reason, reading 90,000, $90,000 and 90000. There's no default behind them: a box it
+  // can't read gives null, and every figure that uses it stays blank. Fractions aren't read here, since "11/12" is
+  // more likely a range than 0.92.
+  var PRICE_BOX = {
+    aNlt: { name: "NLT panel price", eg: "15 or $15" },
+    aRest: { name: "Rest of build", eg: "225 or $225" },
+    aSite: { name: "Site work and foundation", eg: "45,000 or $45,000" },
+    aSoft: { name: "Design, engineering, permits and fees", eg: "15 or 15%", pct: true }
+  };
+  // { value } when it can be read. Otherwise value is null, with empty or overPct set when that's the reason.
+  function parsePrice(text, box) {
+    var t = String(text).trim();
+    if (!t) return { value: null, empty: true };
+    var n = readDecimal(box.pct ? t.replace(/\s*%$/, "") : t.replace(/^\$\s*|\s*\$$/g, ""));
+    // 15,000 or $15,000 here is a dollar amount in the percent box. Read as a percent, it would swamp the total.
+    if (box.pct && n > 100) return { value: null, overPct: true };
+    return { value: n };
+  }
+  var priceVal = function (id) { return parsePrice($(id).value, PRICE_BOX[id]).value; };
+  function paintPriceBox(id) {
+    var el = $(id), box = $(id + "Msg"), r = parsePrice(el.value, PRICE_BOX[id]), msg = "";
+    var bad = r.value === null && el.dataset.settled === "1";
+    if (bad) msg = r.empty ? "Enter a number, such as " + PRICE_BOX[id].eg + "." : r.overPct ? "Over 100%? This box is a percent, not dollars." : "Can't read that. Try " + PRICE_BOX[id].eg + ".";
+    if (bad) el.setAttribute("aria-invalid", "true"); else el.removeAttribute("aria-invalid");
+    box.classList.toggle("bad", bad);
+    if (box.textContent !== msg) box.textContent = msg;
+    // The boxes sit in a section that can be closed, so the price guide says which one is holding it up.
+    // CLT has no panel price yet, so that box holds nothing up there.
+    var clt = radioVal("ps") === "clt", names = Object.keys(PRICE_BOX).filter(function (k) {
+      return $(k).getAttribute("aria-invalid") === "true" && !(clt && k === "aNlt");
+    }).map(function (k) { return PRICE_BOX[k].name; });
+    $("priceGap").hidden = !names.length;
+    $("priceGap").textContent = names.length ? "Can't read: " + names.join("; ") + ". Any price that needs one stays blank until it's fixed under Price and engineering assumptions. No default is used in its place." : "";
   }
 
   LOCATIONS.forEach(function (l) {
@@ -797,8 +845,9 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     };
     if (s.use === "adu") project.bedrooms = c.area >= 650 ? "1 to 2" : c.area >= 450 ? "1" : "Studio";
     if (lot) { project.plan_area = lot.planName; project.zoning = lot.zoning; project.land_capability = lot.landCapabilityClass; project.ipes_score = lot.ipesScore; project.elevation_ft = lot.elevationFt; }
-    if (!c.clt) {
-      project.kit_low = (c.panelsCost || 0) * 0.9; project.kit_high = (c.panelsCost || 0) * 1.1;
+    // A price it can't work out is left off, the same as for CLT, so Business Permitting asks for a valuation rather than getting $0.
+    if (!c.clt && c.panelsCost != null) { project.kit_low = c.panelsCost * 0.9; project.kit_high = c.panelsCost * 1.1; }
+    if (!c.clt && c.shell != null) {
       project.shell_low = c.shell * 0.85; project.shell_high = c.shell * 1.2;
       if (s.use !== "shed") { project.ready_low = c.low; project.ready_high = c.high; }
       project.valuation = s.use === "shed" ? c.shell * 0.85 : c.low;
@@ -873,6 +922,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     $("addrQ").value = v; $("addrQ2").value = "";
     scheduleUpdate();
     $("addrQ").dispatchEvent(new Event("input", { bubbles: true }));
+    // Now, not at the next redraw. A hidden box can't take focus, and the letters typed after that were lost.
+    $("liveBox").hidden = false;
     setTimeout(function () { $("addrQ").focus(); try { $("addrQ").setSelectionRange(v.length, v.length); } catch (err) {} }, 0);
   });
   $("addrQ").addEventListener("input", function () {
@@ -1268,7 +1319,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       pitch: +$("pitch").value,
       pg: +$("pg").value,
       system: radioVal("ps"),
-      aNlt: Math.max(0, numVal("aNlt", 15)),
+      // null when the box can't be read, like the lot boxes above.
+      aNlt: priceVal("aNlt"),
       sheltered: $("shelt").checked,
       clearSpan: $("clearSpan").checked,
       beamType: radioVal("bm") || "glulam",
@@ -1277,10 +1329,10 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       housing: radioVal("ht"),
       use: radioVal("use") || "adu",
       exterior: radioVal("ex") || "live",
-      aRest: Math.max(0, numVal("aRest", 225)),
-      aSite: Math.max(0, numVal("aSite", 45000)),
+      aRest: priceVal("aRest"),
+      aSite: priceVal("aSite"),
       utilities: radioVal("ut") || "shared",
-      aSoft: Math.max(0, numVal("aSoft", 15))
+      aSoft: priceVal("aSoft")
     };
   }
 
@@ -1406,30 +1458,33 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var runFt = 0;
     for (var u = 0; u < n; u++) { var pu = places && places[u]; runFt += (pu && pu.fits && hasHouse ? Math.min(pu.clear, 80) : 40) + 10; }
     // a second unit shares mobilization; sheds and workshops need far less site work (placeholders)
-    var siteWork = s.aSite * (1 + 0.5 * (n - 1)) * (s.use === "shed" ? (s.floor === "skids" ? 0.03 : 0.25) : s.use === "workshop" ? 0.6 : 1);
+    var siteWork = s.aSite == null ? null : s.aSite * (1 + 0.5 * (n - 1)) * (s.use === "shed" ? (s.floor === "skids" ? 0.03 : 0.25) : s.use === "workshop" ? 0.6 : 1);
     // placeholder utility allowances: tie-in vs new meters/laterals, plus $60/ft of shared trench
     var utilCost = s.use === "shed" ? 0 : s.use === "workshop" ? 3000 * n + 30 * runFt : (s.utilities === "separate" ? 22000 : 8000) * n + 60 * runFt;   // workshop: power only
-    var siteCost = siteWork + utilCost;
+    var siteCost = siteWork == null ? null : siteWork + utilCost;
     // lumber is about 56% of panel cost for a 6-in panel, so deeper panels scale that share with lumber volume
     var panelSf = 0, panelsCost = clt ? null : rows.reduce(function (sum, r) {
       if (!r.lumber) return sum;
       var sf = r.qty * r.w * r.len; panelSf += sf;
       return sum + sf * s.aNlt * (0.56 * r.lumber.nomD / 6 + 0.44);
     }, 0);
+    if (s.aNlt == null) panelsCost = null;   // the sum above still gives the panel area, which doesn't need a price
     // placeholder: NLT walls replace wall framing and local live-edge boards are cheap; plywood is cheaper than fiber cement
-    var restRate = s.aRest * ({ live: 0.94, ply: 0.97, siding: 1 }[s.exterior] || 1)
+    var restRate = s.aRest == null ? null : s.aRest * ({ live: 0.94, ply: 0.97, siding: 1 }[s.exterior] || 1)
                  * ({ adu: 1, workshop: 0.5, shed: 0.3 }[s.use] || 1);   // no plumbing or kitchen in a workshop; a shed is mostly envelope
-    var hard = (panelsCost || 0) + totalArea * restRate + siteCost;
-    var softPct = s.aSoft * (s.use === "shed" ? (area <= 120 ? 0.2 : 0.5) : s.use === "workshop" ? 0.7 : 1);
-    var mid = hard * (1 + softPct / 100);
+    var softPct = s.aSoft == null ? null : s.aSoft * (s.use === "shed" ? (area <= 120 ? 0.2 : 0.5) : s.use === "workshop" ? 0.7 : 1);
+    // A total needs every price box behind it. The panel price doesn't count for CLT, whose panels are left out for now.
+    var priced = (clt || s.aNlt != null) && s.aRest != null && s.aSite != null && s.aSoft != null;
+    var hard = priced ? (panelsCost || 0) + totalArea * restRate + siteCost : null;
+    var mid = priced ? hard * (1 + softPct / 100) : null;
 
     return {
       p: p, theta: theta, pf: pf, pfASD: pfASD, unbal: unbal, beam: beam, needsBeam: needsBeam, snowDepth: snowDepth, roofD: roofD, floorD: floorD,
       tRoof: tRoof, tFloor: tFloor, y0: y0, rise: rise, ridge: ridge,
       rows: rows, bf: bf, co2: co2, count: count, area: area,
-      panelsCost: panelsCost, hard: hard, mid: mid, low: mid * 0.85, high: mid * 1.2, clt: clt,
+      panelsCost: panelsCost, hard: hard, mid: mid, low: times(mid, 0.85), high: times(mid, 1.2), clt: clt,
       // shell = walls 12% + roofing 10% + windows/doors/siding 16% of "rest of build", plus their share of builder overhead (20% x 38/80)
-      shell: ((panelsCost || 0) + siteCost + totalArea * restRate * 0.475) * (1 + softPct / 100), restRate: restRate, softPct: softPct,
+      shell: priced ? ((panelsCost || 0) + siteCost + totalArea * restRate * 0.475) * (1 + softPct / 100) : null, restRate: restRate, softPct: softPct,
       n: n, totalArea: totalArea, siteCost: siteCost, panelSf: panelSf,
       places: places, siteWork: siteWork, utilCost: utilCost, runFt: runFt
     };
@@ -1460,6 +1515,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     $("locField").hidden = !!s.lot || liveMode;
     $("lotAreaField").hidden = !!s.lot || liveMode;
     paintAreaBox("lotArea"); paintAreaBox("existCov");
+    Object.keys(PRICE_BOX).forEach(paintPriceBox);
     $("liveFacts").innerHTML = "";
     if (s.lot) {
       var L0 = s.lot, facts = [["Community", L0.community + " (" + L0.jurisdiction + ")"], ["Lot size", fmt(L0.lotAreaSqft) + " ft² · " + fmt(L0.lotAreaSqft / 43560, 2) + " acres"]];
@@ -1475,6 +1531,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
 
     // summary
     var fits = c.area >= 650 ? "Fits 1–2 bedrooms" : c.area >= 450 ? "Fits 1 bedroom" : c.area >= 300 ? "Fits a studio" : "Fits a studio or office";
+    var NO_PRICE = "Can't price yet", NO_PRICE_WHY = "See price assumptions below", headline = s.use === "shed" ? times(c.shell, 0.85) : c.low;
     var roofTxt = c.clt ? "CLT, pending" : c.roofD ? c.roofD.lumber.nom + " NLT" : "Needs engineer";
     var roofSub = c.clt ? "8-ft panels on the 4-ft grid" : c.roofD ? (c.needsBeam ? beamText(s, c) : "Clear span, no beams") : "Over this demo's range";
     $("summary").innerHTML =
@@ -1482,8 +1539,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       stat("Roof panels", roofTxt, roofSub) +
       stat("Panels", fmt(c.count), c.clt ? "CLT layout preview" : fmt(c.bf) + " board ft of local lumber") +
       stat("Carbon stored", c.clt ? "Pending" : "≈ " + fmt(c.co2, 1) + " t CO₂e", c.clt ? "Needs certified panel data" : "Estimated carbon in the wood (volume × assumed density × 50% carbon share). Wood products hold it for as long as they stay in service. Logging, trucking and milling emissions aren't counted.") +
-      stat(s.use === "shed" ? "Weathertight shed" : s.use === "workshop" ? "Finished workshop" : "Move-in ready", c.clt ? "Pending" : "from " + money(s.use === "shed" ? c.shell * 0.85 : c.low),
-           c.clt ? "Waiting on CLT panel pricing" : (s.use === "shed" ? "Timber kit from " + money((c.panelsCost || 0) * 0.9) : "Weathertight shell from " + money(c.shell * 0.85)) + (c.n > 1 ? " · both" : "")) +
+      stat(s.use === "shed" ? "Weathertight shed" : s.use === "workshop" ? "Finished workshop" : "Move-in ready", c.clt ? "Pending" : headline == null ? NO_PRICE : "from " + money(headline),
+           c.clt ? "Waiting on CLT panel pricing" : headline == null ? NO_PRICE_WHY : (s.use === "shed" ? "Timber kit from " + money(c.panelsCost * 0.9) : "Weathertight shell from " + money(c.shell * 0.85)) + (c.n > 1 ? " · both" : "")) +
       stat("Design roof snow", fmt(c.pf) + " psf", "≈ " + fmt(c.snowDepth, 1) + " ft of settled snow at service level");
     // checks
     var checks = [];
@@ -1570,25 +1627,25 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     }).join("");
 
     // cost
-    var soft = c.hard * c.softPct / 100;
+    var soft = c.hard == null ? null : c.hard * c.softPct / 100;
     var TIERS = [
-      ["Timber kit", "Local NLT roof and floor panels, planned to be cut to the 4-ft grid. None are for sale yet, so this is a draft price. Beams and posts are quoted separately.", (c.panelsCost || 0) * 0.9, (c.panelsCost || 0) * 1.1, false],
-      ["Weathertight shell", "The kit plus site work, utilities, foundation, walls, insulated roof, windows, doors and fire-rated siding, with design and permits. You or your builder finish the inside.", c.shell * 0.85, c.shell * 1.2, false],
+      ["Timber kit", "Local NLT roof and floor panels, planned to be cut to the 4-ft grid. None are for sale yet, so this is a draft price. Beams and posts are quoted separately.", times(c.panelsCost, 0.9), times(c.panelsCost, 1.1), false],
+      ["Weathertight shell", "The kit plus site work, utilities, foundation, walls, insulated roof, windows, doors and fire-rated siding, with design and permits. You or your builder finish the inside.", times(c.shell, 0.85), times(c.shell, 1.2), false],
       ["Move-in ready", "Everything in the shell plus heating, plumbing, electrical, kitchen, bath, " + ({ basic: "rental-grade (durable, minimum residential or commercial fittings)", standard: "standard", premium: "premium" }[radioVal("fl")] || "rental-grade") + " interior finishes and builder overhead." + (radioVal("fl") === "basic" ? " The NLT ceiling stays exposed as the finished ceiling." : ""), c.low, c.high, true]
     ];
     if (s.use === "shed") { TIERS.pop(); TIERS[1][4] = true; }
     else if (s.use === "workshop") TIERS[2] = ["Finished workshop", "Everything in the shell plus power, lighting, a basic interior and builder overhead. Not for living in.", c.low, c.high, true];
     $("tiers").innerHTML = TIERS.map(function (t) {
-      var price = c.clt ? "Pending<small>needs CLT pricing</small>" : "from " + money(t[2]) + "<small>" + money(t[2]) + "–" + money(t[3]) + " · from $" + fmt(t[2] / c.totalArea) + "/ft²</small>";
+      var price = c.clt ? "Pending<small>needs CLT pricing</small>" : t[2] == null ? NO_PRICE + "<small>" + NO_PRICE_WHY + "</small>" : "from " + money(t[2]) + "<small>" + money(t[2]) + "–" + money(t[3]) + " · from $" + fmt(t[2] / c.totalArea) + "/ft²</small>";
       return '<li class="tier' + (t[4] ? " main" : "") + '"><h3>' + esc(t[0]) + (c.n > 1 ? " · 2 homes" : "") + '</h3><span class="from">' + price + "</span><p>" + esc(t[1]) + "</p></li>";
     }).join("");
     $("costLines").innerHTML =
       line(c.clt ? "CLT panels (pending pricing)" : "NLT panels (" + fmt(c.panelSf) + " ft² of panel)", c.clt ? "—" : money(c.panelsCost)) +
-      line("Rest of build (" + fmt(c.totalArea) + " ft² × $" + fmt(c.restRate) + ")", money(c.totalArea * c.restRate)) +
+      line("Rest of build (" + fmt(c.totalArea) + " ft²" + (c.restRate == null ? "" : " × $" + fmt(c.restRate)) + ")", money(times(c.totalArea, c.restRate))) +
       line("Site work and foundation" + (c.n > 1 ? " (2 homes)" : ""), money(c.siteWork)) +
       line((s.utilities === "separate" ? "Separate utility hookups" : "Utilities tied into the main house") + " (about " + fmt(c.runFt) + " ft of trench)", money(c.utilCost)) +
-      line("Design, engineering, permits (" + fmt(c.softPct, c.softPct % 1 ? 1 : 0) + "%)", money(soft)) +
-      '<div class="cost-line total"><span>' + (c.clt ? "Range without CLT panels" : "Estimated range") + "</span><span>" + money(c.low) + " – " + money(c.high) + "</span></div>";
+      line("Design, engineering, permits" + (c.softPct == null ? "" : " (" + fmt(c.softPct, c.softPct % 1 ? 1 : 0) + "%)"), money(soft)) +
+      '<div class="cost-line total"><span>' + (c.clt ? "Range without CLT panels" : "Estimated range") + "</span><span>" + (c.low == null ? NO_PRICE : money(c.low) + " – " + money(c.high)) + "</span></div>";
 
     // ---- rough material takeoff (quantities only; a builder's takeoff from real drawings replaces this)
     var TO = [], nU = c.n || 1, OVH = OVERHANG, perim = 2 * (s.L + s.W);
@@ -1650,9 +1707,9 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       ["Interior finishes", 22, "Drywall, flooring, cabinets, counters, tile, appliances, paint"],
       ["Builder overhead and profit", 20, "Supervision, insurance, winter protection, cleanup, overhead and profit"]
     ];
-    var restTotal = c.totalArea * c.restRate;
+    var restTotal = times(c.totalArea, c.restRate);
     $("restBody").innerHTML = REST.map(function (r) {
-      return '<div class="cost-line"><span><b>' + esc(r[0]) + "</b> · " + r[1] + '%<br><span class="sub">' + esc(r[2]) + "</span></span><span>" + money(restTotal * r[1] / 100) + "</span></div>";
+      return '<div class="cost-line"><span><b>' + esc(r[0]) + "</b> · " + r[1] + '%<br><span class="sub">' + esc(r[2]) + "</span></span><span>" + money(restTotal == null ? null : restTotal * r[1] / 100) + "</span></div>";
     }).join("");
 
     // Tahoe-specific savings, chosen by state, jurisdiction, size and housing type
@@ -1723,7 +1780,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
 
     // one short, debounced screen-reader update
     var flags = checks.filter(function (k) { return k[0] === "warn" || k[0] === "bad"; }).map(function (k) { return k[1]; });
-    var msg = s.L + " by " + s.W + " feet, " + fmt(c.area) + " square feet. Roof " + roofTxt + ". " + (c.clt ? "Cost pending." : "Move-in ready from " + money(c.low) + ", weathertight shell from " + money(c.shell * 0.85) + ".") + (flags.length ? " " + flags.join(". ") + "." : "");
+    var msg = s.L + " by " + s.W + " feet, " + fmt(c.area) + " square feet. Roof " + roofTxt + ". " + (c.clt ? "Cost pending." : c.low == null ? "Cost can't be worked out until the price boxes can be read." : "Move-in ready from " + money(c.low) + ", weathertight shell from " + money(c.shell * 0.85) + ".") + (flags.length ? " " + flags.join(". ") + "." : "");
     if (lastMsg === null) lastMsg = msg;
     clearTimeout(liveT);
     liveT = setTimeout(function () { if (msg !== lastMsg) { lastMsg = msg; $("liveStatus").textContent = msg; } }, 600);
@@ -2292,19 +2349,15 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     el.addEventListener("input", scheduleUpdate);
   });
   ["lotArea", "existCov"].forEach(function (id) {
-    var el = $(id), timer = 0;
-    // No message while someone is mid-typing, such as "1/" on the way to "1/4 acre".
-    el.addEventListener("input", function () {
-      delete el.dataset.settled; clearTimeout(timer);
-      timer = setTimeout(function () { el.dataset.settled = "1"; paintAreaBox(id); }, 900);
-    });
-    el.addEventListener("blur", function () { clearTimeout(timer); el.dataset.settled = "1"; paintAreaBox(id); });
+    var el = $(id);
+    watchBox(id, paintAreaBox);
     $(id + "Msg").addEventListener("click", function (e) {
       var b = e.target.closest("button[data-use]"); if (!b) return;
       // The button goes away, so focus moves to its message. Not to the box, which would reopen a phone's keyboard.
       el.value = b.getAttribute("data-use"); this.focus(); scheduleUpdate();
     });
   });
+  Object.keys(PRICE_BOX).forEach(function (id) { watchBox(id, paintPriceBox); });
   function setView(btn, key, val) {
     view[key] = val;
     var s = readState();

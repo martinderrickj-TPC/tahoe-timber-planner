@@ -91,11 +91,14 @@ a { color: var(--accent-text); }
 .field > label, .lab { font-size: 13px; font-weight: 600; }
 .sub, .note { font-size: 12.5px; color: var(--muted); }
 .note { font-size: 13px; max-width: 75ch; }
-.row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+.row3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
 @media (max-width: 460px) { .row2, .row3 { grid-template-columns: minmax(0, 1fr); } }
 /* 16 px, because iPhones zoom the whole page when a smaller box is tapped */
-select, input[type="number"] { width: 100%; font: inherit; font-size: 16px; color: var(--text); background: var(--raised); border: 1px solid var(--border-strong); border-radius: var(--r-sm); padding: 8px 10px; }
+select, input[type="text"] { width: 100%; font: inherit; font-size: 16px; color: var(--text); background: var(--raised); border: 1px solid var(--border-strong); border-radius: var(--r-sm); padding: 8px 10px; }
+input[aria-invalid="true"] { border-color: var(--bad); }
+.field-msg:empty { margin-top: -6px; }   /* stays in the page so screen readers hear it when it fills in */
+.field-msg.bad { color: var(--bad); font-weight: 600; }
 .seg { display: flex; flex-wrap: wrap; gap: 6px; }
 .seg input { position: absolute; opacity: 0; pointer-events: none; }
 .seg label { flex: 1 1 auto; text-align: center; cursor: pointer; border: 1px solid var(--border-strong); border-radius: var(--r-sm); padding: 7px 10px; font-size: 13.5px; font-weight: 600; background: var(--raised); color: var(--text); }
@@ -166,8 +169,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           <input type="radio" name="sc" id="scB" value="B"><label for="scB">B · Small enterprise<small>steady pipeline</small></label>
         </div>
         <div class="row2">
-          <div class="field"><label for="capex">Equipment ($)</label><input type="number" id="capex" min="0" step="100" value="1100"></div>
-          <div class="field"><label for="wc">Working capital, cash buffer ($)</label><input type="number" id="wc" min="0" step="100" value="2000"></div>
+          <div class="field"><label for="capex">Equipment ($)</label><input type="text" inputmode="decimal" id="capex" value="1100" autocomplete="off" spellcheck="false" aria-describedby="capexMsg"><span class="sub field-msg" id="capexMsg" aria-live="polite"></span></div>
+          <div class="field"><label for="wc">Working capital, cash buffer ($)</label><input type="text" inputmode="decimal" id="wc" value="2000" autocomplete="off" spellcheck="false" aria-describedby="wcMsg"><span class="sub field-msg" id="wcMsg" aria-live="polite"></span></div>
         </div>
         <label class="check" for="haveEq" style="display:flex;gap:8px;align-items:center;font-size:13.5px;font-weight:600;cursor:pointer;"><input type="checkbox" id="haveEq" style="width:16px;height:16px;margin:0;accent-color:var(--tw);"> I already have the equipment</label>
         <p class="sub" id="startNote"></p>
@@ -177,8 +180,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       <section class="card" aria-labelledby="h-pn">
         <h2 id="h-pn">Panel</h2>
         <div class="row2">
-          <div class="field"><label for="pw">Panel width (ft)</label><input type="number" id="pw" min="1" max="8" step="1" value="2"></div>
-          <div class="field"><label for="pl">Panel length (ft)</label><input type="number" id="pl" min="4" max="24" step="1" value="10"></div>
+          <div class="field"><label for="pw">Panel width (ft)</label><input type="text" inputmode="decimal" id="pw" value="2" autocomplete="off" spellcheck="false" aria-describedby="pwMsg"><span class="sub field-msg" id="pwMsg" aria-live="polite"></span></div>
+          <div class="field"><label for="pl">Panel length (ft)</label><input type="text" inputmode="decimal" id="pl" value="10" autocomplete="off" spellcheck="false" aria-describedby="plMsg"><span class="sub field-msg" id="plMsg" aria-live="polite"></span></div>
         </div>
         <div class="field">
           <span class="lab" id="bsLab">Boards</span>
@@ -197,8 +200,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           </div>
         </div>
         <div class="row2">
-          <div class="field"><label for="lp">Lumber price ($/board ft)</label><input type="number" id="lp" min="0" step="0.05" value="1.00"></div>
-          <div class="field"><label for="waste">Lumber waste (%)</label><input type="number" id="waste" min="0" max="50" step="1" value="5"></div>
+          <div class="field"><label for="lp">Lumber price ($/board ft)</label><input type="text" inputmode="decimal" id="lp" value="1.00" autocomplete="off" spellcheck="false" aria-describedby="lpMsg"><span class="sub field-msg" id="lpMsg" aria-live="polite"></span></div>
+          <div class="field"><label for="waste">Lumber waste (%)</label><input type="text" inputmode="decimal" id="waste" value="5" autocomplete="off" spellcheck="false" aria-describedby="wasteMsg"><span class="sub field-msg" id="wasteMsg" aria-live="polite"></span></div>
         </div>
         <span class="sub">Local rough-sawn pine was quoted verbally at about $1 per board foot around May 2026. Surfaced pine from a millwork shop runs about $2.20–2.40, a rough estimate from local phone calls.</span>
       </section>
@@ -206,27 +209,27 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       <section class="card" aria-labelledby="h-op">
         <h2 id="h-op">Production</h2>
         <div class="row3">
-          <div class="field"><label for="np">Nail price ($)</label><input type="number" id="np" min="0" step="0.005" value="0.045"></div>
-          <div class="field"><label for="ns">Nail spacing (in)</label><input type="number" id="ns" min="2" step="1" value="10"></div>
-          <div class="field"><label for="nper">Nails per spot</label><input type="number" id="nper" min="1" step="1" value="2"></div>
+          <div class="field"><label for="np">Nail price ($)</label><input type="text" inputmode="decimal" id="np" value="0.045" autocomplete="off" spellcheck="false" aria-describedby="npMsg"><span class="sub field-msg" id="npMsg" aria-live="polite"></span></div>
+          <div class="field"><label for="ns">Nail spacing (in)</label><input type="text" inputmode="decimal" id="ns" value="10" autocomplete="off" spellcheck="false" aria-describedby="nsMsg"><span class="sub field-msg" id="nsMsg" aria-live="polite"></span></div>
+          <div class="field"><label for="nper">Nails per spot</label><input type="text" inputmode="decimal" id="nper" value="2" autocomplete="off" spellcheck="false" aria-describedby="nperMsg"><span class="sub field-msg" id="nperMsg" aria-live="polite"></span></div>
         </div>
         <div class="row3">
-          <div class="field"><label for="lr">Labor ($/hour)</label><input type="number" id="lr" min="0" step="1" value="50"></div>
-          <div class="field"><label for="tp">Throughput (ft²/hour)</label><input type="number" id="tp" min="1" step="1" value="20"></div>
-          <div class="field"><label for="hrs">Hours available / month</label><input type="number" id="hrs" min="1" step="1" value="60"></div>
+          <div class="field"><label for="lr">Labor ($/hour)</label><input type="text" inputmode="decimal" id="lr" value="50" autocomplete="off" spellcheck="false" aria-describedby="lrMsg"><span class="sub field-msg" id="lrMsg" aria-live="polite"></span></div>
+          <div class="field"><label for="tp">Throughput (ft²/hour)</label><input type="text" inputmode="decimal" id="tp" value="20" autocomplete="off" spellcheck="false" aria-describedby="tpMsg"><span class="sub field-msg" id="tpMsg" aria-live="polite"></span></div>
+          <div class="field"><label for="hrs">Hours available / month</label><input type="text" inputmode="decimal" id="hrs" value="60" autocomplete="off" spellcheck="false" aria-describedby="hrsMsg"><span class="sub field-msg" id="hrsMsg" aria-live="polite"></span></div>
         </div>
         <div class="row2">
-          <div class="field"><label for="tr">Transport ($/panel)</label><input type="number" id="tr" min="0" step="1" value="20"></div>
-          <div class="field"><label for="oh">Overhead ($/panel)</label><input type="number" id="oh" min="0" step="1" value="15"></div>
+          <div class="field"><label for="tr">Transport ($/panel)</label><input type="text" inputmode="decimal" id="tr" value="20" autocomplete="off" spellcheck="false" aria-describedby="trMsg"><span class="sub field-msg" id="trMsg" aria-live="polite"></span></div>
+          <div class="field"><label for="oh">Overhead ($/panel)</label><input type="text" inputmode="decimal" id="oh" value="15" autocomplete="off" spellcheck="false" aria-describedby="ohMsg"><span class="sub field-msg" id="ohMsg" aria-live="polite"></span></div>
         </div>
       </section>
 
       <section class="card" aria-labelledby="h-sell">
         <h2 id="h-sell">Selling</h2>
         <div class="row3">
-          <div class="field"><label for="price">Price ($/ft² of panel)</label><input type="number" id="price" min="0" step="0.5" value="15"></div>
-          <div class="field"><label for="pm">Panels / month</label><input type="number" id="pm" min="0" step="1" value="25"></div>
-          <div class="field"><label for="order">One-order size (panels)</label><input type="number" id="order" min="0" step="1" value="214"></div>
+          <div class="field"><label for="price">Price ($/ft² of panel)</label><input type="text" inputmode="decimal" id="price" value="15" autocomplete="off" spellcheck="false" aria-describedby="priceMsg"><span class="sub field-msg" id="priceMsg" aria-live="polite"></span></div>
+          <div class="field"><label for="pm">Panels / month</label><input type="text" inputmode="decimal" id="pm" value="25" autocomplete="off" spellcheck="false" aria-describedby="pmMsg"><span class="sub field-msg" id="pmMsg" aria-live="polite"></span></div>
+          <div class="field"><label for="order">One-order size (panels)</label><input type="text" inputmode="decimal" id="order" value="214" autocomplete="off" spellcheck="false" aria-describedby="orderMsg"><span class="sub field-msg" id="orderMsg" aria-live="polite"></span></div>
         </div>
         <span class="sub">Tahoe Wood's early estimate puts one 600 ft² ADU at about 214 panels of 2×10 ft, covering floor, walls and roof.</span>
       </section>
@@ -234,6 +237,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
 
     <div style="display: grid; gap: 14px;">
       <div class="kpis" id="kpis" aria-live="polite"></div>
+      <p class="flag warn" id="boxFlag" hidden></p>
       <section class="card" aria-labelledby="h-cost">
         <h2 id="h-cost">Cost per panel</h2>
         <p class="sub" id="panelDesc"></p>
@@ -305,66 +309,127 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
 (function () {
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
-  var fmt = function (n, d) { return Number(n).toLocaleString("en-US", { maximumFractionDigits: d || 0, minimumFractionDigits: d || 0 }); };
-  var usd = function (n, d) { return (n < 0 ? "−$" : "$") + fmt(Math.abs(n), d || 0); };
+  // A figure that can't be worked out prints as a dash. null would otherwise print as 0 or $0, which reads as free.
+  var fmt = function (n, d) { return n == null ? "—" : Number(n).toLocaleString("en-US", { maximumFractionDigits: d || 0, minimumFractionDigits: d || 0 }); };
+  var usd = function (n, d) { return n == null ? "—" : (n < 0 ? "−$" : "$") + fmt(Math.abs(n), d || 0); };
   var radio = function (name) { var el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : null; };
-  var num = function (id, fb) { var v = parseFloat($(id).value); return isFinite(v) ? v : fb; };
   var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
   var ACTUAL = { 4: 3.5, 6: 5.5, 8: 7.25, 10: 9.25 };
   var SCEN = { A: { capex: 1100, wc: 2000, oh: 15 }, B: { capex: 7200, wc: 3000, oh: 30 } };
 
+  // ---------------- number boxes ----------------
+  // Plain text boxes, not number boxes. For "1,500" a number box in Firefox or Safari hands the page an empty value,
+  // and the calculator then ran on a default with no warning. A box it can't read now gives no number at all.
+  // min is where the math stops working, such as a 0 ft panel dividing by zero. These used to be raised to it quietly.
+  var BOXES = {
+    capex: { name: "Equipment", eg: "1,100 or $1,100" },
+    wc: { name: "Working capital", eg: "2,000 or $2,000" },
+    pw: { name: "Panel width", eg: "2", min: 0.5 },
+    pl: { name: "Panel length", eg: "10", min: 1 },
+    lp: { name: "Lumber price", eg: "1.00 or $1.00" },
+    waste: { name: "Lumber waste", eg: "5 or 5%", pct: true },
+    np: { name: "Nail price", eg: "0.045 or $0.045" },
+    ns: { name: "Nail spacing", eg: "10", min: 1 },
+    nper: { name: "Nails per spot", eg: "2", min: 1 },
+    lr: { name: "Labor", eg: "50 or $50" },
+    tp: { name: "Throughput", eg: "20", min: 1 },
+    hrs: { name: "Hours available", eg: "60" },
+    tr: { name: "Transport", eg: "20 or $20" },
+    oh: { name: "Overhead", eg: "15 or $15" },
+    price: { name: "Price", eg: "15 or $15" },
+    pm: { name: "Panels / month", eg: "25" },
+    order: { name: "One-order size", eg: "214" }
+  };
+  // A comma only counts where it separates thousands. "12,50" might mean 12.5, so it isn't read at all.
+  function readDecimal(t) { return /^(?:(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d*)?|\.\d+)$/.test(t) ? parseFloat(t.replace(/,/g, "")) : null; }
+  // { value } when it can be read. Otherwise value is null, with empty, overPct or low set when that's the reason.
+  function parseBox(text, box) {
+    var t = String(text).trim();
+    if (!t) return { value: null, empty: true };
+    var n = readDecimal(box.pct ? t.replace(/\s*%$/, "") : t.replace(/^\$\s*|\s*\$$/g, ""));
+    if (n === null) return { value: null };
+    // 1,500 or $1,500 here is a dollar amount in the percent box. Read as a percent, it would swamp the cost.
+    if (box.pct && n > 100) return { value: null, overPct: true };
+    if (n < box.min) return { value: null, low: true };
+    return { value: n };
+  }
+  var val = function (id) { return parseBox($(id).value, BOXES[id]).value; };
+  function paintBox(id) {
+    var el = $(id), box = $(id + "Msg"), info = BOXES[id], r = parseBox(el.value, info), msg = "";
+    // With "I already have the equipment" ticked that box is off and nothing uses it.
+    var bad = r.value === null && el.dataset.settled === "1" && !el.disabled;
+    if (bad) msg = r.empty ? "Enter a number, such as " + info.eg + "." : r.overPct ? "Over 100%? This box is a percent, not dollars." : r.low ? "Has to be at least " + info.min + "." : "Can't read that. Try " + info.eg + ".";
+    if (bad) el.setAttribute("aria-invalid", "true"); else el.removeAttribute("aria-invalid");
+    box.classList.toggle("bad", bad);
+    if (box.textContent !== msg) box.textContent = msg;
+    var names = Object.keys(BOXES).filter(function (k) { return $(k).getAttribute("aria-invalid") === "true"; }).map(function (k) { return BOXES[k].name; });
+    $("boxFlag").hidden = !names.length;
+    $("boxFlag").textContent = names.length ? "Can't read: " + names.join(", ") + ". Any figure that needs one shows a dash until it's fixed. No default is used in its place." : "";
+  }
+  // Add, multiply or divide, unless a number is missing. JavaScript reads null as 0, so a blank box would print as $0.
+  function plus() { var r = 0; for (var i = 0; i < arguments.length; i++) { if (arguments[i] == null) return null; r += arguments[i]; } return r; }
+  function times() { var r = 1; for (var i = 0; i < arguments.length; i++) { if (arguments[i] == null) return null; r *= arguments[i]; } return r; }
+  function per(a, b) { return a == null || b == null ? null : a / b; }
+
   function calc(price) {
-    var w = Math.max(0.5, num("pw", 2)), L = Math.max(1, num("pl", 10)), nom = +radio("bs") || 6, rs = radio("ls") === "rs";
+    var w = val("pw"), L = val("pl"), nom = +radio("bs") || 6, rs = radio("ls") === "rs";
     var thick = rs ? 2 : 1.5, depth = rs ? nom : ACTUAL[nom];
-    var boards = Math.floor(w * 12 / thick + 1e-9);
-    var bfPerFt = thick * depth / 12, panelBF = boards * bfPerFt * L, area = w * L;
-    var lumber = panelBF * num("lp", 1) * (1 + num("waste", 5) / 100);
-    var nails = boards * Math.floor(L * 12 / Math.max(1, num("ns", 10))) * Math.max(1, num("nper", 2)) * num("np", 0.045);
-    var hours = area / Math.max(1, num("tp", 20)), labor = hours * num("lr", 50);
-    var transport = num("tr", 20), overhead = num("oh", 15);
-    var cost = lumber + nails + labor + transport + overhead;
-    var p = price == null ? num("price", 15) : price, revenue = area * p, margin = revenue - cost;
-    var invest = $("haveEq").checked ? 0 : num("capex", 0);   // payback covers equipment only; working capital comes back
-    return { w: w, L: L, nom: nom, rs: rs, thick: thick, depth: depth, boards: boards, panelBF: panelBF, area: area, weight: panelBF * 2.5,
+    var boards = w == null ? null : Math.floor(w * 12 / thick + 1e-9);
+    var bfPerFt = thick * depth / 12, panelBF = times(boards, bfPerFt, L), area = times(w, L);
+    var waste = val("waste"), ns = val("ns");
+    var lumber = times(panelBF, val("lp"), waste == null ? null : 1 + waste / 100);
+    var nails = times(boards, L == null || ns == null ? null : Math.floor(L * 12 / ns), val("nper"), val("np"));
+    var hours = per(area, val("tp")), labor = times(hours, val("lr"));
+    var transport = val("tr"), overhead = val("oh");
+    var cost = plus(lumber, nails, labor, transport, overhead);
+    var p = price == null ? val("price") : price, revenue = times(area, p), margin = revenue == null || cost == null ? null : revenue - cost;
+    var invest = $("haveEq").checked ? 0 : val("capex");   // payback covers equipment only; working capital comes back
+    return { w: w, L: L, nom: nom, rs: rs, thick: thick, depth: depth, boards: boards, panelBF: panelBF, area: area, weight: times(panelBF, 2.5),
              lumber: lumber, nails: nails, labor: labor, transport: transport, overhead: overhead, cost: cost, hours: hours,
-             price: p, revenue: revenue, margin: margin, invest: invest, breakeven: margin > 0 ? Math.ceil(invest / margin) : null, cashStart: invest + num("wc", 0) };
+             price: p, revenue: revenue, margin: margin, invest: invest, breakeven: margin > 0 && invest != null ? Math.ceil(invest / margin) : null, cashStart: plus(invest, val("wc")) };
   }
 
   function render() {
-    var c = calc(), pm = Math.max(0, num("pm", 25)), order = Math.max(0, num("order", 214));
-    $("panelDesc").textContent = c.w + " × " + c.L + " ft panel (" + fmt(c.area) + " ft²) · " + c.boards + " " + (c.rs ? "rough-sawn" : "surfaced") + " 2x" + c.nom +
+    var c = calc(), pm = val("pm"), order = val("order");
+    var tone = function (m) { return m == null ? "" : m >= 0 ? "pos" : "neg"; };
+    var perFt = function (v) { var r = per(v, c.area); return r == null ? "—" : usd(r, 2) + "/ft²"; };
+    var noFigure = function (k) { return kpi(k, "Can't work out", "A box it needs can't be read", ""); };
+    $("panelDesc").textContent = c.area == null ? "Can't size the panel until its width and length can be read." : c.w + " × " + c.L + " ft panel (" + fmt(c.area) + " ft²) · " + c.boards + " " + (c.rs ? "rough-sawn" : "surfaced") + " 2x" + c.nom +
       " boards, " + fmt(c.depth, c.depth % 1 ? 2 : 0) + " in thick · " + fmt(c.panelBF) + " board ft · about " + fmt(Math.round(c.weight / 5) * 5) + " lb";
     var parts = [["Lumber", c.lumber, "--c-lumber"], ["Nails", c.nails, "--c-nails"], ["Labor", c.labor, "--c-labor"], ["Transport", c.transport, "--c-transport"], ["Overhead", c.overhead, "--c-overhead"]];
-    $("bar").innerHTML = parts.map(function (p) { return '<span style="width:' + Math.max(0, p[1] / c.cost * 100) + '%;background:var(' + p[2] + ')"></span>'; }).join("");
+    $("bar").innerHTML = !c.cost ? "" : parts.map(function (p) { return '<span style="width:' + Math.max(0, p[1] / c.cost * 100) + '%;background:var(' + p[2] + ')"></span>'; }).join("");
     $("legend").innerHTML = parts.map(function (p) {
-      return '<li><i style="background:var(' + p[2] + ')"></i><span>' + p[0] + '</span><span class="amt">' + usd(p[1], 2) + '</span><span class="per">' + usd(p[1] / c.area, 2) + '/ft²</span></li>';
+      return '<li><i style="background:var(' + p[2] + ')"></i><span>' + p[0] + '</span><span class="amt">' + usd(p[1], 2) + '</span><span class="per">' + perFt(p[1]) + '</span></li>';
     }).join("");
-    $("totalCost").textContent = usd(c.cost, 2) + " · " + usd(c.cost / c.area, 2) + "/ft²";
-    var mo = pm * c.margin, hrsMo = pm * c.hours, avail = num("hrs", 60);
+    $("totalCost").textContent = c.cost == null ? "Can't work out" : usd(c.cost, 2) + " · " + perFt(c.cost);
+    var mo = times(pm, c.margin), hrsMo = times(pm, c.hours), avail = val("hrs");
     $("kpis").innerHTML =
-      kpi("Cost", usd(c.cost / c.area, 2) + "/ft²", usd(c.cost) + " per panel", "") +
-      kpi("Margin", usd(c.margin) + " / panel", usd(c.margin / c.area, 2) + "/ft² at " + usd(c.price, 2) + "/ft²", c.margin >= 0 ? "good" : "bad") +
-      kpi("Monthly profit", usd(mo), fmt(pm) + " panels · " + fmt(hrsMo, 1) + " of " + fmt(avail) + " hours", mo >= 0 ? "good" : "bad") +
-      (c.margin <= 0 ? kpi("Payback", "Not at this price", "Price is below cost per panel", "bad")
+      (c.cost == null ? noFigure("Cost") : kpi("Cost", perFt(c.cost), usd(c.cost) + " per panel", "")) +
+      (c.margin == null ? noFigure("Margin") : kpi("Margin", usd(c.margin) + " / panel", perFt(c.margin) + " at " + usd(c.price, 2) + "/ft²", c.margin >= 0 ? "good" : "bad")) +
+      (mo == null ? noFigure("Monthly profit") : kpi("Monthly profit", usd(mo), fmt(pm) + " panels · " + fmt(hrsMo, 1) + (avail == null ? "" : " of " + fmt(avail)) + " hours", mo >= 0 ? "good" : "bad")) +
+      (c.margin == null ? noFigure("Payback")
+       : c.margin <= 0 ? kpi("Payback", "Not at this price", "Price is below cost per panel", "bad")
        : c.invest === 0 ? kpi("Payback", "From panel one", "No equipment to pay back", "good")
+       : c.invest == null ? noFigure("Payback")
        : kpi("Payback", fmt(c.breakeven) + " panels", (mo > 0 ? "≈ " + fmt(Math.ceil(c.invest / mo)) + " month" + (Math.ceil(c.invest / mo) > 1 ? "s" : "") + " at " + fmt(pm) + "/month · " : "") + usd(c.invest) + " of equipment", ""));
-    $("startNote").textContent = "Cash to start: " + usd(c.cashStart) + (c.invest ? " (" + usd(c.invest) + " equipment + " + usd(c.cashStart - c.invest) + " working capital)" : " (working capital only)") + ".";
+    $("startNote").textContent = c.cashStart == null ? "Can't work out the cash to start until the boxes above can be read." : "Cash to start: " + usd(c.cashStart) + (c.invest ? " (" + usd(c.invest) + " equipment + " + usd(c.cashStart - c.invest) + " working capital)" : " (working capital only)") + ".";
     $("capex").disabled = $("haveEq").checked;
-    var over = hrsMo > avail;
+    var over = hrsMo != null && avail != null && hrsMo > avail;
     $("capFlag").hidden = !over;
     if (over) $("capFlag").textContent = fmt(pm) + " panels a month takes about " + fmt(hrsMo, 1) + " hours, more than the " + fmt(avail) + " available. Add hours, help, or throughput.";
     var prices = [10, 12.5, 15, 17.5, 20];
-    if (prices.indexOf(c.price) === -1) { prices.push(c.price); prices.sort(function (a, b) { return a - b; }); }
+    if (c.price != null && prices.indexOf(c.price) === -1) { prices.push(c.price); prices.sort(function (a, b) { return a - b; }); }
     $("sens").innerHTML = prices.map(function (pr) {
       var x = calc(pr);
-      return '<tr' + (pr === c.price ? ' class="sel"' : '') + '><td>' + usd(pr, 2) + '</td><td>' + usd(x.revenue) + '</td><td class="' + (x.margin >= 0 ? "pos" : "neg") + '">' + usd(x.margin) +
-        '</td><td class="' + (x.margin >= 0 ? "pos" : "neg") + '">' + usd(x.margin / x.area, 2) + '</td><td>' + (x.margin <= 0 ? "—" : x.invest === 0 ? "none needed" : fmt(x.breakeven)) + '</td><td class="' + (x.margin >= 0 ? "pos" : "neg") + '">' + usd(pm * x.margin) + '</td></tr>';
+      return '<tr' + (pr === c.price ? ' class="sel"' : '') + '><td>' + usd(pr, 2) + '</td><td>' + usd(x.revenue) + '</td><td class="' + tone(x.margin) + '">' + usd(x.margin) +
+        '</td><td class="' + tone(x.margin) + '">' + usd(per(x.margin, x.area), 2) + '</td><td>' + (x.margin <= 0 ? "—" : x.invest === 0 ? "none needed" : fmt(x.breakeven)) + '</td><td class="' + tone(x.margin) + '">' + usd(times(pm, x.margin)) + '</td></tr>';
     }).join("");
     var rows = [["Monthly", pm], ["One order", order]];
     $("vol").innerHTML = rows.map(function (r) {
       var n = r[1];
-      return '<tr><td>' + esc(r[0]) + '</td><td>' + fmt(n) + '</td><td>' + fmt(n * c.hours, 1) + '</td><td>' + usd(n * c.revenue) + '</td><td>' + usd(n * c.cost) + '</td><td class="' + (c.margin >= 0 ? "pos" : "neg") + '">' + usd(n * c.margin) + '</td></tr>';
+      return '<tr><td>' + esc(r[0]) + '</td><td>' + fmt(n) + '</td><td>' + fmt(times(n, c.hours), 1) + '</td><td>' + usd(times(n, c.revenue)) + '</td><td>' + usd(times(n, c.cost)) + '</td><td class="' + tone(c.margin) + '">' + usd(times(n, c.margin)) + '</td></tr>';
     }).join("");
+    Object.keys(BOXES).forEach(paintBox);
   }
   function kpi(k, v, d, cls) { return '<div class="kpi ' + cls + '"><span class="k">' + esc(k) + '</span><span class="v num">' + esc(v) + '</span><span class="d">' + esc(d) + '</span></div>'; }
 
@@ -372,6 +437,15 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     el.addEventListener("input", function () { var s = SCEN[radio("sc")]; $("capex").value = s.capex; $("wc").value = s.wc; $("oh").value = s.oh; });
   });
   document.querySelectorAll("input").forEach(function (el) { el.addEventListener("input", render); });
+  // No message while someone is mid-typing, such as "1," on the way to "1,500".
+  Object.keys(BOXES).forEach(function (id) {
+    var el = $(id), timer = 0;
+    el.addEventListener("input", function () {
+      delete el.dataset.settled; clearTimeout(timer);
+      timer = setTimeout(function () { el.dataset.settled = "1"; paintBox(id); }, 900);
+    });
+    el.addEventListener("blur", function () { clearTimeout(timer); el.dataset.settled = "1"; paintBox(id); });
+  });
   render();
 })();
 </script>
