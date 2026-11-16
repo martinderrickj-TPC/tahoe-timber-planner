@@ -112,6 +112,12 @@ input[type="range"] { width: 100%; accent-color: var(--tw); }
 .fact .v { font-family: var(--font-display); font-size: 18px; font-weight: 700; }
 .note { font-size: 13px; color: var(--muted); max-width: 75ch; }
 footer { margin-top: 24px; font-size: 12.5px; color: var(--muted); max-width: 90ch; }
+/* The 30-second spot sits above the step-by-step walkthrough. */
+.spot { display: grid; gap: 8px; max-width: 960px; margin-bottom: 22px; }
+.spot-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.spot-head h2 { font-size: 18px; }
+.spot-video { display: block; width: 100%; max-width: 100%; height: auto; aspect-ratio: 16 / 9; background: #000; border-radius: var(--r-md); }
+.embedded .spot { padding-top: 14px; }
 </style>
 
 <div class="wrap">
@@ -128,6 +134,18 @@ footer { margin-top: 24px; font-size: 12.5px; color: var(--muted); max-width: 90
     <h1>How NLT Is Made</h1>
     <p class="lede">A nail-laminated timber panel is just lumber, nails and a simple jig. Watch one 2 × 10 ft panel come together from local rough-sawn 2x6s, then see where it goes.</p>
   </header>
+
+  <section class="spot" aria-labelledby="spotTitle">
+    <div class="spot-head">
+      <h2 id="spotTitle">The 30-second version</h2>
+      <span class="note">Turn your sound on, then step through it below.</span>
+    </div>
+    <video class="spot-video" controls playsinline preload="metadata" poster="nlt-spot-poster.jpg" width="1280" height="720">
+      <source src="nlt-spot.mp4" type="video/mp4">
+      Your browser can't play this video. <a href="nlt-spot.mp4">Download the MP4 (31 MB)</a>.
+    </video>
+    <p class="note">Music: “Enter the Party” by Kevin MacLeod (<a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100240" target="_blank" rel="noopener">incompetech.com</a>), licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">Creative Commons: By Attribution 4.0</a>, edited for length. The lakeshore is stylized and the small studio is an example, not a real project. Weight and build time are rough estimates.</p>
+  </section>
 
   <main class="app">
     <section class="stage" id="stage" aria-label="3D animation of making an NLT panel">
