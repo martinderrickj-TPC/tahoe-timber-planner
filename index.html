@@ -951,6 +951,30 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     });
     return best;
   }
+  // clip a ring (local ft) to the square [-h, h] x [-h, h]; TRPA returns whole stream and flood shapes, some huge
+  function clipSquare(ring, h) {
+    var out = ring;
+    [[0, -1], [0, 1], [1, -1], [1, 1]].forEach(function (e) {
+      var inp = out, ax = e[0], sd = e[1];
+      out = [];
+      for (var i = 0; i < inp.length; i++) {
+        var a = inp[(i + inp.length - 1) % inp.length], b = inp[i], ina = a[ax] * sd <= h, inb = b[ax] * sd <= h;
+        var cut = function () { var t = (sd * h - a[ax]) / (b[ax] - a[ax]); return [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])]; };
+        if (inb) { if (!ina) out.push(cut()); out.push(b); } else if (ina) out.push(cut());
+      }
+    });
+    return out;
+  }
+  // how a set of mapped areas relates to the lot: overlapping it, or how far from the lot line
+  function relateToLot(areas, poly) {
+    var best = null;
+    areas.forEach(function (a) {
+      var over = poly.some(function (v) { return pip(v, a.ring); }) || a.ring.some(function (v) { return pip(v, poly); });
+      var d = over ? 0 : Math.min.apply(null, poly.map(function (v) { return nearestOn([a.ring], v, true).d; }));
+      if (!best || d < best.d) best = { d: d, over: over, a: a };
+    });
+    return best;
+  }
   function compassWord(dx, dy) { return ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"][Math.round(((Math.atan2(dx, dy) * 180 / Math.PI) + 360) % 360 / 45) % 8]; }
   function niceStreet(n) { return String(n || "").trim().toLowerCase().replace(/\b[a-z]/g, function (m) { return m.toUpperCase(); }); }
   function loadContext(lot, c, seq) {
@@ -969,10 +993,12 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       q("DataDownloader_Transportation/MapServer/1/query", "NAME"),
       q("DataDownloader_Transportation/MapServer/2/query", "NAME"),
       Promise.resolve({}),   // the lake outline is the high-water line itself, so no separate line is fetched
-      getLake()
+      getLake(),
+      q("Streams_and_Flood_Zone/MapServer/1/query", "Class_name", { maxAllowableOffset: 1.5 }),
+      q("Streams_and_Flood_Zone/MapServer/0/query", "FLOOD_ZONE,ZONE_SUBTYPE", { maxAllowableOffset: 1.5 })
     ]).then(function (r) {
       if (seq !== liveSeq) return;
-      var poly = lot.outline, ctx = { paving: [], neighbors: [], streets: [], hwl: [], lake: null, exits: null, lakeDist: null, lakeDir: null, access: null };
+      var poly = lot.outline, ctx = { paving: [], neighbors: [], streets: [], hwl: [], lake: null, exits: null, lakeDist: null, lakeDir: null, access: null, sez: [], flood: [], photo: null };
       (r[0].features || []).forEach(function (f) {
         var rg = biggestRing(f.geometry || {}), kind = (f.attributes || {}).Feature;
         if (!rg || kind === "Trail") return;
@@ -998,6 +1024,24 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         ctx.lakefront = poly.some(inWater) || near < 3;
         ctx.lakeDist = ctx.lakefront ? 0 : near; ctx.lakeDir = compassWord(nl.x, nl.y);
       }
+      // stream environment zones and 100-year flood zones, trimmed to the window around the lot
+      var halfFt = R * M2FT;
+      [[6, ctx.sez, function (a) { return a.Class_name || "Stream zone"; }], [7, ctx.flood, function (a) { return a.FLOOD_ZONE || ""; }]].forEach(function (L) {
+        (r[L[0]].features || []).forEach(function (f) {
+          ((f.geometry || {}).rings || []).forEach(function (rg) {
+            if (L[0] === 6 && Math.abs(ringArea(rg)) > 5e6) return;   // the SEZ map counts Lake Tahoe itself as lacustrine; the lake is drawn already
+            var loc = clipSquare(rg.map(toLocal), halfFt);
+            if (loc.length > 2 && Math.abs(ringArea(loc)) > 20) L[1].push({ ring: loc, label: L[2](f.attributes || {}) });
+          });
+        });
+      });
+      ctx.sezRel = relateToLot(ctx.sez, poly);
+      ctx.floodRel = relateToLot(ctx.flood, poly);
+      // TRPA's 2018 aerial photo of the same window, laid on the ground in the 3D view
+      var px = Math.min(2048, Math.round(2 * R / 0.22));
+      var photoUrl = function (h, size) { return TRPA + "2018_Imagery/MapServer/export?bbox=" + [c[0] - h, c[1] - h, c[0] + h, c[1] + h].join(",") + "&bboxSR=26910&imageSR=26910&size=" + size + "," + size + "&format=jpg&f=image"; };
+      ctx.photo = { half: halfFt, url: photoUrl(R, px) };
+      ctx.photoWide = { half: 1200 * M2FT, url: photoUrl(1200, 1024) };   // about 2.4 km across at 2.3 m per pixel
       // access: a mapped driveway on this lot and the street it reaches, or else the nearest street
       var named = ctx.streets.filter(function (st) { return st.name; }), best = null;
       function nearStreet(pts) {
@@ -1022,7 +1066,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     if (!lot.live) { sum.textContent = "Surroundings \u00b7 search an address"; add("Sample lots are anonymized, so their real surroundings aren't shown. Search an address to see its streets, driveways and the lake."); return; }
     var ctx = lot.ctx;
     if (!ctx) { sum.textContent = "Surroundings \u00b7 loading\u2026"; add("Loading the streets, driveways and lake around this lot\u2026"); return; }
-    sum.textContent = ctx.lakeDist == null ? "Surroundings" : ctx.lakefront ? "Surroundings \u00b7 lakefront" : "Surroundings \u00b7 lake " + ft(ctx.lakeDist) + " " + ABBR[ctx.lakeDir];
+    sum.textContent = (ctx.lakeDist == null ? "Surroundings" : ctx.lakefront ? "Surroundings \u00b7 lakefront" : "Surroundings \u00b7 lake " + ft(ctx.lakeDist) + " " + ABBR[ctx.lakeDir])
+      + (ctx.sezRel && ctx.sezRel.over ? " \u00b7 SEZ" : "") + (ctx.floodRel && ctx.floodRel.over ? " \u00b7 flood zone" : "");
     var a = ctx.access;
     if (a && a.driveway) add(a.gap <= 45 ? "Driveway: the mapped driveway reaches " + a.street + "." : "Driveway: one is mapped on this lot. The nearest street is " + a.street + ", about " + ft(a.gap) + " from it.");
     else if (a) add("Driveway: none mapped on this lot in 2019. The nearest street is " + a.street + ", about " + ft(a.gap) + " from the lot line.");
@@ -1031,7 +1076,11 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       var el = lot.elevationFt, rel = el == null ? "" : " The lot sits about " + (Math.round(Math.abs(el - HIGH_WATER_FT) / 10) * 10).toLocaleString() + " ft " + (el >= HIGH_WATER_FT ? "above" : "below") + " the lake's 6,229 ft high-water level.";
       add((ctx.lakefront ? "Lake Tahoe: the lot runs to the lake's high-water line, to the " + ctx.lakeDir + "." : "Lake Tahoe: about " + ft(ctx.lakeDist) + " from the lot line, to the " + ctx.lakeDir + ".") + rel + " The water is drawn at the high-water level; when the lake is lower, the shore sits farther out. The ground is drawn flat.");
     }
-    add("Driveways, paved areas and neighboring buildings: TRPA's impervious-surface map, digitized in 2019. Streets: TRPA's streets layer. Lake: TRPA's outline of Lake Tahoe at high water (6,229 ft), from 2010 LiDAR. Neighbors are drawn at a standard height, and the mountains are a generic skyline.", "ctx-src");
+    var sz = ctx.sezRel, fz = ctx.floodRel;
+    add(!sz ? "Stream zones: none mapped near this lot." : sz.over ? "Stream zones: part of the lot is in a mapped stream environment zone (" + sz.a.label + "), shown in teal." : "Stream zones: the nearest mapped stream environment zone (" + sz.a.label + ") is about " + ft(sz.d) + " from the lot line, shown in teal.");
+    add(!fz ? "Flood zones: none mapped near this lot." : fz.over ? "Flood zones: part of the lot is in the 100-year flood zone" + (fz.a.label ? " (zone " + fz.a.label + ")" : "") + ", shown in blue." : "Flood zones: the 100-year flood zone is about " + ft(fz.d) + " from the lot line, shown in blue.");
+    if (sz || fz) add("These maps are for screening. TRPA confirms stream zones and setbacks on site.");
+    add("Driveways, paved areas and neighboring buildings: TRPA's impervious-surface map, digitized in 2019. Streets: TRPA's streets layer. Lake: TRPA's outline of Lake Tahoe at high water (6,229 ft), from 2010 LiDAR. Ground photo: TRPA's 2018 aerial imagery. Stream zones: TRPA's SEZ map, from LiDAR. Flood zones: TRPA's 100-year flood-zone layer. Neighbors are drawn at a standard height, and the mountains are a generic skyline.", "ctx-src");
   }
   function probeLive() {
     if (document.getElementById("parcelData")) { $("lmLive").hidden = false; $("lmLiveLab").hidden = false; return; }
@@ -2054,6 +2103,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
 
     var scene = new THREE.Scene();
     var camera = new THREE.PerspectiveCamera(38, 1, 0.5, 400000);
+
    // far enough for ridges beyond the lake's far shore
     camera.position.set(56, 24, 62);
 
@@ -2202,6 +2252,10 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var waterMat = new THREE.MeshStandardMaterial({ color: 0x1b5480, roughness: 0.3, metalness: 0, normalMap: waterNormal, normalScale: new THREE.Vector2(0.15, 0.15), polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
     function paveMat(hex) { return new THREE.MeshStandardMaterial({ color: hex, roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }); }
     var PAVE = { Road: paveMat(0x56595c), Driveway: paveMat(0x8a8b86), Other: paveMat(0xa6a7a0) };
+    var sezMat = new THREE.MeshBasicMaterial({ color: 0x2aa198, transparent: true, opacity: 0.32, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
+    var floodMat = new THREE.MeshBasicMaterial({ color: 0x3b6fd6, transparent: true, opacity: 0.22, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
+    var sezLine = new THREE.LineBasicMaterial({ color: 0x1b8f86 }), floodLine = new THREE.LineDashedMaterial({ color: 0x2f5fc4, dashSize: 6, gapSize: 4 });
+    var photoToken = null;
     var neighborMat = new THREE.MeshStandardMaterial({ color: 0xd9d4c8, roughness: 0.95, transparent: true, opacity: 0.6 });
     var shoreMat = new THREE.LineDashedMaterial({ color: 0x1f6f9e, dashSize: 8, gapSize: 6 });
     var ctxGroup = new THREE.Group(); scene.add(ctxGroup);
@@ -2250,7 +2304,43 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       if (!ctx) return;
       if (ctx.lake) { var lm = new THREE.Mesh(lakeGeometry(ctx.lake), waterMat); lm.rotation.x = -Math.PI / 2; lm.position.y = 0.06; lm.receiveShadow = true; ctxGroup.add(lm); }
       ctx.streets.forEach(function (st) { st.paths.forEach(function (p) { if (p.length > 1) ctxGroup.add(ribbon(p, st.width, PAVE.Road, 0.03)); }); });
-      ctx.paving.forEach(function (p) { if (p.ring.length > 2) ctxGroup.add(flatMesh(p.ring, PAVE[p.kind], p.kind === "Road" ? 0.035 : 0.045)); });
+      ctx.paving.forEach(function (p) { if (p.ring.length > 2) { var pm = flatMesh(p.ring, PAVE[p.kind], p.kind === "Road" ? 0.035 : 0.045); pm.userData.pave = true; ctxGroup.add(pm); } });
+      [[ctx.sez, sezMat, sezLine, 0.085], [ctx.flood, floodMat, floodLine, 0.09]].forEach(function (L) {
+        L[0].forEach(function (a) {
+          var fm = flatMesh(a.ring, L[1], L[3]); fm.renderOrder = 2; ctxGroup.add(fm);
+          var ln = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(a.ring.map(function (q) { return new THREE.Vector3(q[0], L[3] + 0.05, -q[1]); })), L[2]);
+          if (L[2].isLineDashedMaterial) ln.computeLineDistances();
+          ctxGroup.add(ln);
+        });
+      });
+      // the aerial photo replaces the drawn paving under the lot once it arrives; its edge fades into the ground
+      // the aerial photos replace the drawn paving once they arrive; their edges fade into the ground
+      var token = photoToken = {};
+      function addPhoto(spec, y, order, fadeFrom, hidePaving) {
+        if (!spec) return;
+        var img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = function () {
+          if (photoToken !== token) return;   // a newer lot has replaced this one
+          var S = img.width, cv = document.createElement("canvas"); cv.width = cv.height = S;
+          var g2 = cv.getContext("2d"); g2.drawImage(img, 0, 0, S, S);
+          g2.globalCompositeOperation = "destination-in";
+          var fade = g2.createRadialGradient(S / 2, S / 2, S * fadeFrom, S / 2, S / 2, S * 0.5);
+          fade.addColorStop(0, "rgba(0,0,0,1)"); fade.addColorStop(1, "rgba(0,0,0,0)");
+          g2.fillStyle = fade; g2.fillRect(0, 0, S, S);
+          var tex = new THREE.CanvasTexture(cv);
+          tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+          var pmat = new THREE.MeshStandardMaterial({ map: tex, roughness: 1, transparent: true, depthWrite: false });
+          pmat.envMapIntensity = 0.15;
+          var pm = new THREE.Mesh(new THREE.PlaneGeometry(spec.half * 2, spec.half * 2), pmat);
+          pm.rotation.x = -Math.PI / 2; pm.position.y = y; pm.receiveShadow = true; pm.renderOrder = order; pm.userData.own = true;
+          ctxGroup.add(pm);
+          if (hidePaving) ctxGroup.children.forEach(function (o) { if (o.userData.pave) o.visible = false; });
+        };
+        img.src = spec.url;
+      }
+      addPhoto(ctx.photoWide, 0.065, 0, 0.3, false);
+      addPhoto(ctx.photo, 0.07, 1, 0.36, true);
       ctx.neighbors.forEach(function (bp) {
         if (bp.length < 3) return;
         var sh = new THREE.Shape(); sh.moveTo(bp[0][0], bp[0][1]);
