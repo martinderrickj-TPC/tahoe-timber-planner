@@ -164,6 +164,14 @@ p { margin: 0; }
   border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 600; box-shadow: var(--shadow-sm);
 }
 .hint { font-size: 12px; color: var(--muted); background: var(--raised); border-radius: 999px; padding: 4px 10px; border: 1px solid var(--border); }
+.ctx-pop { max-width: min(340px, 100%); align-self: flex-start; background: var(--raised); color: var(--text); border: 1px solid var(--border); border-radius: var(--r-md); box-shadow: var(--shadow-sm); font-size: 12.5px; line-height: 1.45; }
+.ctx-pop summary { cursor: pointer; padding: 6px 12px; font-size: 13px; font-weight: 600; list-style: none; }
+.ctx-pop summary::-webkit-details-marker { display: none; }
+.ctx-pop summary::after { content: " \25BE"; color: var(--muted); }
+.ctx-pop[open] summary::after { content: " \25B4"; }
+.ctx-body { display: grid; gap: 6px; padding: 0 12px 10px; }
+.ctx-body p { margin: 0; }
+.ctx-body .ctx-src { color: var(--muted); font-size: 11.5px; }
 
 /* ---------- controls ---------- */
 .panel { display: grid; gap: 14px; }
@@ -328,6 +336,10 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           <button class="tbtn" id="replayBuild" type="button">Build it</button>
           <button class="tbtn" id="orbitToggle" aria-pressed="false" type="button" hidden>Rotate model</button>
         </div>
+        <details class="ctx-pop" id="ctxPop" hidden>
+          <summary>Surroundings</summary>
+          <div class="ctx-body" id="ctxBody"></div>
+        </details>
       </div>
       <div class="stage-foot">
         <span class="chip-float num" id="dimChip">28 × 24 ft · 672 ft²</span>
@@ -895,6 +907,124 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     } while (keep.length > max);
     return keep.map(function (i) { return loop[i]; });
   }
+  // ---------------- real surroundings for a live parcel: lake, streets, driveways, neighbors ----------------
+  // Lake outline: USGS National Hydrography Dataset (public domain), bundled as lake.json in UTM zone 10N meters.
+  // Streets, driveways, paved areas and buildings: TRPA's public layers, fetched around the parcel.
+  var HIGH_WATER_FT = 6229;   // Lake Tahoe's legal high-water level
+  var lakeP = null;
+  function getLake() {
+    var get = function () { return fetch("lake.json").then(function (r) { if (!r.ok) throw new Error("lake"); return r.json(); }); };
+    if (!lakeP) lakeP = get().catch(get)   // one retry
+      .then(function (d) { return d.rings.map(function (f) { var r = []; for (var i = 0; i < f.length; i += 2) r.push([f[i], f[i + 1]]); return r; }); })
+      .catch(function () { lakeP = null; return null; });
+    return lakeP;
+  }
+  // For each compass degree, how far out (ft) the last shoreline crossing is, so distant ridges stand beyond the far shore.
+  function lakeExits(rings, c) {
+    var out = [];
+    for (var a = 0; a < 360; a++) {
+      var th = a * Math.PI / 180, dx = Math.sin(th), dy = Math.cos(th), best = 0;
+      for (var k = 0; k < rings.length; k++) {
+        var r = rings[k];
+        for (var i = 0, j = r.length - 1; i < r.length; j = i++) {
+          var ax = r[j][0] - c[0], ay = r[j][1] - c[1], ex = r[i][0] - r[j][0], ey = r[i][1] - r[j][1], det = ex * dy - dx * ey;
+          if (Math.abs(det) < 1e-9) continue;
+          var t = (ex * ay - ax * ey) / det, u = (dx * ay - dy * ax) / det;
+          if (t > best && t < 60000 && u >= 0 && u <= 1) best = t;
+        }
+      }
+      out.push(best * M2FT);
+    }
+    return out;
+  }
+  // nearest point on a set of rings (closed) or paths (open) to p
+  function nearestOn(lines, p, closed) {
+    var best = { d: Infinity, x: 0, y: 0 };
+    lines.forEach(function (r) {
+      for (var i = closed ? 0 : 1, j = closed ? r.length - 1 : 0; i < r.length; j = i++) {
+        var a = r[j], b = r[i], ex = b[0] - a[0], ey = b[1] - a[1], L = ex * ex + ey * ey;
+        var t = L ? Math.max(0, Math.min(1, ((p[0] - a[0]) * ex + (p[1] - a[1]) * ey) / L)) : 0;
+        var x = a[0] + t * ex, y = a[1] + t * ey, d = Math.hypot(p[0] - x, p[1] - y);
+        if (d < best.d) best = { d: d, x: x, y: y };
+      }
+    });
+    return best;
+  }
+  function compassWord(dx, dy) { return ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest"][Math.round(((Math.atan2(dx, dy) * 180 / Math.PI) + 360) % 360 / 45) % 8]; }
+  function niceStreet(n) { return String(n || "").trim().toLowerCase().replace(/\b[a-z]/g, function (m) { return m.toUpperCase(); }); }
+  function loadContext(lot, c, seq) {
+    // about 560 ft around the lot's center, or the whole lot plus 360 ft for big parcels (capped)
+    var half = 0; (lot.outline || []).forEach(function (v) { half = Math.max(half, Math.abs(v[0]), Math.abs(v[1])); });
+    var R = Math.min(450, Math.max(170, half / M2FT + 110)), env = [c[0] - R, c[1] - R, c[0] + R, c[1] + R].join(",");
+    var toLocal = function (q) { return [(q[0] - c[0]) * M2FT, (q[1] - c[1]) * M2FT]; };
+    var q = function (path, fields, extra) {
+      var p = { where: "1=1", geometry: env, geometryType: "esriGeometryEnvelope", inSR: 26910, spatialRel: "esriSpatialRelIntersects", outFields: fields, returnGeometry: "true", outSR: 26910 };
+      for (var k in extra || {}) p[k] = extra[k];
+      return trpa(path, p).catch(function () { return {}; });
+    };
+    Promise.all([
+      q("DataDownloader_Impervious/MapServer/1/query", "Feature", { resultRecordCount: 2000 }),
+      q("DataDownloader_Transportation/MapServer/0/query", "NAME"),
+      q("DataDownloader_Transportation/MapServer/1/query", "NAME"),
+      q("DataDownloader_Transportation/MapServer/2/query", "NAME"),
+      q("Shoreline_Contours/MapServer/0/query", "OBJECTID"),
+      getLake()
+    ]).then(function (r) {
+      if (seq !== liveSeq) return;
+      var poly = lot.outline, ctx = { paving: [], neighbors: [], streets: [], hwl: [], lake: null, exits: null, lakeDist: null, lakeDir: null, access: null };
+      (r[0].features || []).forEach(function (f) {
+        var rg = biggestRing(f.geometry || {}), kind = (f.attributes || {}).Feature;
+        if (!rg || kind === "Trail") return;
+        var loc = simplifyRing(rg.slice(0, -1), 60).map(toLocal);
+        if (kind === "Building") { if (!pip(ringCentroid(loc), poly)) ctx.neighbors.push(loc); }
+        else ctx.paving.push({ kind: kind === "Road" || kind === "Driveway" ? kind : "Other", ring: loc });
+      });
+      [1, 2, 3].forEach(function (k) {
+        (r[k].features || []).forEach(function (f) {
+          var paths = ((f.geometry || {}).paths || []).map(function (p) { return p.map(toLocal); });
+          if (paths.length) ctx.streets.push({ name: niceStreet((f.attributes || {}).NAME), width: k === 1 ? 34 : k === 2 ? 26 : 22, paths: paths });
+        });
+      });
+      (r[4].features || []).forEach(function (f) { ((f.geometry || {}).paths || []).forEach(function (p) { ctx.hwl.push(p.map(toLocal)); }); });
+      if (r[5]) {
+        ctx.exits = lakeExits(r[5], c);
+        ctx.lake = r[5].map(function (rg) { return rg.map(toLocal); });
+        var nl = nearestOn(ctx.lake, [0, 0], true);
+        ctx.lakeDist = nl.d; ctx.lakeDir = compassWord(nl.x, nl.y);
+      }
+      // access: a mapped driveway on this lot and the street it reaches, or else the nearest street
+      var named = ctx.streets.filter(function (st) { return st.name; }), best = null;
+      function nearStreet(pts) {
+        named.forEach(function (st) { pts.forEach(function (v) { var n = nearestOn(st.paths, v, false); if (!best || n.d < best.d) best = { d: n.d, name: st.name }; }); });
+      }
+      var drives = ctx.paving.filter(function (p) { return p.kind === "Driveway" && (pip(ringCentroid(p.ring), poly) || p.ring.some(function (v) { return pip(v, poly); })); });
+      if (drives.length) drives.forEach(function (d) { nearStreet(d.ring); }); else nearStreet(poly);
+      if (best) ctx.access = { driveway: drives.length > 0, street: best.name, gap: best.d };
+      lot.ctx = ctx;
+      scheduleUpdate();
+    });
+  }
+  function contextNote(lot) {
+    var pop = $("ctxPop"), body = $("ctxBody");
+    if (!pop || !body) return;
+    if (!lot) { pop.hidden = true; return; }
+    pop.hidden = false;
+    body.textContent = "";
+    var add = function (txt, cls) { var p = document.createElement("p"); p.textContent = txt; if (cls) p.className = cls; body.appendChild(p); };
+    var ft = function (n) { return n < 2640 ? (Math.round(n / 10) * 10).toLocaleString() + " ft" : (n / 5280).toFixed(1) + " mi"; };
+    if (!lot.live) { add("Sample lots are anonymized, so their real surroundings aren't shown. Search an address to see its streets, driveways and the lake."); return; }
+    var ctx = lot.ctx;
+    if (!ctx) { add("Loading the streets, driveways and lake around this lot…"); return; }
+    var a = ctx.access;
+    if (a && a.driveway) add(a.gap <= 45 ? "Driveway: the mapped driveway reaches " + a.street + "." : "Driveway: one is mapped on this lot. The nearest street is " + a.street + ", about " + ft(a.gap) + " from it.");
+    else if (a) add("Driveway: none mapped on this lot in 2019. The nearest street is " + a.street + ", about " + ft(a.gap) + " from the lot line.");
+    else add("Driveway: no named streets are mapped near this lot.");
+    if (ctx.lakeDist != null) {
+      var el = lot.elevationFt, rel = el == null ? "" : " The lot sits about " + (Math.round(Math.abs(el - HIGH_WATER_FT) / 10) * 10).toLocaleString() + " ft " + (el >= HIGH_WATER_FT ? "above" : "below") + " the lake's 6,229 ft high-water level.";
+      add("Lake Tahoe: about " + ft(ctx.lakeDist) + " to the " + ctx.lakeDir + "." + rel + " The ground is drawn flat.");
+    }
+    add("Streets, driveways, paved areas and neighboring buildings: TRPA, mapped from 2019 imagery. Lake outline: USGS National Hydrography Dataset. Blue dashes: TRPA's high-water line. Neighbors are drawn at a standard height, and the mountains are a generic skyline.", "ctx-src");
+  }
   function probeLive() {
     if (document.getElementById("parcelData")) { $("lmLive").hidden = false; $("lmLiveLab").hidden = false; return; }
     if (!window.__snapshotFiles) { $("lmLive").hidden = false; $("lmLiveLab").hidden = false; return; }   // public site: search TRPA live, no built-in address list
@@ -1066,6 +1196,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       delete $("existCov").dataset.settled;   // no "enter a number" message while the figure is still loading
       $("liveStatusMsg").textContent = "Loaded from TRPA. Checking existing buildings and elevation…";
       scheduleUpdate();
+      loadContext(lot, c, seq);
       // second pass: existing impervious cover + buildings, and elevation
       var xs = ring.map(function (q) { return q[0]; }), ys = ring.map(function (q) { return q[1]; });
       var env = [Math.min.apply(null, xs), Math.min.apply(null, ys), Math.max.apply(null, xs), Math.max.apply(null, ys)];
@@ -1903,7 +2034,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     if (!window.THREE) return null;
     var stage = $("stage");
     var renderer;
-    try { renderer = new THREE.WebGLRenderer({ antialias: true }); } catch (e) { return null; }
+    try { renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true }); } catch (e) { return null; }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -1914,7 +2045,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     renderer.domElement.setAttribute("aria-label", "3D model of the timber home design");
 
     var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(38, 1, 0.5, 2000);
+    var camera = new THREE.PerspectiveCamera(38, 1, 0.5, 400000);   // far enough for ridges beyond the lake's far shore
     camera.position.set(52, 34, 58);
 
     var controls = null;
@@ -1949,7 +2080,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       camera.lookAt(0, 8, 0);
     }
 
-    scene.add(new THREE.HemisphereLight(0xdfeefa, 0x5b5a48, 0.8));
+    scene.add(new THREE.HemisphereLight(0xdfeefa, 0x5b5a48, 0.5));   // the sky's image-based light adds the rest
     var sun = new THREE.DirectionalLight(0xffe6c4, 0.95);
     sun.position.set(40, 70, 30);
     sun.castShadow = true;
@@ -1958,9 +2089,12 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     sun.shadow.bias = -0.0005;
     scene.add(sun);
 
-    // a floating "diorama" island for the lot
-    var ground = new THREE.Mesh(new THREE.CylinderGeometry(150, 144, 5, 72), new THREE.MeshStandardMaterial({ color: 0xcdd8c0, roughness: 1 }));
-    ground.position.y = -2.5; ground.receiveShadow = true; scene.add(ground);
+    // real ground that runs out to the horizon, so the lake, streets and driveways can reach past the lot
+    // (a fine near disk takes the shadows; one huge disk smears them into streaks)
+    var ground = new THREE.Mesh(new THREE.CircleGeometry(1500, 128), new THREE.MeshStandardMaterial({ color: 0xa3ad8c, roughness: 1 }));
+    ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+    var groundFar = new THREE.Mesh(new THREE.RingGeometry(1500, 240000, 128, 1), ground.material);
+    groundFar.rotation.x = -Math.PI / 2; scene.add(groundFar);
     var grid = null;
 
     var mats = {
@@ -1983,21 +2117,186 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var group = new THREE.Group(); scene.add(group);
     var site = new THREE.Group(); scene.add(site);
 
+    // ---------- sky with the sun, distant snowy ridgelines, image-based light, and the parcel's real surroundings ----------
+    var SUN_DIR = sun.position.clone().normalize();
+    var skyMat = new THREE.ShaderMaterial({
+      uniforms: { zen: { value: new THREE.Color() }, hor: { value: new THREE.Color() }, sunC: { value: new THREE.Color("#fff3df") }, sunDir: { value: SUN_DIR }, sunAmt: { value: 1 } },
+      vertexShader: "varying vec3 vDir; void main(){ vDir = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+      // linearToOutputTexel keeps the sky correct when it's rendered into the image-based-light map
+      fragmentShader: "uniform vec3 zen; uniform vec3 hor; uniform vec3 sunC; uniform vec3 sunDir; uniform float sunAmt; varying vec3 vDir;" +
+        "void main(){ vec3 d = normalize(vDir); float h = clamp(d.y, 0.0, 1.0); vec3 c = mix(hor, zen, pow(h, 0.55));" +
+        "float s = max(dot(d, sunDir), 0.0); c += sunC * sunAmt * (pow(s, 1500.0) * 1.4 + pow(s, 24.0) * 0.16 + pow(s, 4.0) * 0.05);" +
+        "gl_FragColor = linearToOutputTexel(vec4(c, 1.0)); }",
+      side: THREE.BackSide, depthWrite: false, depthTest: false
+    });
+    var skyDome = new THREE.Mesh(new THREE.SphereGeometry(300000, 32, 16), skyMat);
+    skyDome.renderOrder = -1000; skyDome.frustumCulled = false; scene.add(skyDome);
+
+    // a generic Sierra skyline: nearby hills where there's no lake, and ridges beyond the lake's far shore where there is
+    function rnd1(n) { var x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+    function vnoise(t, L, sd) { var x = t * L, i = Math.floor(x), f = x - i, a = rnd1(((i % L) + L) % L * 13.7 + sd), b = rnd1((((i + 1) % L) + L) % L * 13.7 + sd); f = f * f * (3 - 2 * f); return a + (b - a) * f; }
+    function ridgeN(t, sd) { var v = 0, amp = 0.55, L = 5, n = 0; for (var o = 0; o < 6; o++) { var nv = vnoise(t, L, sd + o * 17.3); v += amp * (o < 2 ? nv : 1 - Math.abs(nv * 2 - 1)); n += amp; amp *= 0.5; L *= 2; } return v / n; }
+    var ridgeMat = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide });
+    var ridges = null;
+    function buildRidges(exits) {
+      if (ridges) { scene.remove(ridges); ridges.geometry.dispose(); ridges = null; }
+      var SEG = 360, ROWS = 8, NEAR = 5200, P = [], CL = [], I = [], i, k;
+      var forest = new THREE.Color("#3b5444"), rock = new THREE.Color("#8a857b"), snowC = new THREE.Color("#f3f5f7"), col = new THREE.Color();
+      var wet = [], far = [];
+      for (i = 0; i < SEG; i++) wet.push(exits && exits[i] > 2500 ? 1 : 0);
+      for (i = 0; i < SEG; i++) {
+        var d = wet[i] ? exits[i] : 0;
+        for (k = 1; k < 180 && !d; k++) { if (wet[(i + k) % SEG]) d = exits[(i + k) % SEG]; else if (wet[(i - k + SEG) % SEG]) d = exits[(i - k + SEG) % SEG]; }
+        far.push(Math.max(NEAR * 2, (d || NEAR) + 3500));
+      }
+      function smooth(arr, w) { return arr.map(function (_, idx) { var sm = 0; for (var q = -w; q <= w; q++) sm += arr[(idx + q + SEG) % SEG]; return sm / (2 * w + 1); }); }
+      var wetS = smooth(wet, 3), farS = smooth(far, 4);
+      [0, 1].forEach(function (ring) {
+        var start = P.length / 3;
+        for (var ci = 0; ci <= SEG; ci++) {
+          var ii = ci % SEG, t = ii / SEG, th = t * Math.PI * 2;
+          var rb = ring ? farS[ii] : NEAR, mask = ring ? wetS[ii] : 1 - wetS[ii];
+          var nearness = Math.min(1, Math.max(0, (rb - NEAR) / 60000));
+          var ang = (6.5 - 3.8 * nearness) * (0.45 + 0.55 * ridgeN(t, ring ? 11 : 4)) * Math.PI / 180;
+          var top = rb * Math.tan(ang) * mask, snowLine = top * (0.8 + 0.1 * vnoise(t, 30, 3 + ring));
+          for (var rw = 0; rw < ROWS; rw++) {
+            var f = rw / (ROWS - 1), y = -30 + (top + 30) * f, rr = rb * (1 + 0.1 * f);
+            P.push(Math.sin(th) * rr, y, -Math.cos(th) * rr);
+            if (y > snowLine && top > 900) col.copy(snowC); else if (f > 0.75 && top > 300) col.copy(rock); else col.copy(forest).lerp(rock, f * 0.3);
+            CL.push(col.r, col.g, col.b);
+          }
+        }
+        for (var cj = 0; cj < SEG; cj++) for (var rw2 = 0; rw2 < ROWS - 1; rw2++) { var a = start + cj * ROWS + rw2, b = start + (cj + 1) * ROWS + rw2; I.push(a, b, a + 1, b, b + 1, a + 1); }
+      });
+      var g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.Float32BufferAttribute(P, 3)); g.setAttribute("color", new THREE.Float32BufferAttribute(CL, 3)); g.setIndex(I); g.computeVertexNormals();
+      ridges = new THREE.Mesh(g, ridgeMat); ridges.frustumCulled = false; scene.add(ridges);
+    }
+    buildRidges(null);
+
+    // the lake, streets, driveways and neighbors around a searched parcel
+    var waterNormal = (function () {
+      var S = 256, cv = document.createElement("canvas"); cv.width = cv.height = S;
+      var g = cv.getContext("2d"), img = g.createImageData(S, S), WV = [];
+      for (var wi = 0; wi < 14; wi++) { var kx = Math.round((rnd1(wi * 3.7) - 0.5) * 2 * (3 + wi * 1.6)), ky = Math.round((rnd1(wi * 5.3 + 1) - 0.5) * 2 * (3 + wi * 1.6)); if (!kx && !ky) kx = 2 + wi; WV.push([kx, ky, rnd1(wi * 9.1) * 6.28, 0.5 / (1 + wi * 0.7)]); }
+      for (var y = 0; y < S; y++) for (var x = 0; x < S; x++) {
+        var dx = 0, dy = 0;
+        for (var w = 0; w < WV.length; w++) { var q = WV[w], cs = Math.cos(2 * Math.PI * (q[0] * x + q[1] * y) / S + q[2]) * q[3] * 2 * Math.PI / S * 14; dx += cs * q[0]; dy += cs * q[1]; }
+        var l = Math.hypot(dx, dy, 1), o = (y * S + x) * 4;
+        img.data[o] = (-dx / l * 0.5 + 0.5) * 255; img.data[o + 1] = (-dy / l * 0.5 + 0.5) * 255; img.data[o + 2] = (1 / l * 0.5 + 0.5) * 255; img.data[o + 3] = 255;
+      }
+      g.putImageData(img, 0, 0);
+      var t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1 / 60, 1 / 60); return t;
+    })();
+    var waterMat = new THREE.MeshStandardMaterial({ color: 0x1b5480, roughness: 0.3, metalness: 0, normalMap: waterNormal, normalScale: new THREE.Vector2(0.15, 0.15), polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+    function paveMat(hex) { return new THREE.MeshStandardMaterial({ color: hex, roughness: 0.95, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }); }
+    var PAVE = { Road: paveMat(0x56595c), Driveway: paveMat(0x8a8b86), Other: paveMat(0xa6a7a0) };
+    var neighborMat = new THREE.MeshStandardMaterial({ color: 0xd9d4c8, roughness: 0.95, transparent: true, opacity: 0.6 });
+    var shoreMat = new THREE.LineDashedMaterial({ color: 0x1f6f9e, dashSize: 8, gapSize: 6 });
+    var ctxGroup = new THREE.Group(); scene.add(ctxGroup);
+    function flatMesh(ring, mat, y) {
+      var sh = new THREE.Shape(); sh.moveTo(ring[0][0], ring[0][1]);
+      for (var i = 1; i < ring.length; i++) sh.lineTo(ring[i][0], ring[i][1]);
+      var m = new THREE.Mesh(new THREE.ShapeGeometry(sh), mat); m.rotation.x = -Math.PI / 2; m.position.y = y; m.receiveShadow = true; return m;
+    }
+    function ribbon(path, width, mat, y) {
+      var P = [], I = [], h = width / 2;
+      for (var i = 0; i < path.length; i++) {
+        var a = path[Math.max(0, i - 1)], b = path[Math.min(path.length - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1;
+        var nx = -dy / L * h, ny = dx / L * h, x = path[i][0], z = -path[i][1];
+        P.push(x + nx, y, z - ny, x - nx, y, z + ny);
+        if (i) { var o = (i - 1) * 2; I.push(o, o + 1, o + 2, o + 1, o + 3, o + 2); }
+      }
+      var g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.Float32BufferAttribute(P, 3)); g.setIndex(I); g.computeVertexNormals();
+      var m = new THREE.Mesh(g, mat); m.receiveShadow = true; return m;
+    }
+    function lakeGeometry(rings) {
+      var area = function (r) { var a = 0; for (var i = 0, j = r.length - 1; i < r.length; j = i++) a += (r[j][0] + r[i][0]) * (r[j][1] - r[i][1]); return Math.abs(a); };
+      var order = rings.slice().sort(function (a, b) { return area(b) - area(a); });
+      var toV = function (r) { return r.map(function (q) { return new THREE.Vector2(q[0], q[1]); }); };
+      var sh = new THREE.Shape(toV(order[0]));
+      for (var i = 1; i < order.length; i++) sh.holes.push(new THREE.Path(toV(order[i])));
+      return new THREE.ShapeGeometry(sh);
+    }
+    function streetLabel(text, x, z) {
+      var cv = document.createElement("canvas"), cx = cv.getContext("2d"), fs = 44, font = "600 " + fs + "px system-ui, -apple-system, 'Segoe UI', sans-serif";
+      cx.font = font;
+      var w = Math.ceil(cx.measureText(text).width) + 32;
+      cv.width = w; cv.height = fs + 24;
+      cx.font = font; cx.fillStyle = "rgba(255,255,255,0.9)"; cx.fillRect(0, 0, w, cv.height);
+      cx.fillStyle = "#1d2420"; cx.textBaseline = "middle"; cx.fillText(text, 16, cv.height / 2 + 2);
+      var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthWrite: false, transparent: true }));
+      sp.scale.set(7 * w / cv.height, 7, 1); sp.position.set(x, 9, z); sp.userData.own = true; return sp;
+    }
+    function setContext(lot) {
+      while (ctxGroup.children.length) {
+        var o = ctxGroup.children.pop();
+        if (o.geometry) o.geometry.dispose();
+        if (o.userData.own) { o.material.map.dispose(); o.material.dispose(); }
+      }
+      var ctx = lot && lot.ctx;
+      buildRidges(ctx ? ctx.exits : null);
+      if (!ctx) return;
+      if (ctx.lake) { var lm = new THREE.Mesh(lakeGeometry(ctx.lake), waterMat); lm.rotation.x = -Math.PI / 2; lm.position.y = 0.06; lm.receiveShadow = true; ctxGroup.add(lm); }
+      ctx.streets.forEach(function (st) { st.paths.forEach(function (p) { if (p.length > 1) ctxGroup.add(ribbon(p, st.width, PAVE.Road, 0.03)); }); });
+      ctx.paving.forEach(function (p) { if (p.ring.length > 2) ctxGroup.add(flatMesh(p.ring, PAVE[p.kind], p.kind === "Road" ? 0.035 : 0.045)); });
+      ctx.neighbors.forEach(function (bp) {
+        if (bp.length < 3) return;
+        var sh = new THREE.Shape(); sh.moveTo(bp[0][0], bp[0][1]);
+        for (var i = 1; i < bp.length; i++) sh.lineTo(bp[i][0], bp[i][1]);
+        var m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 14, bevelEnabled: false }), neighborMat);
+        m.rotation.x = -Math.PI / 2; m.castShadow = true; m.receiveShadow = true; ctxGroup.add(m);
+      });
+      ctx.hwl.forEach(function (p) {
+        if (p.length < 2) return;
+        var ln = new THREE.Line(new THREE.BufferGeometry().setFromPoints(p.map(function (q) { return new THREE.Vector3(q[0], 0.2, -q[1]); })), shoreMat);
+        ln.computeLineDistances(); ctxGroup.add(ln);
+      });
+      // street names where each street passes closest to the lot
+      var seen = {}, shown = 0;
+      ctx.streets.map(function (st) { return { st: st, n: nearestOn(st.paths, [0, 0], false) }; })
+        .sort(function (a, b) { return a.n.d - b.n.d; })
+        .forEach(function (e) {
+          if (!e.st.name || seen[e.st.name] || e.n.d > 420 || shown >= 3) return;
+          seen[e.st.name] = 1; shown++;
+          ctxGroup.add(streetLabel(e.st.name, e.n.x, -e.n.y));
+        });
+    }
+
+    // image-based light from the same sky, rebuilt when the theme changes
+    var pmrem = null, envRT = null, envScene = new THREE.Scene();
+    var envSky = new THREE.Mesh(new THREE.SphereGeometry(50, 32, 16), skyMat); envSky.renderOrder = -1000; envScene.add(envSky);
+    var envGroundMat = new THREE.MeshBasicMaterial({ color: 0xcdd8c0 });
+    var envGround = new THREE.Mesh(new THREE.CircleGeometry(60, 48), envGroundMat); envGround.rotation.x = -Math.PI / 2; envGround.position.y = -0.5; envScene.add(envGround);
+    function setSky(dark) {
+      skyMat.uniforms.zen.value.set(dark ? "#0d1a24" : "#6fa7d4");
+      skyMat.uniforms.hor.value.set(dark ? "#2b3c44" : "#e4ecee");
+      skyMat.uniforms.sunAmt.value = dark ? 0.15 : 1;
+      scene.background = null;
+      scene.fog = new THREE.FogExp2(skyMat.uniforms.hor.value.clone(), 0.6e-5);
+      ridgeMat.color.setScalar(dark ? 0.5 : 1);
+      waterMat.color.set(dark ? "#12304a" : "#1b5480");
+      envGroundMat.color.set(dark ? "#2a352c" : "#a3ad8c");
+      try {
+        if (!pmrem) pmrem = new THREE.PMREMGenerator(renderer);
+        if (envRT) envRT.dispose();
+        envRT = pmrem.fromScene(envScene, 0.02, 0.1, 200);
+        scene.environment = envRT.texture;
+      } catch (e) { scene.environment = null; }
+    }
+    // keep the image-based light from washing out wood and walls; glass and water keep more of their reflections
+    [ground.material, neighborMat, PAVE.Road, PAVE.Driveway, PAVE.Other].concat(Object.keys(mats).map(function (k) { return mats[k]; }))
+      .forEach(function (m) { if (m.isMeshStandardMaterial) m.envMapIntensity = m === mats.glass ? 0.9 : 0.45; });
+    waterMat.envMapIntensity = 0.35; neighborMat.envMapIntensity = 0.25; ground.material.envMapIntensity = 0.15;
+
     function applyTheme() {
       var cs = getComputedStyle(document.documentElement);
       var g1 = cs.getPropertyValue("--stage-grid-major").trim() || "#8fadb1";
       var g2 = cs.getPropertyValue("--stage-grid").trim() || "#b3c2c5";
       var t = document.documentElement.getAttribute("data-theme"), dark = false;
       try { dark = t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches; } catch (e) {}
-      var sky = dark ? ["#0e1a22", "#1f3340", "#34474a"] : ["#a9cfe6", "#d6e8f0", "#f4efe4"];
-      var cv = document.createElement("canvas"); cv.width = 2; cv.height = 256;
-      var cx = cv.getContext("2d"), grd = cx.createLinearGradient(0, 0, 0, 256);
-      grd.addColorStop(0, sky[0]); grd.addColorStop(0.55, sky[1]); grd.addColorStop(1, sky[2]);
-      cx.fillStyle = grd; cx.fillRect(0, 0, 2, 256);
-      if (scene.background && scene.background.dispose) scene.background.dispose();
-      scene.background = new THREE.CanvasTexture(cv);
-      scene.fog = new THREE.Fog(new THREE.Color(sky[2]), 230, 1000);
-      ground.material.color.set(dark ? "#2a352c" : "#cdd8c0");
+      setSky(dark);
+      ground.material.color.set(dark ? "#2a352c" : "#a3ad8c");
       if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
       grid = new THREE.GridHelper(192, 48, new THREE.Color(g1), new THREE.Color(g2));  // 4-ft cells
       grid.position.y = 0.02;
@@ -2057,6 +2356,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       requestAnimationFrame(loop);
       if (controls) controls.update();
       if (anim) stepAnim();
+      skyDome.position.copy(camera.position);
       renderer.render(scene, camera);
     })();
 
@@ -2067,7 +2367,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       gt.wrapS = gt.wrapT = THREE.RepeatWrapping; gt.repeat.set(0.25, 0.125);
       clad[k] = { box: a, gable: gt };
     });
-    return { scene: scene, group: group, site: site, mats: mats, camera: camera, controls: controls, lastLot: undefined, clad: clad, cladKind: null,
+    return { scene: scene, group: group, site: site, mats: mats, camera: camera, controls: controls, lastLot: undefined, clad: clad, cladKind: null, setContext: setContext, ctxKey: null,
              playBuild: playBuild, cancelAnim: cancelAnim, getGrid: function () { return grid; } };
   }
 
@@ -2088,6 +2388,9 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       var sc0 = site.children.pop();
       if (sc0.geometry) sc0.geometry.dispose();
     }
+    var ctxKey = s.lot ? s.lot.id + (s.lot.ctx ? ":ctx" : "") : "none";
+    if (three.ctxKey !== ctxKey) { three.ctxKey = ctxKey; three.setContext(s.lot && s.lot.ctx ? s.lot : null); }
+    contextNote(s.lot);
     if (s.lot && s.lot.outline && s.lot.outline.length > 2) {
       var ol = s.lot.outline, lsh = new THREE.Shape();
       lsh.moveTo(ol[0][0], ol[0][1]);
