@@ -908,7 +908,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     return keep.map(function (i) { return loop[i]; });
   }
   // ---------------- real surroundings for a live parcel: lake, streets, driveways, neighbors ----------------
-  // Lake outline: USGS National Hydrography Dataset (public domain), bundled as lake.json in UTM zone 10N meters.
+  // Lake outline: TRPA's "Lake Tahoe at High Water" (6,229 ft, from 2010 LiDAR), bundled as lake.json in UTM zone 10N
+  // meters. It follows the shore in TRPA's 2018 aerial photos; the USGS outline used before sat 10-20 m offshore.
   // Streets, driveways, paved areas and buildings: TRPA's public layers, fetched around the parcel.
   var HIGH_WATER_FT = 6229;   // Lake Tahoe's legal high-water level
   var lakeP = null;
@@ -967,7 +968,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       q("DataDownloader_Transportation/MapServer/0/query", "NAME"),
       q("DataDownloader_Transportation/MapServer/1/query", "NAME"),
       q("DataDownloader_Transportation/MapServer/2/query", "NAME"),
-      q("Shoreline_Contours/MapServer/0/query", "OBJECTID"),
+      Promise.resolve({}),   // the lake outline is the high-water line itself, so no separate line is fetched
       getLake()
     ]).then(function (r) {
       if (seq !== liveSeq) return;
@@ -989,8 +990,13 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       if (r[5]) {
         ctx.exits = lakeExits(r[5], c);
         ctx.lake = r[5].map(function (rg) { return rg.map(toLocal); });
-        var nl = nearestOn(ctx.lake, [0, 0], true);
-        ctx.lakeDist = nl.d; ctx.lakeDir = compassWord(nl.x, nl.y);
+        // measured from the lot line, not the lot's center; a lot that crosses the line runs to the water
+        var outer = ctx.lake.reduce(function (a, b) { return Math.abs(ringArea(b)) > Math.abs(ringArea(a)) ? b : a; });
+        var inWater = function (v) { return pip(v, outer) && !ctx.lake.some(function (h) { return h !== outer && pip(v, h); }); };
+        var nl = nearestOn(ctx.lake, [0, 0], true), near = Infinity;
+        poly.forEach(function (v) { near = Math.min(near, nearestOn(ctx.lake, v, true).d); });
+        ctx.lakefront = poly.some(inWater) || near < 3;
+        ctx.lakeDist = ctx.lakefront ? 0 : near; ctx.lakeDir = compassWord(nl.x, nl.y);
       }
       // access: a mapped driveway on this lot and the street it reaches, or else the nearest street
       var named = ctx.streets.filter(function (st) { return st.name; }), best = null;
@@ -1016,16 +1022,16 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     if (!lot.live) { sum.textContent = "Surroundings \u00b7 search an address"; add("Sample lots are anonymized, so their real surroundings aren't shown. Search an address to see its streets, driveways and the lake."); return; }
     var ctx = lot.ctx;
     if (!ctx) { sum.textContent = "Surroundings \u00b7 loading\u2026"; add("Loading the streets, driveways and lake around this lot\u2026"); return; }
-    sum.textContent = ctx.lakeDist != null ? "Surroundings \u00b7 lake " + ft(ctx.lakeDist) + " " + ABBR[ctx.lakeDir] : "Surroundings";
+    sum.textContent = ctx.lakeDist == null ? "Surroundings" : ctx.lakefront ? "Surroundings \u00b7 lakefront" : "Surroundings \u00b7 lake " + ft(ctx.lakeDist) + " " + ABBR[ctx.lakeDir];
     var a = ctx.access;
     if (a && a.driveway) add(a.gap <= 45 ? "Driveway: the mapped driveway reaches " + a.street + "." : "Driveway: one is mapped on this lot. The nearest street is " + a.street + ", about " + ft(a.gap) + " from it.");
     else if (a) add("Driveway: none mapped on this lot in 2019. The nearest street is " + a.street + ", about " + ft(a.gap) + " from the lot line.");
     else add("Driveway: no named streets are mapped near this lot.");
     if (ctx.lakeDist != null) {
       var el = lot.elevationFt, rel = el == null ? "" : " The lot sits about " + (Math.round(Math.abs(el - HIGH_WATER_FT) / 10) * 10).toLocaleString() + " ft " + (el >= HIGH_WATER_FT ? "above" : "below") + " the lake's 6,229 ft high-water level.";
-      add("Lake Tahoe: about " + ft(ctx.lakeDist) + " to the " + ctx.lakeDir + "." + rel + " The ground is drawn flat.");
+      add((ctx.lakefront ? "Lake Tahoe: the lot runs to the lake's high-water line, to the " + ctx.lakeDir + "." : "Lake Tahoe: about " + ft(ctx.lakeDist) + " from the lot line, to the " + ctx.lakeDir + ".") + rel + " The water is drawn at the high-water level; when the lake is lower, the shore sits farther out. The ground is drawn flat.");
     }
-    add("Streets, driveways, paved areas and neighboring buildings: TRPA, mapped from 2019 imagery. Lake outline: USGS National Hydrography Dataset. Blue dashes: TRPA's high-water line. Neighbors are drawn at a standard height, and the mountains are a generic skyline.", "ctx-src");
+    add("Driveways, paved areas and neighboring buildings: TRPA's impervious-surface map, digitized in 2019. Streets: TRPA's streets layer. Lake: TRPA's outline of Lake Tahoe at high water (6,229 ft), from 2010 LiDAR. Neighbors are drawn at a standard height, and the mountains are a generic skyline.", "ctx-src");
   }
   function probeLive() {
     if (document.getElementById("parcelData")) { $("lmLive").hidden = false; $("lmLiveLab").hidden = false; return; }
