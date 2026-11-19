@@ -221,6 +221,10 @@ input[type="range"] { width: 100%; accent-color: var(--tw); }
   border-radius: 999px; padding: 5px 12px; box-shadow: var(--shadow-sm);
 }
 .tbtn[aria-pressed="true"] { background: var(--brand-fill); color: var(--on-brand); border-color: var(--brand-fill); }
+.tbtn.cta { background: var(--brand-fill); color: var(--on-brand); border-color: var(--brand-fill); animation: ctaPulse 1.8s ease-in-out infinite; }
+@keyframes ctaPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(47, 156, 85, 0.45); } 50% { box-shadow: 0 0 0 7px rgba(47, 156, 85, 0); } }
+@media (prefers-reduced-motion: reduce) { .tbtn.cta { animation: none; } }
+.place-note { background: var(--brand-fill); color: var(--on-brand); border-color: var(--brand-fill); }
 
 /* ---------- summary ---------- */
 .summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
@@ -342,6 +346,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         </details>
       </div>
       <div class="stage-foot">
+        <span class="chip-float place-note" id="placeNote">Press Build it or pick a design to place your home</span>
         <span class="chip-float num" id="dimChip">28 × 24 ft · 672 ft²</span>
         <span class="hint" id="stageHint">Drag to orbit · Ctrl/⌘ + scroll or pinch to zoom</span>
       </div>
@@ -803,7 +808,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
   // ---------------- real sample lots (TRPA parcel data) ----------------
   // Each carries its lot center (c, UTM zone 10N meters) so the 3D view can show its real surroundings.
   // The page shows no address or APN for them; "shows" says what each one is a good example of.
-  var SAMPLE_LOTS = /*LOTS*/[{"id":"lot-a","community":"Carnelian Bay","shows":"lakefront, flood zone","jurisdiction":"Placer County","state":"CA","lotAreaSqft":17385,"planName":"PLACER COUNTY TAHOE BASIN AREA PLAN","zoning":"Placer County Tahoe Basin Area Plan - Residential - Flick Point/Agate Bay","coverageBasis":"Estimate","landCapabilityClass":"WB (0%) / 6 (100%)","ipesScore":null,"baseCoveragePct":null,"allowedCoverageSqft":5111,"existingCoverageSqft":3241,"elevationFt":6238,"c":[753051.51,4346429.31],"outline":[[-68.1,34.8],[105.8,40.3],[106.8,40.3],[108.6,-39.9],[28.7,-42.4],[-102.7,-46.5],[-102.8,-45.4],[-107,8.6],[-105.7,48.7]],"buildings":[[[-5.3,33.4],[14.3,31.9],[17.4,31.9],[17.4,30.4],[29.4,30.4],[29.4,28.9],[34,28.9],[32.5,15.3],[32.5,7.7],[30.9,7.7],[30.9,-7.4],[29.4,-7.4],[29.4,-20.9],[27.9,-20.9],[27.9,-34.5],[26.4,-40.6],[9.8,-39],[9.8,-37.5],[0.8,-37.5],[-2.3,-36],[-18.9,-34.5],[-20.4,-34.5],[-17.3,-10.4],[-14.3,4.7],[-14.3,16.8],[-12.8,16.8],[-12.8,28.9],[-11.3,28.9],[-11.3,34.9],[-5.3,34.9]]]},{"id":"lot-b","community":"Meyers","shows":"IPES score sets coverage","jurisdiction":"El Dorado County","state":"CA","lotAreaSqft":10500,"planName":"TAHOE PARADISE (TP) WASHOAN","zoning":"Tahoe Paradise Washoan","coverageBasis":"IPES","landCapabilityClass":"6","ipesScore":1012,"baseCoveragePct":30,"allowedCoverageSqft":3150,"existingCoverageSqft":1577,"elevationFt":6496,"c":[761042.09,4307623],"outline":[[83,2.6],[54.7,-61.5],[-82.6,-1.3],[-54.8,62.8]],"buildings":[[[-36.7,38.7],[-26.1,31.2],[-24.6,31.2],[-23.1,31.2],[-20.1,26.7],[-8,20.6],[-9.5,17.6],[-9.5,16.1],[-9.5,14.6],[-21.6,-0.5],[-21.6,-2],[-23.1,-2],[-30.7,-15.6],[-33.7,-15.6],[-39.7,-9.6],[-44.3,-12.6],[-60.9,1],[-62.4,1],[-62.4,2.5],[-57.8,5.5],[-57.8,7.1],[-57.8,8.6]]]},{"id":"lot-c","community":"South Lake Tahoe","shows":"near the lake","jurisdiction":"City of South Lake Tahoe","state":"CA","lotAreaSqft":9170,"planName":"AL TAHOE","zoning":"Al Tahoe Special Area #1","coverageBasis":"Estimate","landCapabilityClass":"7","ipesScore":null,"baseCoveragePct":null,"allowedCoverageSqft":2751,"existingCoverageSqft":1052,"elevationFt":6253,"c":[760951.89,4314684.48],"outline":[[68.2,-1.7],[47.7,-23.1],[5.6,-67],[-67.5,4.5],[-6,68.7]],"buildings":[[[-0.4,7],[-0.4,5.5],[-0.4,4],[-7.9,1],[-7.9,-0.6],[-21.5,-6.6],[-27.5,7],[-29,7],[-32,17.6],[-32,19.1],[-17,26.6],[-17,28.1],[-15.4,28.1],[-15.4,29.6],[-13.9,29.6],[-12.4,28.1],[-7.9,16]],[[35.9,14.5],[40.4,-5.1],[41.9,-5.1],[41.9,-6.6],[40.4,-6.6],[40.4,-8.1],[25.3,-12.6],[17.8,8.5],[34.4,14.5]]]},{"id":"lot-d","community":"Incline Village","shows":"next to a stream zone","jurisdiction":"Washoe County","state":"NV","lotAreaSqft":17830,"planName":"WASHOE COUNTY TAHOE AREA PLAN","zoning":"Wood Creek","coverageBasis":"Estimate","landCapabilityClass":"6","ipesScore":null,"baseCoveragePct":null,"allowedCoverageSqft":5349,"existingCoverageSqft":3253,"elevationFt":6685,"c":[762525.86,4349847.52],"outline":[[48.2,76.4],[58.2,39.3],[101.7,9.1],[98.6,6.4],[96.1,3.3],[94,-0.2],[92.5,-4],[91.7,-7.9],[91.5,-12],[92,-16],[93.1,-19.9],[-123.6,-101.2],[-57.8,-3.2],[11.4,99.7]],"buildings":[[[-13.5,30.5],[-10.4,29],[-10.4,27.5],[-7.4,27.5],[-7.4,26],[-5.9,26],[12.2,12.4],[13.7,9.4],[24.3,3.4],[15.2,-14.7],[7.7,-8.7],[4.7,-8.7],[3.1,-5.7],[-7.4,0.3],[-7.4,1.9],[-18,9.4],[-19.5,9.4],[-19.5,10.9],[-25.5,13.9],[-21,18.5],[-21,20],[-19.5,20],[-19.5,24.5],[-16.5,24.5]]]},{"id":"lot-e","community":"Zephyr Cove","shows":"little coverage left","jurisdiction":"Douglas County","state":"NV","lotAreaSqft":12768,"planName":"MARLA BAY/ZEPHYR HEIGHTS","zoning":"Marla Bay/Zephyr Heights","coverageBasis":"Land capability","landCapabilityClass":"2 (36%) / 1A (64%)","ipesScore":null,"baseCoveragePct":null,"allowedCoverageSqft":128,"existingCoverageSqft":1310,"elevationFt":6330,"c":[763794.64,4321534.2],"outline":[[52.4,-70.3],[-14.6,-59.5],[-48.1,-55.5],[-53.4,66.3],[46.7,64.4],[50.3,-19.9]],"buildings":[[[-33.4,1.4],[-0.2,-0.1],[2.8,-0.1],[1.3,-19.7],[1.3,-21.2],[1.3,-36.3],[-34.9,-34.8],[-34.9,-21.2]]]}]/*END*/;
+  var SAMPLE_LOTS = /*LOTS*/[{"id":"lot-a","community":"Carnelian Bay","shows":"lakefront, flood zone","jurisdiction":"Placer County","state":"CA","lotAreaSqft":17385,"planName":"PLACER COUNTY TAHOE BASIN AREA PLAN","zoning":"Placer County Tahoe Basin Area Plan - Residential - Flick Point/Agate Bay","coverageBasis":"Estimate","landCapabilityClass":"WB (0%) / 6 (100%)","ipesScore":null,"baseCoveragePct":null,"allowedCoverageSqft":5111,"existingCoverageSqft":3241,"elevationFt":6238,"c":[753051.51,4346429.31],"outline":[[-68.1,34.8],[105.8,40.3],[106.8,40.3],[108.6,-39.9],[28.7,-42.4],[-102.7,-46.5],[-102.8,-45.4],[-107,8.6],[-105.7,48.7]],"buildings":[[[-5.3,33.4],[14.3,31.9],[17.4,31.9],[17.4,30.4],[29.4,30.4],[29.4,28.9],[34,28.9],[32.5,15.3],[32.5,7.7],[30.9,7.7],[30.9,-7.4],[29.4,-7.4],[29.4,-20.9],[27.9,-20.9],[27.9,-34.5],[26.4,-40.6],[9.8,-39],[9.8,-37.5],[0.8,-37.5],[-2.3,-36],[-18.9,-34.5],[-20.4,-34.5],[-17.3,-10.4],[-14.3,4.7],[-14.3,16.8],[-12.8,16.8],[-12.8,28.9],[-11.3,28.9],[-11.3,34.9],[-5.3,34.9]]]},{"id":"lot-b","community":"Meyers","shows":"IPES score sets coverage","jurisdiction":"El Dorado County","state":"CA","lotAreaSqft":10500,"planName":"TAHOE PARADISE (TP) WASHOAN","zoning":"Tahoe Paradise Washoan","coverageBasis":"IPES","landCapabilityClass":"6","ipesScore":1012,"baseCoveragePct":30,"allowedCoverageSqft":3150,"existingCoverageSqft":1577,"elevationFt":6496,"c":[761042.09,4307623],"outline":[[83,2.6],[54.7,-61.5],[-82.6,-1.3],[-54.8,62.8]],"buildings":[[[-36.7,38.7],[-26.1,31.2],[-24.6,31.2],[-23.1,31.2],[-20.1,26.7],[-8,20.6],[-9.5,17.6],[-9.5,16.1],[-9.5,14.6],[-21.6,-0.5],[-21.6,-2],[-23.1,-2],[-30.7,-15.6],[-33.7,-15.6],[-39.7,-9.6],[-44.3,-12.6],[-60.9,1],[-62.4,1],[-62.4,2.5],[-57.8,5.5],[-57.8,7.1],[-57.8,8.6]]]},{"id":"lot-c","community":"South Lake Tahoe","shows":"near the lake","jurisdiction":"City of South Lake Tahoe","state":"CA","lotAreaSqft":9170,"planName":"AL TAHOE","zoning":"Al Tahoe Special Area #1","coverageBasis":"Estimate","landCapabilityClass":"7","ipesScore":null,"baseCoveragePct":null,"allowedCoverageSqft":2751,"existingCoverageSqft":1052,"elevationFt":6253,"c":[760951.89,4314684.48],"outline":[[68.2,-1.7],[47.7,-23.1],[5.6,-67],[-67.5,4.5],[-6,68.7]],"buildings":[[[-0.4,7],[-0.4,5.5],[-0.4,4],[-7.9,1],[-7.9,-0.6],[-21.5,-6.6],[-27.5,7],[-29,7],[-32,17.6],[-32,19.1],[-17,26.6],[-17,28.1],[-15.4,28.1],[-15.4,29.6],[-13.9,29.6],[-12.4,28.1],[-7.9,16]],[[35.9,14.5],[40.4,-5.1],[41.9,-5.1],[41.9,-6.6],[40.4,-6.6],[40.4,-8.1],[25.3,-12.6],[17.8,8.5],[34.4,14.5]]]},{"id":"lot-d","community":"Incline Village","shows":"next to a stream zone","jurisdiction":"Washoe County","state":"NV","lotAreaSqft":17830,"planName":"WASHOE COUNTY TAHOE AREA PLAN","zoning":"Wood Creek","coverageBasis":"Estimate","landCapabilityClass":"6","ipesScore":null,"baseCoveragePct":null,"allowedCoverageSqft":5349,"existingCoverageSqft":3253,"elevationFt":6685,"c":[762525.86,4349847.52],"outline":[[48.2,76.4],[58.2,39.3],[101.7,9.1],[98.6,6.4],[96.1,3.3],[94,-0.2],[92.5,-4],[91.7,-7.9],[91.5,-12],[92,-16],[93.1,-19.9],[-123.6,-101.2],[-57.8,-3.2],[11.4,99.7]],"buildings":[[[-13.5,30.5],[-10.4,29],[-10.4,27.5],[-7.4,27.5],[-7.4,26],[-5.9,26],[12.2,12.4],[13.7,9.4],[24.3,3.4],[15.2,-14.7],[7.7,-8.7],[4.7,-8.7],[3.1,-5.7],[-7.4,0.3],[-7.4,1.9],[-18,9.4],[-19.5,9.4],[-19.5,10.9],[-25.5,13.9],[-21,18.5],[-21,20],[-19.5,20],[-19.5,24.5],[-16.5,24.5]]]},{"id":"lot-e","community":"Zephyr Cove","shows":"little coverage left","jurisdiction":"Douglas County","state":"NV","lotAreaSqft":12768,"planName":"MARLA BAY/ZEPHYR HEIGHTS","zoning":"Marla Bay/Zephyr Heights","coverageBasis":"Land capability","landCapabilityClass":"2 (36%) / 1A (64%)","ipesScore":null,"baseCoveragePct":null,"allowedCoverageSqft":128,"existingCoverageSqft":1310,"elevationFt":6330,"c":[763794.64,4321534.2],"outline":[[52.4,-70.3],[-14.6,-59.5],[-48.1,-55.5],[-53.4,66.3],[46.7,64.4],[50.3,-19.9]],"buildings":[[[-33.4,1.4],[-0.2,-0.1],[2.8,-0.1],[1.3,-19.7],[1.3,-21.2],[1.3,-36.3],[-34.9,-34.8],[-34.9,-21.2]]]},{"id":"lot-f","community":"Tahoe City","shows":"steep lot above the lake","jurisdiction":"Placer County","state":"CA","lotAreaSqft":17232,"planName":"PLACER COUNTY TAHOE BASIN AREA PLAN","zoning":"Placer County Tahoe Basin Area Plan - Residential - Taven Heights","coverageBasis":"IPES","landCapabilityClass":"5 (1%) / 5 (99%)","ipesScore":784,"baseCoveragePct":26,"allowedCoverageSqft":4308,"existingCoverageSqft":2632,"elevationFt":6296,"c":[746703.11,4337334.19],"outline":[[209.5,57.4],[209.7,38.5],[149.4,35.4],[149.1,45.4],[66.5,41.4],[61.2,31.2],[18.7,-66.5],[18.3,-67.5],[-82.9,-69.9],[-83.6,-51.5],[-84.5,-32.9],[-85.9,-14.3],[-87.6,4.6],[-89.6,23.5],[-92,42.6],[-92.3,44.5],[-91.3,44.5],[189.4,57.4],[209.5,58.4]],"buildings":[[[0.6,71.1],[2.1,53],[2.1,51.5],[3.6,16.8],[-2.5,16.8],[-5.5,16.8],[-14.5,16.8],[-14.5,15.3],[-19.1,15.3],[-35.7,15.3],[-35.7,30.4],[-44.7,30.4],[-49.2,30.4],[-52.3,30.4],[-56.8,30.4],[-58.3,54.5],[-37.2,54.5],[-37.2,60.6],[-38.7,60.6],[-38.7,69.6],[-17.6,69.6],[-17.6,71.1],[-1,71.1]]]},{"id":"lot-g","community":"Tahoma","shows":"sloped, wooded lot","jurisdiction":"El Dorado County","state":"CA","lotAreaSqft":11256,"planName":"TAHOMA RESIDENTIAL","zoning":"Tahoma Residential","coverageBasis":"IPES","landCapabilityClass":"5","ipesScore":696,"baseCoveragePct":4,"allowedCoverageSqft":2814,"existingCoverageSqft":1693,"elevationFt":6342,"c":[747780,4327787.73],"outline":[[35.8,77.9],[41.1,-87.9],[24.5,-78.3],[7.4,-69.2],[-9.7,-60.4],[-26.8,-51.8],[-43.9,-43.5],[-62.5,-35.5],[-16.2,78.4],[-13.7,78.1],[-10.7,77.7],[-8.2,77.4],[-5.7,77.2],[-2.7,77.2],[-0.2,77],[2.3,77.1],[4.8,77.1],[8.8,77.1]],"buildings":[[[-8.6,33.7],[-14.6,30.6],[-14.6,29.1],[-16.2,29.1],[-17.7,33.7],[-28.2,33.7],[-28.2,63.8],[-28.2,65.4],[12.5,65.4],[23.1,65.4],[24.6,65.4],[24.6,35.2],[24.6,33.7],[6.5,33.7],[3.5,33.7]]]}]/*END*/;
   var LOT_LETTERS = "ABCDEFGHIJ";
   SAMPLE_LOTS.forEach(function (lot, i) {
     lot.label = "Lot " + LOT_LETTERS.charAt(i);
@@ -917,6 +922,89 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
   // meters. It follows the shore in TRPA's 2018 aerial photos; the USGS outline used before sat 10-20 m offshore.
   // Streets, driveways, paved areas and buildings: TRPA's public layers, fetched around the parcel.
   var HIGH_WATER_FT = 6229;   // Lake Tahoe's legal high-water level
+
+  // Ground shape: USGS 3DEP elevation (lidar, about 1 m in the basin), read as raw 32-bit heights in the
+  // same UTM zone 10N windows as the aerial photos. The service sends an uncompressed tiled TIFF.
+  var DEM = "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/exportImage";
+  function parseTiffF32(buf) {
+    var dv = new DataView(buf), le = dv.getUint16(0) === 0x4949, t = {}, i, k;
+    var u16 = function (o) { return dv.getUint16(o, le); }, u32 = function (o) { return dv.getUint32(o, le); };
+    var ifd = u32(4), n = u16(ifd);
+    for (i = 0; i < n; i++) {
+      var e = ifd + 2 + i * 12, tag = u16(e), typ = u16(e + 2), cnt = u32(e + 4), sz = typ === 3 ? 2 : 4, at = cnt * sz <= 4 ? e + 8 : u32(e + 8), v = [];
+      if (typ === 3 || typ === 4) for (k = 0; k < cnt; k++) v.push(typ === 3 ? u16(at + k * 2) : u32(at + k * 4));
+      t[tag] = v;
+    }
+    if ((t[259] || [1])[0] !== 1 || (t[258] || [0])[0] !== 32 || (t[339] || [0])[0] !== 3) throw new Error("unexpected elevation format");
+    var W = t[256][0], H = t[257][0], out = new Float32Array(W * H), r, q;
+    if (t[324]) {
+      var TW = t[322][0], TH = t[323][0], across = Math.ceil(W / TW);
+      t[324].forEach(function (off, ti) {
+        var tx = ti % across, ty = Math.floor(ti / across);
+        for (r = 0; r < TH; r++) for (q = 0; q < TW; q++) {
+          var y = ty * TH + r, x = tx * TW + q;
+          if (y < H && x < W) out[y * W + x] = dv.getFloat32(off + 4 * (r * TW + q), le);
+        }
+      });
+    } else {
+      var rps = t[278] ? t[278][0] : H, idx = 0;
+      t[273].forEach(function (off, si) {
+        var rows = Math.min(rps, H - si * rps);
+        for (k = 0; k < rows * W; k++) out[idx++] = dv.getFloat32(off + 4 * k, le);
+      });
+    }
+    return { n: W, m: out };
+  }
+  function demGrid(c, halfM, n) {
+    var url = DEM + "?bbox=" + [c[0] - halfM, c[1] - halfM, c[0] + halfM, c[1] + halfM].join(",") + "&bboxSR=26910&imageSR=26910&size=" + n + "," + n +
+      "&format=tiff&pixelType=F32&compression=None&interpolation=RSP_BilinearInterpolation&f=image";
+    var get = function () { return fetch(url).then(function (r) { if (!r.ok) throw new Error("elevation " + r.status); return r.arrayBuffer(); }).then(parseTiffF32); };
+    // the service sometimes answers 502 once; try again after a moment
+    return get().catch(function () { return new Promise(function (ok) { setTimeout(ok, 1500); }).then(get); });
+  }
+  // bilinear height (ft) at a local point, from a grid of pixel-centered samples; null outside it
+  function gridHeight(G, x, y) {
+    var u = (x + G.half) / G.cell - 0.5, v = (G.half - y) / G.cell - 0.5, n = G.n;
+    if (u < 0 || v < 0 || u > n - 1 || v > n - 1) return null;
+    var i = Math.min(n - 2, Math.floor(v)), j = Math.min(n - 2, Math.floor(u)), fu = u - j, fv = v - i, h = G.h;
+    return (h[i * n + j] * (1 - fu) + h[i * n + j + 1] * fu) * (1 - fv) + (h[(i + 1) * n + j] * (1 - fu) + h[(i + 1) * n + j + 1] * fu) * fv;
+  }
+  function loadTerrain(lot, ctx, c, R) {
+    Promise.all([demGrid(c, R, 128), demGrid(c, 1200, 128)]).then(function (gs) {
+      var mk = function (g, halfM) {
+        var bad = 0, last = null, i;
+        for (i = 0; i < g.m.length; i++) { if (isFinite(g.m[i]) && g.m[i] > -500) last = g.m[i]; else { bad++; g.m[i] = last != null ? last : NaN; } }
+        return { half: halfM * M2FT, n: g.n, cell: 2 * halfM * M2FT / g.n, m: g.m, bad: bad };
+      };
+      var near = mk(gs[0], R), wide = mk(gs[1], 1200);
+      // the datum (y = 0 in the scene) is the ground at the lot's center
+      var a0 = (near.n >> 1) - 1, nn = near.n, mm = near.m;
+      var mid = (mm[a0 * nn + a0] + mm[a0 * nn + a0 + 1] + mm[(a0 + 1) * nn + a0] + mm[(a0 + 1) * nn + a0 + 1]) / 4;
+      if (!isFinite(mid)) throw new Error("no elevation at the lot");
+      var datumFt = mid * M2FT;
+      [near, wide].forEach(function (G) { G.h = new Float32Array(G.m.length); for (var i = 0; i < G.m.length; i++) G.h[i] = (isFinite(G.m[i]) ? G.m[i] * M2FT : datumFt) - datumFt; delete G.m; });
+      var terrain = { near: near, wide: wide, datumFt: datumFt, lakeY: HIGH_WATER_FT - datumFt };
+      // the lot's slope: a plane fitted to the ground inside the lot line
+      var poly = lot.outline, pts = [], lo = Infinity, hi = -Infinity;
+      for (var i = 0; i < near.n; i++) for (var j = 0; j < near.n; j++) {
+        var x = -near.half + (j + 0.5) * near.cell, y = near.half - (i + 0.5) * near.cell;
+        if (!pip([x, y], poly)) continue;
+        var h = near.h[i * near.n + j]; pts.push([x, y, h]); lo = Math.min(lo, h); hi = Math.max(hi, h);
+      }
+      if (pts.length >= 6) {
+        var mx = 0, my = 0, mz = 0; pts.forEach(function (p) { mx += p[0]; my += p[1]; mz += p[2]; }); mx /= pts.length; my /= pts.length; mz /= pts.length;
+        var sxx = 0, syy = 0, sxy = 0, sxz = 0, syz = 0;
+        pts.forEach(function (p) { var dx = p[0] - mx, dy = p[1] - my, dz = p[2] - mz; sxx += dx * dx; syy += dy * dy; sxy += dx * dy; sxz += dx * dz; syz += dy * dz; });
+        var det = sxx * syy - sxy * sxy;
+        if (det > 0) {
+          var a = (sxz * syy - syz * sxy) / det, b = (syz * sxx - sxz * sxy) / det;
+          terrain.slope = { pct: Math.hypot(a, b) * 100, dir: compassWord(-a, -b), drop: hi - lo };
+        }
+      }
+      ctx.terrain = terrain;
+      scheduleUpdate();
+    }).catch(function () { ctx.terrainFailed = true; scheduleUpdate(); });
+  }
   var lakeP = null;
   function getLake() {
     var get = function () { return fetch("lake.json").then(function (r) { if (!r.ok) throw new Error("lake"); return r.json(); }); };
@@ -1057,6 +1145,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       var photoUrl = function (h, size) { return TRPA + "2018_Imagery/MapServer/export?bbox=" + [c[0] - h, c[1] - h, c[0] + h, c[1] + h].join(",") + "&bboxSR=26910&imageSR=26910&size=" + size + "," + size + "&format=jpg&f=image"; };
       ctx.photo = { half: halfFt, url: photoUrl(R, px) };
       ctx.photoWide = { half: 1200 * M2FT, url: photoUrl(1200, 1024) };   // about 2.4 km across at 2.3 m per pixel
+      loadTerrain(lot, ctx, c, R);   // the ground's shape arrives on its own, after the surroundings
       // access: a mapped driveway on this lot and the street it reaches, or else the nearest street
       var named = ctx.streets.filter(function (st) { return st.name; }), best = null;
       function nearStreet(pts) {
@@ -1082,15 +1171,19 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var ctx = lot.ctx;
     if (!ctx) { sum.textContent = "Surroundings \u00b7 loading\u2026"; add("Loading the streets, driveways and lake around this lot\u2026"); return; }
     sum.textContent = (ctx.lakeDist == null ? "Surroundings" : ctx.lakefront ? "Surroundings \u00b7 lakefront" : "Surroundings \u00b7 lake " + ft(ctx.lakeDist) + " " + ABBR[ctx.lakeDir])
-      + (ctx.sezRel && ctx.sezRel.over ? " \u00b7 SEZ" : "") + (ctx.floodRel && ctx.floodRel.over ? " \u00b7 flood zone" : "");
+      + (ctx.sezRel && ctx.sezRel.over ? " \u00b7 SEZ" : "") + (ctx.floodRel && ctx.floodRel.over ? " \u00b7 flood zone" : "")
+      + (ctx.terrain && ctx.terrain.slope && ctx.terrain.slope.pct >= 8 ? " \u00b7 " + Math.round(ctx.terrain.slope.pct) + "% slope" : "");
     var a = ctx.access;
     if (a && a.driveway) add(a.gap <= 45 ? "Driveway: the mapped driveway reaches " + a.street + "." : "Driveway: one is mapped on this lot. The nearest street is " + a.street + ", about " + ft(a.gap) + " from it.");
     else if (a) add("Driveway: none mapped on this lot in 2019. The nearest street is " + a.street + ", about " + ft(a.gap) + " from the lot line.");
     else add("Driveway: no named streets are mapped near this lot.");
     if (ctx.lakeDist != null) {
       var el = lot.elevationFt, rel = el == null ? "" : " The lot sits about " + (Math.round(Math.abs(el - HIGH_WATER_FT) / 10) * 10).toLocaleString() + " ft " + (el >= HIGH_WATER_FT ? "above" : "below") + " the lake's 6,229 ft high-water level.";
-      add((ctx.lakefront ? "Lake Tahoe: the lot runs to the lake's high-water line, to the " + ctx.lakeDir + "." : "Lake Tahoe: about " + ft(ctx.lakeDist) + " from the lot line, to the " + ctx.lakeDir + ".") + rel + " The water is drawn at the high-water level; when the lake is lower, the shore sits farther out. The ground is drawn flat.");
+      add((ctx.lakefront ? "Lake Tahoe: the lot runs to the lake's high-water line, to the " + ctx.lakeDir + "." : "Lake Tahoe: about " + ft(ctx.lakeDist) + " from the lot line, to the " + ctx.lakeDir + ".") + rel + " The water is drawn at the high-water level; when the lake is lower, the shore sits farther out." + (ctx.terrainFailed ? " The ground is drawn flat because the elevation data didn't load." : ""));
     }
+    var sl = ctx.terrain && ctx.terrain.slope;
+    if (sl) add("Slope: the ground inside the lot line falls about " + Math.round(sl.drop) + " ft, an average " + Math.round(sl.pct) + "% grade, downhill to the " + sl.dir + "." +
+      (ctx.homeDrop >= 1.5 ? " Under the home it falls about " + Math.round(ctx.homeDrop) + " ft, so the floor is set at the high side and the downhill side gets a taller concrete foundation wall." : ""));
     var sz = ctx.sezRel, fz = ctx.floodRel;
     add(!sz ? "Stream zones: none mapped near this lot." : sz.over ? "Stream zones: part of the lot is in a mapped stream environment zone (" + sz.a.label + "), shown in teal." : "Stream zones: the nearest mapped stream environment zone (" + sz.a.label + ") is about " + ft(sz.d) + " from the lot line, shown in teal.");
     var f5 = ctx.flood500Rel;
@@ -1099,7 +1192,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       : fz ? "Flood zones: the 100-year flood zone is about " + ft(fz.d) + " from the lot line, shown in blue."
       : "Flood zones: none mapped near this lot.");
     if (sz || fz || f5) add("These maps are for screening. TRPA confirms stream zones and setbacks on site.");
-    add("Driveways, paved areas and neighboring buildings: TRPA's impervious-surface map, digitized in 2019. Streets: TRPA's streets layer. Lake: TRPA's outline of Lake Tahoe at high water (6,229 ft), from 2010 LiDAR. Ground photo: TRPA's 2018 aerial imagery. Stream zones: TRPA's SEZ map, from LiDAR. Flood zones: TRPA's flood-zone layer (zones A and AE are the 100-year flood zone; zone X is the 500-year). Neighbors are drawn at a standard height, and the mountains are a generic skyline.", "ctx-src");
+    add("Driveways, paved areas and neighboring buildings: TRPA's impervious-surface map, digitized in 2019. Streets: TRPA's streets layer. Lake: TRPA's outline of Lake Tahoe at high water (6,229 ft), from 2010 LiDAR. Ground photo: TRPA's 2018 aerial imagery. Stream zones: TRPA's SEZ map, from LiDAR. Flood zones: TRPA's flood-zone layer (zones A and AE are the 100-year flood zone; zone X is the 500-year). Ground shape: USGS 3DEP elevation from lidar, about 1 m detail. Neighbors are drawn at a standard height, and the mountains are a generic skyline.", "ctx-src");
   }
   function probeLive() {
     if (document.getElementById("parcelData")) { $("lmLive").hidden = false; $("lmLiveLab").hidden = false; return; }
@@ -2165,7 +2258,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     sun.shadow.mapSize.set(2048, 2048);
     var sc = sun.shadow.camera; sc.left = -110; sc.right = 110; sc.top = 110; sc.bottom = -110; sc.near = 10; sc.far = 200;
     sun.shadow.bias = -0.0005;
-    scene.add(sun);
+    scene.add(sun); scene.add(sun.target);
 
     // real ground that runs out to the horizon, so the lake, streets and driveways can reach past the lot
     // (a fine near disk takes the shadows; one huge disk smears them into streaks)
@@ -2189,7 +2282,12 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       lot: new THREE.MeshBasicMaterial({ color: 0x8fadb1, transparent: true, opacity: 0.28, depthWrite: false }),
       lotLine: new THREE.LineBasicMaterial({ color: 0xc98649 }),
       house: new THREE.MeshStandardMaterial({ color: 0xeae7df, roughness: 0.95 }),
-      snow: new THREE.MeshStandardMaterial({ color: 0xf7fbff, roughness: 0.95, transparent: true, opacity: 0.72, side: THREE.DoubleSide })
+      snow: new THREE.MeshStandardMaterial({ color: 0xf7fbff, roughness: 0.95, transparent: true, opacity: 0.72, side: THREE.DoubleSide }),
+      domeOk: new THREE.MeshStandardMaterial({ color: 0x4fbf73, roughness: 0.4, transparent: true, opacity: 0.36, depthWrite: false, side: THREE.DoubleSide }),
+      domeWarn: new THREE.MeshStandardMaterial({ color: 0xe0a03a, roughness: 0.4, transparent: true, opacity: 0.36, depthWrite: false, side: THREE.DoubleSide }),
+      domeLine: new THREE.LineBasicMaterial({ color: 0x2f9c55 }),
+      domeLineWarn: new THREE.LineBasicMaterial({ color: 0xc9802a }),
+      footDash: new THREE.LineDashedMaterial({ color: 0x1d2420, dashSize: 2, gapSize: 1.5 })
     };
 
     var group = new THREE.Group(); scene.add(group);
@@ -2277,6 +2375,52 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var flood500Mat = new THREE.MeshBasicMaterial({ color: 0x8fb3ee, transparent: true, opacity: 0.14, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
     var flood500Line = new THREE.LineDashedMaterial({ color: 0x8fb0e6, dashSize: 3, gapSize: 5 });
     var photoToken = null;
+    // the current lot's ground, in feet above the ground at the lot's center (flat when there's none)
+    var terr = null;
+    function smooth01(a, b, x) { var t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
+    function heightAt(x, y) {
+      if (!terr) return 0;
+      var h = gridHeight(terr.near, x, y);
+      if (h == null) h = gridHeight(terr.wide, x, y);
+      return h == null ? terr.lakeY : h;
+    }
+    // a height mesh over one grid; the wide one sinks under the near one and settles to the distant ground at its edge
+    function terrainMesh(G, mat, sinkInside, groundY) {
+      var n = G.n, span = G.cell * (n - 1), geo = new THREE.PlaneGeometry(span, span, n - 1, n - 1);
+      var pos = geo.attributes.position, uv = geo.attributes.uv;
+      for (var i = 0; i < pos.count; i++) {
+        var x = pos.getX(i), y = pos.getY(i), r = Math.hypot(x, y), h = G.h[i];
+        if (sinkInside) {
+          h -= 25 * (1 - smooth01(sinkInside, sinkInside * 1.15, r));
+          h += (groundY - h) * smooth01(800 * M2FT, 1180 * M2FT, r);
+        }
+        pos.setZ(i, h);
+        uv.setXY(i, (x + G.half) / (2 * G.half), (y + G.half) / (2 * G.half));
+      }
+      geo.computeVertexNormals();
+      var m = new THREE.Mesh(geo, mat); m.rotation.x = -Math.PI / 2; m.receiveShadow = true; return m;
+    }
+    var nearFade = (function () {
+      var cv = document.createElement("canvas"); cv.width = cv.height = 128;
+      var g2 = cv.getContext("2d"), f = g2.createRadialGradient(64, 64, 128 * 0.36, 64, 64, 64);
+      f.addColorStop(0, "#fff"); f.addColorStop(1, "#000"); g2.fillStyle = f; g2.fillRect(0, 0, 128, 128);
+      return new THREE.CanvasTexture(cv);
+    })();
+    // stream zones, flood zones and the lot's fill, painted into the near photo so they follow the ground
+    function paintOverlays(g2, S, half, lot, ctx) {
+      var px = function (q) { return [(q[0] + half) / (2 * half) * S, (half - q[1]) / (2 * half) * S]; };
+      var poly = function (ring) { g2.beginPath(); ring.forEach(function (q, i) { var p = px(q); if (i) g2.lineTo(p[0], p[1]); else g2.moveTo(p[0], p[1]); }); g2.closePath(); };
+      var lw = Math.max(2, S / 600);
+      [[ctx.sez, "rgba(42,161,152,0.34)", "#1b8f86", null], [ctx.flood.filter(function (a) { return a.label !== "X"; }), "rgba(59,111,214,0.26)", "#2f5fc4", [6, 4]],
+       [ctx.flood.filter(function (a) { return a.label === "X"; }), "rgba(143,179,238,0.18)", "#8fb0e6", [3, 5]]].forEach(function (L) {
+        L[0].forEach(function (a) {
+          poly(a.ring); g2.fillStyle = L[1]; g2.fill();
+          g2.setLineDash(L[3] ? L[3].map(function (d) { return d * lw * 1.5; }) : []); g2.strokeStyle = L[2]; g2.lineWidth = lw; g2.stroke();
+        });
+      });
+      g2.setLineDash([]);
+      if (lot && lot.outline && lot.outline.length > 2) { poly(lot.outline); g2.fillStyle = "rgba(143,173,177,0.28)"; g2.fill(); }
+    }
     var neighborMat = new THREE.MeshStandardMaterial({ color: 0xd9d4c8, roughness: 0.95, transparent: true, opacity: 0.6 });
     var shoreMat = new THREE.LineDashedMaterial({ color: 0x1f6f9e, dashSize: 8, gapSize: 6 });
     var ctxGroup = new THREE.Group(); scene.add(ctxGroup);
@@ -2319,15 +2463,28 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         var o = ctxGroup.children.pop();
         if (o.geometry) o.geometry.dispose();
         if (o.userData.own) { o.material.map.dispose(); o.material.dispose(); }
+        else if (o.userData.plainGround) o.material.dispose();
       }
       var ctx = lot && lot.ctx;
+      terr = ctx && ctx.terrain || null;
+      var baseY = terr ? terr.lakeY : 0;   // the lake, the distant ground and the skyline sit at the lake's level
       buildRidges(ctx ? ctx.exits : null);
+      if (ridges) ridges.position.y = baseY;
+      ground.position.y = groundFar.position.y = terr ? baseY - 0.5 : 0;
       if (!ctx) return;
-      if (ctx.lake) { var lm = new THREE.Mesh(lakeGeometry(ctx.lake), waterMat); lm.rotation.x = -Math.PI / 2; lm.position.y = 0.06; lm.receiveShadow = true; ctxGroup.add(lm); }
-      ctx.streets.forEach(function (st) { st.paths.forEach(function (p) { if (p.length > 1) ctxGroup.add(ribbon(p, st.width, PAVE.Road, 0.03)); }); });
-      ctx.paving.forEach(function (p) { if (p.ring.length > 2) { var pm = flatMesh(p.ring, PAVE[p.kind], p.kind === "Road" ? 0.035 : 0.045); pm.userData.pave = true; ctxGroup.add(pm); } });
+      if (ctx.lake) { var lm = new THREE.Mesh(lakeGeometry(ctx.lake), waterMat); lm.rotation.x = -Math.PI / 2; lm.position.y = baseY + 0.06; lm.receiveShadow = true; ctxGroup.add(lm); }
+      var nearT = null, wideT = null;
+      if (terr) {
+        // plain ground until the photos arrive; the near mesh fades at its edge like its photo will
+        var plain = function (fade) { var m = new THREE.MeshStandardMaterial({ color: ground.material.color, roughness: 1, transparent: true, depthWrite: true, alphaMap: fade || null }); m.envMapIntensity = 0.15; return m; };
+        wideT = terrainMesh(terr.wide, plain(null), terr.near.half, baseY - 0.5); wideT.renderOrder = 0; wideT.userData.plainGround = true; ctxGroup.add(wideT);
+        nearT = terrainMesh(terr.near, plain(nearFade), 0, 0); nearT.renderOrder = 1; nearT.userData.plainGround = true; ctxGroup.add(nearT);
+      } else {
+        ctx.streets.forEach(function (st) { st.paths.forEach(function (p) { if (p.length > 1) ctxGroup.add(ribbon(p, st.width, PAVE.Road, 0.03)); }); });
+        ctx.paving.forEach(function (p) { if (p.ring.length > 2) { var pm = flatMesh(p.ring, PAVE[p.kind], p.kind === "Road" ? 0.035 : 0.045); pm.userData.pave = true; ctxGroup.add(pm); } });
+      }
       var isX = function (a) { return a.label === "X"; };
-      [[ctx.sez, sezMat, sezLine, 0.085], [ctx.flood.filter(function (a) { return !isX(a); }), floodMat, floodLine, 0.09],
+      if (!terr) [[ctx.sez, sezMat, sezLine, 0.085], [ctx.flood.filter(function (a) { return !isX(a); }), floodMat, floodLine, 0.09],
        [ctx.flood.filter(isX), flood500Mat, flood500Line, 0.088]].forEach(function (L) {
         L[0].forEach(function (a) {
           var fm = flatMesh(a.ring, L[1], L[3]); fm.renderOrder = 2; ctxGroup.add(fm);
@@ -2339,7 +2496,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       // the aerial photo replaces the drawn paving under the lot once it arrives; its edge fades into the ground
       // the aerial photos replace the drawn paving once they arrive; their edges fade into the ground
       var token = photoToken = {};
-      function addPhoto(spec, y, order, fadeFrom, hidePaving) {
+      function addPhoto(spec, y, order, fadeFrom, hidePaving, tmesh) {
         if (!spec) return;
         var img = new Image();
         img.crossOrigin = "anonymous";
@@ -2347,14 +2504,16 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           if (photoToken !== token) return;   // a newer lot has replaced this one
           var S = img.width, cv = document.createElement("canvas"); cv.width = cv.height = S;
           var g2 = cv.getContext("2d"); g2.drawImage(img, 0, 0, S, S);
+          if (tmesh && hidePaving) paintOverlays(g2, S, spec.half, lot, ctx);
           g2.globalCompositeOperation = "destination-in";
           var fade = g2.createRadialGradient(S / 2, S / 2, S * fadeFrom, S / 2, S / 2, S * 0.5);
           fade.addColorStop(0, "rgba(0,0,0,1)"); fade.addColorStop(1, "rgba(0,0,0,0)");
           g2.fillStyle = fade; g2.fillRect(0, 0, S, S);
           var tex = new THREE.CanvasTexture(cv);
           tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-          var pmat = new THREE.MeshStandardMaterial({ map: tex, roughness: 1, transparent: true, depthWrite: false });
+          var pmat = new THREE.MeshStandardMaterial({ map: tex, roughness: 1, transparent: true, depthWrite: !!tmesh });
           pmat.envMapIntensity = 0.15;
+          if (tmesh) { var old = tmesh.material; tmesh.material = pmat; old.dispose(); tmesh.userData.own = true; tmesh.userData.plainGround = false; return; }
           var pm = new THREE.Mesh(new THREE.PlaneGeometry(spec.half * 2, spec.half * 2), pmat);
           pm.rotation.x = -Math.PI / 2; pm.position.y = y; pm.receiveShadow = true; pm.renderOrder = order; pm.userData.own = true;
           ctxGroup.add(pm);
@@ -2362,14 +2521,16 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         };
         img.src = spec.url;
       }
-      addPhoto(ctx.photoWide, 0.065, 0, 0.3, false);
-      addPhoto(ctx.photo, 0.07, 1, 0.36, true);
+      addPhoto(ctx.photoWide, 0.065, 0, 0.3, false, wideT);
+      addPhoto(ctx.photo, 0.07, 1, 0.36, true, nearT);
       ctx.neighbors.forEach(function (bp) {
         if (bp.length < 3) return;
         var sh = new THREE.Shape(); sh.moveTo(bp[0][0], bp[0][1]);
         for (var i = 1; i < bp.length; i++) sh.lineTo(bp[i][0], bp[i][1]);
         var m = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 14, bevelEnabled: false }), neighborMat);
-        m.rotation.x = -Math.PI / 2; m.castShadow = true; m.receiveShadow = true; ctxGroup.add(m);
+        m.rotation.x = -Math.PI / 2; m.castShadow = true; m.receiveShadow = true;
+        if (terr) { var hs = bp.map(function (q) { return heightAt(q[0], q[1]); }), lo = Math.min.apply(null, hs), hi = Math.max.apply(null, hs); m.position.y = lo; m.scale.z = (14 + hi - lo) / 14; }
+        ctxGroup.add(m);
       });
       ctx.hwl.forEach(function (p) {
         if (p.length < 2) return;
@@ -2383,7 +2544,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         .forEach(function (e) {
           if (!e.st.name || seen[e.st.name] || e.n.d > 420 || shown >= 3) return;
           seen[e.st.name] = 1; shown++;
-          ctxGroup.add(streetLabel(e.st.name, e.n.x, -e.n.y));
+          var lab = streetLabel(e.st.name, e.n.x, -e.n.y); lab.position.y += heightAt(e.n.x, e.n.y); ctxGroup.add(lab);
         });
     }
 
@@ -2480,6 +2641,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     (function loop() {
       requestAnimationFrame(loop);
       if (controls) controls.update();
+      if (!reduceMotion) mats.domeOk.opacity = mats.domeWarn.opacity = 0.33 + 0.08 * Math.sin(performance.now() / 450);
+      if (terr) { var cg = heightAt(camera.position.x, -camera.position.z) + 6; if (camera.position.y < cg) camera.position.y = cg; }   // never under the ground
       if (anim) stepAnim();
       skyDome.position.copy(camera.position);
       renderer.render(scene, camera);
@@ -2493,6 +2656,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       clad[k] = { box: a, gable: gt };
     });
     return { scene: scene, group: group, site: site, mats: mats, camera: camera, controls: controls, lastLot: undefined, clad: clad, cladKind: null, setContext: setContext, ctxKey: null,
+             heightAt: heightAt, hasTerrain: function () { return !!terr; }, sun: sun,
              playBuild: playBuild, cancelAnim: cancelAnim, getGrid: function () { return grid; } };
   }
 
@@ -2512,8 +2676,9 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     while (site.children.length) {
       var sc0 = site.children.pop();
       if (sc0.geometry) sc0.geometry.dispose();
+      if (sc0.userData.own) { sc0.material.map.dispose(); sc0.material.dispose(); }
     }
-    var ctxKey = s.lot ? s.lot.id + (s.lot.ctx ? ":ctx" : "") : "none";
+    var ctxKey = s.lot ? s.lot.id + (s.lot.ctx ? ":ctx" : "") + (s.lot.ctx && s.lot.ctx.terrain ? ":ground" : "") : "none";
     if (three.ctxKey !== ctxKey) { three.ctxKey = ctxKey; three.setContext(s.lot && s.lot.ctx ? s.lot : null); }
     contextNote(s.lot);
     if (s.lot && s.lot.outline && s.lot.outline.length > 2) {
@@ -2521,10 +2686,18 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       lsh.moveTo(ol[0][0], ol[0][1]);
       for (var li = 1; li < ol.length; li++) lsh.lineTo(ol[li][0], ol[li][1]);
       lsh.closePath();
-      var lotMesh = new THREE.Mesh(new THREE.ShapeGeometry(lsh), M.lot);
-      lotMesh.rotation.x = -Math.PI / 2; lotMesh.position.y = 0.04;
-      site.add(lotMesh);
-      var lpts = ol.map(function (q) { return new THREE.Vector3(q[0], 0.1, -q[1]); });
+      var onGround = three.hasTerrain(), hAt = three.heightAt;
+      if (!onGround) {   // on real ground, the lot's fill is painted into the photo instead
+        var lotMesh = new THREE.Mesh(new THREE.ShapeGeometry(lsh), M.lot);
+        lotMesh.rotation.x = -Math.PI / 2; lotMesh.position.y = 0.04;
+        site.add(lotMesh);
+      }
+      // the lot line, laid along the ground every few feet
+      var lpts = [];
+      ol.forEach(function (q, qi) {
+        var nx = ol[(qi + 1) % ol.length], seg = onGround ? Math.max(1, Math.ceil(Math.hypot(nx[0] - q[0], nx[1] - q[1]) / 4)) : 1;
+        for (var si = 0; si < seg; si++) { var px = q[0] + (nx[0] - q[0]) * si / seg, py = q[1] + (nx[1] - q[1]) * si / seg; lpts.push(new THREE.Vector3(px, hAt(px, py) + (onGround ? 0.4 : 0.1), -py)); }
+      });
       site.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(lpts), M.lotLine));
       (s.lot.buildings || []).forEach(function (bp) {
         if (bp.length < 3) return;
@@ -2534,12 +2707,37 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         bsh.closePath();
         var hm = new THREE.Mesh(new THREE.ExtrudeGeometry(bsh, { depth: 14, bevelEnabled: false }), M.house);
         hm.rotation.x = -Math.PI / 2; hm.castShadow = true; hm.receiveShadow = true;
+        if (onGround) { var bh = bp.map(function (q) { return hAt(q[0], q[1]); }), blo = Math.min.apply(null, bh), bhi = Math.max.apply(null, bh); hm.position.y = blo; hm.scale.z = (14 + bhi - blo) / 14; }
         site.add(hm);
       });
     }
     var pl0 = c.place && c.place.fits ? c.place : null;
-    g.position.set(pl0 ? pl0.x : 0, 0, pl0 ? -pl0.y : 0);
-    g.rotation.y = c.place ? c.place.angle : 0;
+    // on sloped ground: the floor sits at the highest ground under the footprint, with concrete down to grade
+    function seat(x, z, ang) {
+      if (!three.hasTerrain()) return { hi: 0, lo: 0 };
+      var hi = -Infinity, lo = Infinity, ca = Math.cos(ang), sa = Math.sin(ang);
+      [-0.5, 0, 0.5].forEach(function (fx) { [-0.5, 0, 0.5].forEach(function (fz) {
+        var lx = fx * s.L, lz = fz * s.W, wx = x + lx * ca + lz * sa, wz = z - lx * sa + lz * ca, h = three.heightAt(wx, -wz);
+        hi = Math.max(hi, h); lo = Math.min(lo, h);
+      }); });
+      return { hi: hi, lo: lo };
+    }
+    function footing(x, z, ang, st) {
+      if (st.hi - st.lo < 0.4) return;
+      var fb = box(s.L, st.hi - st.lo, s.W, M.concrete, x, (st.hi + st.lo) / 2, z); fb.rotation.y = ang; site.add(fb);
+    }
+    var gx = pl0 ? pl0.x : 0, gz = pl0 ? -pl0.y : 0, gang = c.place ? c.place.angle : 0, gseat = seat(gx, gz, gang);
+    g.position.set(gx, gseat.hi, gz);
+    g.rotation.y = gang;
+    g.visible = !!homePlaced;
+    if (homePlaced) footing(gx, gz, gang, gseat);
+    else placeMarker(s, c, gx, gz, gang, !!pl0);
+    if (s.lot && s.lot.ctx && s.lot.ctx.terrain) {
+      var hd = gseat.hi - gseat.lo;
+      if (Math.round(hd) !== Math.round(s.lot.ctx.homeDrop || 0)) { s.lot.ctx.homeDrop = hd; contextNote(s.lot); }
+    }
+    var gridObj2 = three.getGrid(); if (gridObj2) gridObj2.position.y = gseat.hi + 0.02;
+    three.sun.target.position.set(gx, gseat.hi, gz); three.sun.position.set(gx + 40, gseat.hi + 70, gz + 30);
     while (g.children.length) {
       var ch = g.children.pop();
       ch.traverse(function (o) { if (o.geometry) o.geometry.dispose(); });
@@ -2733,16 +2931,21 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
 
     // frame the camera target on first build / size change
     if (c.place2 && c.place2.fits) {
-      var cl = g.clone();
-      cl.position.set(c.place2.x, 0, -c.place2.y);
+      var cl = g.clone(), seat2 = seat(c.place2.x, -c.place2.y, c.place2.angle);
+      cl.position.set(c.place2.x, seat2.hi, -c.place2.y);
       cl.rotation.y = c.place2.angle;
+      cl.visible = !!homePlaced;
+      if (homePlaced) footing(c.place2.x, -c.place2.y, c.place2.angle, seat2);
       three.scene.add(cl);
       three.clone = cl;
     }
     var ty = Math.min((c.ridge + (view.snow ? c.snowDepth : 0)) * 0.45, 14);
     var lotKey = s.lot ? s.lot.id : null;
     if (three.controls) {
-      var tgt = new THREE.Vector3(g.position.x, ty, g.position.z);
+      var tgt = new THREE.Vector3(g.position.x, g.position.y + ty, g.position.z);
+      // the ground arrived or the home moved: keep the camera at the same height above it
+      if (three.lastLot === lotKey && three.seatY != null) three.camera.position.y += g.position.y - three.seatY;
+      three.seatY = g.position.y;
       // once the surroundings are known, look across the lot toward the lake when it's within half a mile,
       // else toward a stream or 100-year flood zone within 300 ft, else toward the lake within 2 miles
       var lc = s.lot && s.lot.ctx, lakeD = lc && lc.lakeVec && lc.lakeDist != null ? lc.lakeDist : Infinity;
@@ -2758,12 +2961,60 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           three.ctxFramed = lotKey;
         }
         if (three.lastLot !== lotKey) three.controls.userMoved = false;
-        three.camera.position.set(tgt.x + dx * k, 24 * k, tgt.z + dz * k);
+        three.camera.position.set(tgt.x + dx * k, g.position.y + 24 * k, tgt.z + dz * k);
         three.lastLot = lotKey;
 
       }
+      // once the ground is known, lift the starting view above any uphill ground between it and the home
+      if (three.hasTerrain() && three.groundFramed !== lotKey && !three.controls.userMoved) {
+        var cp = three.camera.position, kk = Math.max(1, Math.hypot(cp.x - tgt.x, cp.z - tgt.z) / Math.hypot(56, 62)), hiG = -Infinity;
+        for (var fi = 0; fi <= 4; fi++) { var fx = tgt.x + (cp.x - tgt.x) * fi / 4, fz = tgt.z + (cp.z - tgt.z) * fi / 4; hiG = Math.max(hiG, three.heightAt(fx, -fz)); }
+        cp.y = Math.max(cp.y, hiG + 14 * kk);
+        three.groundFramed = lotKey;
+      }
       three.controls.target.copy(tgt);
     }
+    if (homeMorph && homePlaced) { homeMorph = false; three.cancelAnim(); three.playBuild(); }   // the home builds in once, when it's placed
+  }
+
+  // Before a design is placed: a dome over the spot where it would go, sized to the coverage left
+  function placeMarker(s, c, gx, gz, gang, fitsSpot) {
+    var M = three.mats, site = three.site, hAt = three.heightAt;
+    var allowed = s.lot && s.lot.allowedCoverageSqft != null ? s.lot.allowedCoverageSqft : (s.loc.trpa && s.landClass && s.lotArea != null ? s.lotArea * s.landClass.pct / 100 : null);
+    var left = allowed != null && s.existCov != null ? allowed - s.existCov : null, need = s.L * s.W * c.n;
+    var ok = fitsSpot && (left == null || left >= need);
+    var r = Math.min(45, Math.max(10, Math.sqrt((left != null && left > 0 ? left : need) / Math.PI)));
+    var y = hAt(gx, -gz);
+    var dome = new THREE.Mesh(new THREE.SphereGeometry(r, 48, 12, 0, Math.PI * 2, 0, Math.PI / 2), ok ? M.domeOk : M.domeWarn);
+    dome.scale.y = 0.5; dome.position.set(gx, y, gz); dome.renderOrder = 3; site.add(dome);
+    var ring = [];
+    for (var i = 0; i <= 72; i++) { var a = i / 72 * Math.PI * 2, rx = gx + Math.cos(a) * r, rz = gz + Math.sin(a) * r; ring.push(new THREE.Vector3(rx, hAt(rx, -rz) + 0.3, rz)); }
+    site.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(ring), ok ? M.domeLine : M.domeLineWarn));
+    // this design's footprint, dashed on the ground where it would sit
+    var ca = Math.cos(gang), sa = Math.sin(gang), pts = [], cs = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+    cs.forEach(function (p, k) {
+      var q = cs[(k + 1) % 4];
+      for (var t = 0; t < 8; t++) {
+        var lx = (p[0] + (q[0] - p[0]) * t / 8) * s.L / 2, lz = (p[1] + (q[1] - p[1]) * t / 8) * s.W / 2;
+        var wx = gx + lx * ca + lz * sa, wz = gz - lx * sa + lz * ca;
+        pts.push(new THREE.Vector3(wx, hAt(wx, -wz) + 0.35, wz));
+      }
+    });
+    pts.push(pts[0].clone());
+    var fl = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), M.footDash); fl.computeLineDistances(); site.add(fl);
+    var l1 = !fitsSpot ? "No open spot fits this size" : ok ? "A home could go here" : "A home could go here, but",
+        l2 = left == null ? "coverage left isn't known" : left <= 0 ? "no land coverage is left" : (ok ? "about " : "only about ") + fmt(Math.round(left / 10) * 10) + " ft² of coverage left";
+    site.add(placeLabel(l1, l2, gx, y + r * 0.5 + 8, gz, ok));
+  }
+  function placeLabel(l1, l2, x, y, z, ok) {
+    var cv = document.createElement("canvas"), g2 = cv.getContext("2d"), f1 = "700 46px system-ui, -apple-system, 'Segoe UI', sans-serif", f2 = "500 38px system-ui, -apple-system, 'Segoe UI', sans-serif";
+    g2.font = f1; var w = g2.measureText(l1).width; g2.font = f2; w = Math.ceil(Math.max(w, g2.measureText(l2).width)) + 48;
+    cv.width = w; cv.height = 132;
+    g2.fillStyle = "rgba(255,255,255,0.94)"; g2.fillRect(0, 0, w, 132);
+    g2.fillStyle = ok ? "#2f9c55" : "#c9802a"; g2.fillRect(0, 0, 10, 132);
+    g2.fillStyle = "#1d2420"; g2.textBaseline = "middle"; g2.font = f1; g2.fillText(l1, 26, 42); g2.font = f2; g2.fillStyle = "#3f4a44"; g2.fillText(l2, 26, 96);
+    var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthWrite: false, depthTest: false, transparent: true }));
+    sp.scale.set(11 * w / 132, 11, 1); sp.position.set(x, y, z); sp.renderOrder = 10; sp.userData.own = true; return sp;
   }
 
   // ---------------- wiring ----------------
@@ -2776,6 +3027,15 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     var done = false, run = function () { if (done) return; done = true; pending = 0; update(); };
     requestAnimationFrame(run); setTimeout(run, 120);
   }
+  // the home isn't drawn until the visitor places a design, so nothing looks already built
+  var homePlaced = false, homeMorph = false;
+  function placeDesign() {
+    if (homePlaced) return false;
+    homePlaced = true; homeMorph = true;
+    $("replayBuild").classList.remove("cta"); $("placeNote").hidden = true;
+    return true;
+  }
+  $("replayBuild").classList.add("cta");
   function update() {
     var s = readState();
     var c = compute(s);
@@ -2805,17 +3065,28 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     $("viewExterior").setAttribute("aria-pressed", "true"); $("viewStructure").setAttribute("aria-pressed", "false"); setView(null, "structure", false);
   });
   $("viewStructure").addEventListener("click", function () {
+    placeDesign();
     $("viewStructure").setAttribute("aria-pressed", "true"); $("viewExterior").setAttribute("aria-pressed", "false"); setView(null, "structure", true);
   });
-  $("replayBuild").addEventListener("click", function () { if (three) { three.cancelAnim(); three.playBuild(); } });
+  $("replayBuild").addEventListener("click", function () {
+    if (placeDesign()) { scheduleUpdate(); return; }
+    if (three) { three.cancelAnim(); three.playBuild(); }
+  });
+  // changing the design's size, roof or panels places it too
+  ["h-shape", "h-roof", "h-panel"].forEach(function (id) {
+    var sec = document.querySelector('section[aria-labelledby="' + id + '"]');
+    if (sec) sec.addEventListener("input", function () { if (placeDesign()) scheduleUpdate(); });
+  });
   $("designLib").addEventListener("click", function (e) {
     var b = e.target.closest("button[data-i]"); if (!b) return;
+    placeDesign();
     var d = JSON.parse($("designLib").dataset.designs)[+b.getAttribute("data-i")];
     $("len").value = d[1]; $("wid").value = d[2]; $(d[3]).checked = true; $(d[4]).checked = true;
     $("rfGable").checked = true; $("pitch").value = 4; if (d[3] === "useShed") $("un1").checked = true;
     scheduleUpdate();
   });
   $("viewSnow").addEventListener("click", function () {
+    placeDesign();
     var on = $("viewSnow").getAttribute("aria-pressed") !== "true";
     $("viewSnow").setAttribute("aria-pressed", String(on)); setView(null, "snow", on);
   });
