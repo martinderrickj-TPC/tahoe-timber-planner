@@ -1,6 +1,6 @@
 # Tahoe Timber Planner
 
-A working demo from [Tahoe Wood](https://tahoewood.org). You sketch a backyard home or ADU built from nail-laminated timber (NLT) panels made locally from Tahoe forest-thinning wood on a 4-ft plywood module. The planner then:
+A working demo from [Tahoe Wood](https://tahoewood.org). You lay out an ADU, workforce unit, workshop or shed built from nail-laminated timber (NLT) panels made locally from Tahoe forest-thinning wood on a 4-ft plywood module. The planner then:
 
 - checks what a Lake Tahoe lot allows (TRPA coverage, California ADU size and height)
 - screens the roof for ASCE 7-22 snow loads
@@ -8,7 +8,7 @@ A working demo from [Tahoe Wood](https://tahoewood.org). You sketch a backyard h
 - shows a tiered price guide (timber kit, weathertight shell, move-in ready)
 - lists the Tahoe-specific savings that apply to the lot
 
-The public version includes six real sample lots from TRPA's parcel service, with addresses and parcel numbers left out, plus a live address search that asks TRPA one search at a time.
+The public version includes seven real sample lots from TRPA's parcel service, with addresses and parcel numbers left out, plus a live address search that asks TRPA one search at a time.
 
 The rules, snow loads, panel depths and prices are illustrative placeholders for discussion. They are not code determinations, engineering or quotes.
 
