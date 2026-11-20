@@ -318,7 +318,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
   <nav class="sitenav" aria-label="Tahoe Wood tools">
     <a class="sn-brand" href="https://tahoewood.org" target="_blank" rel="noopener"><span class="tw-mark" role="img" aria-label="Tahoe Wood logo"></span><span>Tahoe Wood</span></a>
     <div class="sn-tabs">
-      <a href="#" aria-current="page">Home planner</a>
+      <a href="#" aria-current="page">ADU Planner</a>
       <a href="nlt.html">NLT calculator</a>
       <a href="process.html">How NLT is made</a>
     </div>
@@ -326,7 +326,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
   <header class="top">
     <div class="eyebrow"><span class="pill demo">Working demo · screening numbers only</span></div>
     <h1>Tahoe Timber Planner</h1>
-    <p class="lede">A Forest Service silviculturist estimated in 2023 that there are now about 50 to 75 trees per acre, compared with likely about 20 before Comstock-era logging. Other estimates differ. Trees felled in the Tahoe region are typically hauled 70 to over 100 miles away, the Tahoe Daily Tribune reported in October 2026. Local crews make nail-laminated timber (NLT) panels from that wood. None are for sale yet, and Tahoe Wood is working to build that pipeline and workforce. Sketch a backyard home or ADU from those panels. The planner checks what a Tahoe lot allows, sizes the roof for snow, and lists every panel with a price guide and the estimated carbon in the wood. Everything snaps to a 4-ft plywood module, so the same grid carries over to local CLT.</p>
+    <p class="lede">A Forest Service silviculturist estimated in 2023 that there are now about 50 to 75 trees per acre, compared with likely about 20 before Comstock-era logging. Other estimates differ. Trees felled in the Tahoe region are typically hauled 70 to over 100 miles away, the Tahoe Daily Tribune reported in October 2026. Local crews make nail-laminated timber (NLT) panels from that wood. None are for sale yet, and Tahoe Wood is working to build that pipeline and workforce. Lay out an ADU, workforce unit, workshop or shed from those panels. The planner checks what a Tahoe lot allows, sizes the roof for snow, and lists every panel with a price guide and the estimated carbon in the wood. Everything snaps to a 4-ft plywood module, so the same grid carries over to local CLT.</p>
   </header>
 
   <main class="app">
@@ -346,7 +346,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         </details>
       </div>
       <div class="stage-foot">
-        <span class="chip-float place-note" id="placeNote">Press Build it or pick a design to place your home</span>
+        <span class="chip-float place-note" id="placeNote">Press Build it or pick a design to place your structure</span>
         <span class="chip-float num" id="dimChip">28 × 24 ft · 672 ft²</span>
         <span class="hint" id="stageHint">Drag to orbit · Ctrl/⌘ + scroll or pinch to zoom</span>
       </div>
@@ -375,7 +375,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           <label for="addrQ2" style="margin-top:6px">Or search any Tahoe Basin address</label>
           <input type="search" id="addrQ2" placeholder="Street number and name" autocomplete="off">
           <dl class="facts" id="lotFacts"></dl>
-          <span class="sub">Real parcels from <a href="https://maps.trpa.org/server/rest/services" target="_blank" rel="noopener">TRPA's parcel service</a>. We've left out addresses and parcel numbers. The planner places the home on the lot at least 5 ft from the lot lines and 10 ft from the existing house, as close to the house as that allows to keep utility runs short. Both distances are placeholders.</span>
+          <span class="sub">Real parcels from <a href="https://maps.trpa.org/server/rest/services" target="_blank" rel="noopener">TRPA's parcel service</a>. We've left out addresses and parcel numbers. The planner sites the structure at least 5 ft from the lot lines and 10 ft from the existing house, as close to the house as that allows to keep utility runs short. Both distances are placeholders.</span>
         </div>
         <div class="field" id="locField">
           <label for="loc">Community</label>
@@ -411,7 +411,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         <div class="field">
           <span class="lab" id="useLab">Use</span>
           <div class="seg" role="radiogroup" aria-labelledby="useLab">
-            <input type="radio" name="use" id="useAdu" value="adu" checked><label for="useAdu">Home (ADU)<small>lived in</small></label>
+            <input type="radio" name="use" id="useAdu" value="adu" checked><label for="useAdu">Dwelling unit (ADU)<small>lived in</small></label>
             <input type="radio" name="use" id="useWork" value="workshop"><label for="useWork">Workshop or studio<small>not lived in</small></label>
             <input type="radio" name="use" id="useShed" value="shed"><label for="useShed">Small shed<small>120 ft² or less</small></label>
           </div>
@@ -442,7 +442,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
           </div>
         </div>
         <div class="field">
-          <span class="lab" id="unLab">Homes on this lot</span>
+          <span class="lab" id="unLab">ADUs on this lot</span>
           <div class="seg" role="radiogroup" aria-labelledby="unLab">
             <input type="radio" name="un" id="un1" value="1" checked><label for="un1">One<small>single ADU</small></label>
             <input type="radio" name="un" id="un2" value="2"><label for="un2">Two<small>TRPA's limit in most areas</small></label>
@@ -504,7 +504,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
             <input type="radio" name="sp" id="spWall" value="wall"><label for="spWall">Center bearing wall<small>doubles as a room divider</small></label>
             <input type="radio" name="sp" id="spTies" value="ties"><label for="spTies">Tied rafters<small>no ridge beam, steel ties</small></label>
           </div>
-          <span class="sub">A center bearing wall carries the roof along the beam line with no posts, and a short header spans its doorway. It splits the home lengthwise, for example bedroom and bath on one side and living on the other. Tied rafters skip the ridge beam entirely. The two roof slopes lean on each other at the peak, and steel ties across the room at wall-top height keep the walls from spreading. They work on gable roofs only.</span>
+          <span class="sub">A center bearing wall carries the roof along the beam line with no posts, and a short header spans its doorway. It splits the floor plan lengthwise, for example bedroom and bath on one side and living on the other. Tied rafters skip the ridge beam entirely. The two roof slopes lean on each other at the peak, and steel ties across the room at wall-top height keep the walls from spreading. They work on gable roofs only.</span>
         </div>
       </section>
 
@@ -544,13 +544,13 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
             <input type="radio" name="ut" id="utShared" value="shared" checked><label for="utShared">Tie into the main house<small>shared sewer, water, electric</small></label>
             <input type="radio" name="ut" id="utSep" value="separate"><label for="utSep">Separate hookups<small>new meters and laterals</small></label>
           </div>
-          <span class="sub">All-electric with heat pumps, so there's no gas line or meter. Septic generally isn't an option in the Tahoe Basin. California law sends basin sewage to sewer systems that carry it out of the watershed, with narrow exceptions, and both states ordered sewage exported in the 1960s. Plan on connecting to sewer. Ask your water provider whether your lot has public water or a private well. The planner sites the home near the house to keep the utility trench short. Each water and sewer provider decides whether a detached ADU needs its own connection. California law requires any ADU connection charge to be proportionate to the unit's burden, based on its square footage or plumbing fixtures.</span>
+          <span class="sub">All-electric with heat pumps, so there's no gas line or meter. Septic generally isn't an option in the Tahoe Basin. California law sends basin sewage to sewer systems that carry it out of the watershed, with narrow exceptions, and both states ordered sewage exported in the 1960s. Plan on connecting to sewer. Ask your water provider whether your lot has public water or a private well. The planner sites the structure near the main house to keep the utility trench short. Each water and sewer provider decides whether a detached ADU needs its own connection. California law requires any ADU connection charge to be proportionate to the unit's burden, based on its square footage or plumbing fixtures.</span>
         </div>
         <p class="sub field-msg bad" id="priceGap" hidden></p>
         <ul class="tiers" id="tiers"></ul>
         <div class="handoff" id="navHandoff" hidden>
           <a id="navLink" href="#" target="_blank" rel="noopener">Get my permit checklist</a>
-          <span class="sub">Opens Business Permitting with this lot and design, including an application report with the forms and fees for each agency. Your street address and parcel number stay in your browser. The lot's map point, size and design go to Business Permitting to build the list, and aren't stored.</span>
+          <span class="sub">Opens the Permit Navigator with this lot and design, including an application report with the forms and fees for each agency. Your street address and parcel number stay in your browser. The lot's map point, size and design go to the Permit Navigator to build the list, and aren't stored.</span>
         </div>
         <details id="saveDetails">
           <summary>Ways to lower the cost</summary>
@@ -561,7 +561,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
             <li><b>Use a pre-approved standard plan once one is ready.</b> None exists for NLT yet, and one is in the works. Repeating a plan should cut architect, engineering and plan-check time.</li>
             <li><b>Tie into the main house's sewer, water and electric</b>, and site the ADU close to the house. The trench stays short and there are no new meters.</li>
             <li><b>Go all-electric with heat pumps.</b> There's no gas line, meter or trench.</li>
-            <li><b>If local rules allow two homes, build both at once.</b> They share site work, utility runs and mobilization.</li>
+            <li><b>If local rules allow two units, build both at once.</b> They share site work, utility runs and mobilization.</li>
             <li><b>Take the weathertight shell and finish the inside yourself</b>, or with a local finish carpenter.</li>
             <li><b>Deed-restrict it as workforce housing.</b> That can open fee waivers, bonus units and housing grants where they're offered.</li>
           </ul></div>
@@ -573,9 +573,9 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
         <details id="restDetails">
           <summary>What "rest of build" covers</summary>
           <div class="body"><div class="cost-lines" id="restBody"></div>
-          <p class="note">This is an illustrative split for a small Tahoe home, for discussion only. Builder bids will replace it. Land isn't included. Utility connections and the foundation sit in the site line.</p></div>
+          <p class="note">This is an illustrative split for a small Tahoe ADU, for discussion only. Builder bids will replace it. Land isn't included. Utility connections and the foundation sit in the site line.</p></div>
         </details>
-        <p class="note">"From" is the low end of each range. Panel price is an early local estimate. Finish-level rates and the other prices are placeholders until builders bid real designs, and all are editable under Price and engineering assumptions. Small homes cost more per square foot because site work and utilities are a fixed cost.</p>
+        <p class="note">"From" is the low end of each range. Panel price is an early local estimate. Finish-level rates and the other prices are placeholders until builders bid real designs, and all are editable under Price and engineering assumptions. Small ADUs cost more per square foot because site work and utilities are a fixed cost.</p>
       </section>
     </div>
 
@@ -600,7 +600,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     <details id="takeoffDetails">
       <summary>Material takeoff (rough quantities)</summary>
       <div class="body">
-        <p class="note">Rough quantities worked out from the design, for discussion. They're counted for every home on the lot, with about 10% waste on sheet goods and finishes. A builder's takeoff from real drawings replaces this. Prices per line can be added later.</p>
+        <p class="note">Rough quantities worked out from the design, for discussion. They're counted for every structure on the lot, with about 10% waste on sheet goods and finishes. A builder's takeoff from real drawings replaces this. Prices per line can be added later.</p>
         <div class="table-wrap" tabindex="0" role="region" aria-label="Material takeoff table">
           <table>
             <thead><tr><th>Item</th><th class="r">Qty</th><th>Unit</th><th>Note</th></tr></thead>
@@ -1183,7 +1183,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     }
     var sl = ctx.terrain && ctx.terrain.slope;
     if (sl) add("Slope: the ground inside the lot line falls about " + Math.round(sl.drop) + " ft, an average " + Math.round(sl.pct) + "% grade, downhill to the " + sl.dir + "." +
-      (ctx.homeDrop >= 1.5 ? " Under the home it falls about " + Math.round(ctx.homeDrop) + " ft, so the floor is set at the high side and the downhill side gets a taller concrete foundation wall." : ""));
+      (ctx.homeDrop >= 1.5 ? " Under the structure it falls about " + Math.round(ctx.homeDrop) + " ft, so the floor is set at the high side and the downhill side gets a taller concrete foundation wall." : ""));
     var sz = ctx.sezRel, fz = ctx.floodRel;
     add(!sz ? "Stream zones: none mapped near this lot." : sz.over ? "Stream zones: part of the lot is in a mapped stream environment zone (" + sz.a.label + "), shown in teal." : "Stream zones: the nearest mapped stream environment zone (" + sz.a.label + ") is about " + ft(sz.d) + " from the lot line, shown in teal.");
     var f5 = ctx.flood500Rel;
@@ -1804,7 +1804,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     $("pg").setAttribute("aria-valuetext", s.pg + " pounds per square foot");
     var adu = s.use === "adu";
     $("htLab").parentNode.hidden = !adu;
-    $("unLab").textContent = adu ? "Homes on this lot" : "Buildings on this lot";
+    $("unLab").textContent = adu ? "ADUs on this lot" : "Buildings on this lot";
     $("dimChip").textContent = s.L + " × " + s.W + " ft · " + fmt(c.area) + " ft²";
     $("locSub").textContent = s.loc.juris === "Town of Truckee" ? "California. Nevada County, not the State of Nevada. Outside the Tahoe Basin, so TRPA coverage rules don't apply." : s.loc.state + " · " + (s.loc.trpa ? "Inside the Tahoe Basin, so TRPA rules apply" : "Outside the Tahoe Basin, so TRPA coverage rules don't apply");
     $("lcField").hidden = !s.loc.trpa || !!s.lot;
@@ -1845,13 +1845,13 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     // checks
     var checks = [];
     if (c.n > 1) {
-      checks.push(adu ? ["warn", "Two homes on one lot", s.loc.trpa
-          ? "TRPA allows up to two ADUs on a single-family or multifamily property in most areas. A market-rate ADU needs a residential unit of use, and a deed-restricted ADU can use a bonus unit. TRPA's ADU page describes the two as one attached and one detached. Local rules can be stricter. Washoe allows one ADU per parcel and Placer's pages differ. Douglas, South Lake Tahoe and El Dorado may also limit you. Confirm before designing a second home."
-          : "State law changes on January 1, 2027 to require two detached ADUs on a single-family lot, but local code may still say one. Ask before designing a second home."]
+      checks.push(adu ? ["warn", "Two ADUs on one lot", s.loc.trpa
+          ? "TRPA allows up to two ADUs on a single-family or multifamily property in most areas. A market-rate ADU needs a residential unit of use, and a deed-restricted ADU can use a bonus unit. TRPA's ADU page describes the two as one attached and one detached. Local rules can be stricter. Washoe allows one ADU per parcel and Placer's pages differ. Douglas, South Lake Tahoe and El Dorado may also limit you. Confirm before designing a second unit."
+          : "State law changes on January 1, 2027 to require two detached ADUs on a single-family lot, but local code may still say one. Ask before designing a second unit."]
                         : ["info", "Two buildings on one lot", "Both count toward land coverage and setbacks. ADU unit limits don't apply to sheds or workshops."]);
       if (c.place && c.place.fits && c.place2) {
-        if (c.place2.fits) checks.push(["ok", "Room for both homes", "The second home also clears the lot lines, the existing house and the first home. This is about space only, not whether local rules allow two."]);
-        else checks.push(["warn", "Only one home fits at this size", "There isn't room for a second home with these setbacks and separations. Try a smaller footprint."]);
+        if (c.place2.fits) checks.push(["ok", "Room for both structures", "The second structure also clears the lot lines, the existing house and the first structure. This is about space only, not whether local rules allow two."]);
+        else checks.push(["warn", "Only one structure fits at this size", "There isn't room for a second structure with these setbacks and separations. Try a smaller footprint."]);
       }
     }
     if (!adu) { /* housing-type notes apply to homes only */ } else if (s.housing === "work") checks.push(["info", "Workforce unit", "A deed restriction to achievable, moderate or affordable incomes can let a unit use a TRPA residential bonus unit instead of an allocation. Some deed-restricted units also get coverage and density incentives. Eligibility depends on the parcel, so confirm with TRPA."]);
@@ -1859,7 +1859,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     if (adu && s.loc.state === "CA" && c.area < 750) checks.push(["ok", "Under 750 ft²: no local impact fees", "California bars local impact fees on ADUs with 750 ft² or less of interior living space. Utility connection charges are separate." + (s.loc.trpa ? " Ask whether TRPA's own mitigation fees are covered." : "")]);
     if (c.place) {
       if (c.place.fits) checks.push(["ok", "Fits on this lot", "The planner found a spot at least " + SETBACK + " ft from every lot line and " + fmt(Math.min(c.place.clear, 60)) + " ft from the existing house. Setbacks here are placeholders until local setbacks are connected."]);
-      else checks.push(["warn", "Doesn't fit on this lot at this size", "No spot keeps " + SETBACK + " ft from the lot lines and " + SEPARATION + " ft from the existing house. Try a smaller footprint or a different shape. The 3D view shows the home at the lot's center for reference."]);
+      else checks.push(["warn", "Doesn't fit on this lot at this size", "No spot keeps " + SETBACK + " ft from the lot lines and " + SEPARATION + " ft from the existing house. Try a smaller footprint or a different shape. The 3D view shows the structure at the lot's center for reference."]);
     }
     // TRPA coverage exemption for non-permanent sheds (TRPA land coverage exemptions packet)
     if (s.lot && s.lot.coverageUnknown) checks.push(["warn", "Existing coverage unknown", "TRPA has no existing-coverage estimate for this parcel. Enter your own figure above, or the coverage check here reads as if the lot were empty."]);
@@ -1875,9 +1875,9 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     if (covExempt) checks.push([shedRule.bmp === true ? "ok" : "warn", "May be exempt from TRPA land coverage", "A shed on skids with no permanent foundation, up to 120 ft² and no more than 2% of the parcel's non-sensitive land, can be exempt from land coverage on capability classes 4–7 or IPES 726 and up. TRPA also requires installed BMPs. " + (shedRule.bmp === true ? "TRPA's map shows a BMP certificate on this parcel." : shedRule.bmp === false ? "TRPA's map shows no BMP certificate on this parcel, so plan on installing BMPs first." : "Check whether this parcel has a BMP certificate.") + " It still goes through TRPA's exemption declaration."]);
     else if (s.lot && s.lot.allowedCoverageSqft != null) {
       var remainingT = s.lot.allowedCoverageSqft - s.existCov, fpT = s.L * s.W * c.n;
-      if (s.existCov == null || (s.lot.coverageUnknown && !s.existCov)) checks.push(["warn", "Coverage can't be checked yet", "This home covers " + fmt(fpT) + " ft² and TRPA estimates " + fmt(s.lot.allowedCoverageSqft) + " ft² of allowed coverage, but how much is already used isn't known. Enter your own figure above."]);
-      else if (fpT <= remainingT) checks.push(["ok", "Land coverage fits", "This home covers " + fmt(fpT) + " ft². TRPA estimates " + fmt(s.lot.allowedCoverageSqft) + " ft² of allowed coverage for this parcel, and about " + fmt(s.existCov) + " ft² is already used, leaving " + fmt(remainingT) + " ft². Coverage is only an estimate until TRPA verifies the site."]);
-      else checks.push(["warn", "Over allowed land coverage", "This home covers " + fmt(fpT) + " ft², but only about " + fmt(Math.max(0, remainingT)) + " ft² of TRPA's estimated allowed coverage is left. Options include a smaller footprint, removing old coverage, or buying and transferring coverage through TRPA."]);
+      if (s.existCov == null || (s.lot.coverageUnknown && !s.existCov)) checks.push(["warn", "Coverage can't be checked yet", "The proposed footprint covers " + fmt(fpT) + " ft² and TRPA estimates " + fmt(s.lot.allowedCoverageSqft) + " ft² of allowed coverage, but how much is already used isn't known. Enter your own figure above."]);
+      else if (fpT <= remainingT) checks.push(["ok", "Land coverage fits", "The proposed footprint covers " + fmt(fpT) + " ft². TRPA estimates " + fmt(s.lot.allowedCoverageSqft) + " ft² of allowed coverage for this parcel, and about " + fmt(s.existCov) + " ft² is already used, leaving " + fmt(remainingT) + " ft². Coverage is only an estimate until TRPA verifies the site."]);
+      else checks.push(["warn", "Over allowed land coverage", "The proposed footprint covers " + fmt(fpT) + " ft², but only about " + fmt(Math.max(0, remainingT)) + " ft² of TRPA's estimated allowed coverage is left. Options include a smaller footprint, removing old coverage, or buying and transferring coverage through TRPA."]);
     } else if (s.loc.trpa && (s.lotArea == null || s.existCov == null)) {
       var unread = s.lotArea != null ? "the existing coverage" : s.existCov != null ? "the lot size" : "the lot size and existing coverage";
       checks.push(["warn", "Coverage can't be checked yet", "Enter " + unread + " above to see how much coverage is left."]);
@@ -1885,8 +1885,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       var allowed = s.lotArea * s.landClass.pct / 100;
       var remaining = allowed - s.existCov;
       var fp = s.L * s.W * c.n;
-      if (fp <= remaining) checks.push(["ok", "Land coverage fits", "This home covers " + fmt(fp) + " ft². Your lot has " + fmt(remaining) + " ft² of base coverage left (" + s.landClass.pct + "% of " + fmt(s.lotArea) + " ft², minus " + fmt(s.existCov) + " ft² already used). Driveways and patios count too."]);
-      else checks.push(["warn", "Over base land coverage", "This home covers " + fmt(fp) + " ft², but only " + fmt(Math.max(0, remaining)) + " ft² of base coverage is left. Options include a smaller footprint, removing old coverage, or buying and transferring coverage through TRPA."]);
+      if (fp <= remaining) checks.push(["ok", "Land coverage fits", "The proposed footprint covers " + fmt(fp) + " ft². Your lot has " + fmt(remaining) + " ft² of base coverage left (" + s.landClass.pct + "% of " + fmt(s.lotArea) + " ft², minus " + fmt(s.existCov) + " ft² already used). Driveways and patios count too."]);
+      else checks.push(["warn", "Over base land coverage", "The proposed footprint covers " + fmt(fp) + " ft², but only " + fmt(Math.max(0, remaining)) + " ft² of base coverage is left. Options include a smaller footprint, removing old coverage, or buying and transferring coverage through TRPA."]);
     } else {
       checks.push(["info", "Local zoning applies", s.loc.juris + " sets lot coverage and setbacks here. TRPA rules don't apply outside the basin."]);
     }
@@ -1900,7 +1900,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       checks.push(["info", "Height " + fmt(c.ridge, 1) + " ft", "Height limits for accessory structures vary and are often lower than for ADUs. Confirm " + (s.loc.trpa ? "TRPA and " : "") + s.loc.juris + " limits."]);
     } else if (s.loc.state === "CA") {
       if (c.area <= 1200) checks.push([c.area > 850 ? "warn" : "ok", "Under the 1,200 ft² state ceiling", "1,200 ft² is the limit in state ADU law for a detached unit. State law also says local rules can't set a maximum below 850 ft², or 1,000 ft² for more than one bedroom. Local limits vary, so confirm with " + s.loc.juris + "."]);
-      else checks.push(["warn", "Over 1,200 ft²", "1,200 ft² is the limit in state ADU law for a detached unit. Local limits vary, so confirm with " + s.loc.juris + ". Over the limit, this would need a permit as a separate home."]);
+      else checks.push(["warn", "Over 1,200 ft²", "1,200 ft² is the limit in state ADU law for a detached unit. Local limits vary, so confirm with " + s.loc.juris + ". Over the limit, this would need a permit as a separate dwelling."]);
       var heightAuth = s.loc.trpa ? "TRPA and " + s.loc.juris : s.loc.juris;
       if (c.ridge <= 16) checks.push(["ok", "Height " + fmt(c.ridge, 1) + " ft", "Within the 16-ft height that state ADU law guarantees for a detached ADU. " + heightAuth + " limits can differ."]);
       else checks.push(["warn", "Height " + fmt(c.ridge, 1) + " ft", "Taller than the 16-ft height that state ADU law guarantees. Confirm " + heightAuth + " limits, or lower the pitch or wall height."]);
@@ -1908,7 +1908,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
       checks.push(["info", "State of Nevada ADU rules", "The State of Nevada's 2025 ADU law (AB 396) sets no size or height guarantee, and its ordinance requirement appears not to reach the Tahoe Basin. " + s.loc.juris + " code" + (s.loc.trpa ? " and TRPA's height and accessory-dwelling rules" : "") + " set the limits here. The roof peak is " + fmt(c.ridge, 1) + " ft."]);
     }
     if (c.clt) checks.push(["info", "Snow design pending for CLT", "Needs certified panel values from a local CLT mill. Design snow here is " + fmt(c.pf) + " psf."]);
-    else if (c.roofD && c.needsBeam && !c.beam) checks.push(["warn", "Roof beams need an engineer", c.roofD.lumber.nom + " NLT panels work, but no " + ({ glulam: "glulam up to " + GL.maxD + " in deep", log: "log up to 24 in diameter", nlt: "NLT beam up to 8 plies of 2x12", clt: "CLT beam up to 42 in deep" }[s.beamType] || "beam") + " works" + (s.clearSpan ? " as a clear span" : " with posts 8 ft apart or more") + " at " + fmt(s.pg) + " psf. " + (s.clearSpan ? "Allow interior posts, or narrow the home." : "Try a narrower width, a steeper pitch or a lower snow load.")]);
+    else if (c.roofD && c.needsBeam && !c.beam) checks.push(["warn", "Roof beams need an engineer", c.roofD.lumber.nom + " NLT panels work, but no " + ({ glulam: "glulam up to " + GL.maxD + " in deep", log: "log up to 24 in diameter", nlt: "NLT beam up to 8 plies of 2x12", clt: "CLT beam up to 42 in deep" }[s.beamType] || "beam") + " works" + (s.clearSpan ? " as a clear span" : " with posts 8 ft apart or more") + " at " + fmt(s.pg) + " psf. " + (s.clearSpan ? "Allow interior posts, or narrow the footprint." : "Try a narrower width, a steeper pitch or a lower snow load.")]);
     else if (c.roofD) checks.push(["ok", "Roof screened for " + fmt(s.pg) + " psf ground snow (ASCE 7-22)", c.roofD.lumber.nom + " NLT spanning " + fmt(c.roofD.span, 1) + " ft" + (c.needsBeam ? (c.beam && c.beam.type === "ties" ? ", with tied rafters instead of a ridge beam" : ", on " + beamText(s, c).charAt(0).toLowerCase() + beamText(s, c).slice(1)) : "") + (c.unbal ? ". Includes unbalanced snow (" + fmt(s.pg) + " psf on the leeward side)" : "") + ". The walls carry the roof, and wall capacity, headers, bracing and connections aren't checked. Screening only; an engineer's stamped tables replace this."]);
     else checks.push(["bad", "Roof beyond this demo's range", "No 2x6–2x12 NLT layout with up to three beam lines works at this snow load and width. An engineer would look at deeper panels or CLT."]);
     if (c.beam && c.beam.type === "ties") {
@@ -1920,7 +1920,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     if (s.roof === "flat" && s.pg >= 200) checks.push(["warn", "Low-slope roof in deep snow", "A low-slope roof holds the snow load longer and needs careful drainage and ice-dam detailing. Ask your engineer."]);
     if (s.exterior !== "siding") checks.push(["warn", "Wood exterior needs a wildfire-code path", s.loc.state === "CA" ? "In California's Wildland-Urban Interface areas, exterior walls must use a method listed in the code, or be covered with noncombustible material, ignition-resistant material, or fire-retardant-treated wood labeled for exterior use. Confirm with the building department." : "In the State of Nevada, ask your local fire district what it accepts for wood. Tahoe Douglas Fire requires materials meeting Class 1 Ignition Resistant Construction. Washoe County's guide lists fire-retardant-treated wood labeled for exterior use among allowed wall materials. Incline Village and Crystal Bay have their own locally amended code."]);
     checks.push(["info", "Wildfire zone not yet checked", s.loc.state === "CA" ? "The fire-hazard lookup isn't connected yet. In mapped fire hazard severity zones and wildland-urban interface areas, the California Wildland-Urban Interface Code (Title 24, Part 7) applies. It took effect January 1, 2026 and took over the CBC Chapter 7A provisions." : "The fire-hazard lookup isn't connected yet. Counties in the State of Nevada (Douglas, Washoe) apply their adopted wildland-urban interface code."]);
-    if (adu && s.loc.state === "CA") checks.push(["warn", "30-ft fire setback may apply", "State fire-safe rules call for a 30-ft setback from property lines in State Responsibility Areas and Very High fire zones, and allow a reduction if another method limits ignition between structures. State ADU law says 4 ft. We haven't found a clear state answer on whether the 30 ft applies to an ADU on a built lot. Ask your building department and fire district in writing before siting the home."]);
+    if (adu && s.loc.state === "CA") checks.push(["warn", "30-ft fire setback may apply", "State fire-safe rules call for a 30-ft setback from property lines in State Responsibility Areas and Very High fire zones, and allow a reduction if another method limits ignition between structures. State ADU law says 4 ft. We haven't found a clear state answer on whether the 30 ft applies to an ADU on a built lot. Ask your building department and fire district in writing before siting the ADU."]);
     $("checks").innerHTML = checks.map(function (k) {
       var lab = { ok: "Fits", warn: "Check", bad: "Blocked", info: "Note" }[k[0]];
       return '<li class="check"><span class="badge ' + k[0] + '">' + lab + '</span><span><b>' + esc(k[1]) + '</b><span class="sub">' + esc(k[2]) + '</span></span></li>';
@@ -1937,12 +1937,12 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     else if (s.use === "workshop") TIERS[2] = ["Finished workshop", "Everything in the shell plus power, lighting, a basic interior and builder overhead. Not for living in.", c.low, c.high, true];
     $("tiers").innerHTML = TIERS.map(function (t) {
       var price = c.clt ? "Pending<small>needs CLT pricing</small>" : t[2] == null ? NO_PRICE + "<small>" + NO_PRICE_WHY + "</small>" : "from " + money(t[2]) + "<small>" + money(t[2]) + "–" + money(t[3]) + " · from $" + fmt(t[2] / c.totalArea) + "/ft²</small>";
-      return '<li class="tier' + (t[4] ? " main" : "") + '"><h3>' + esc(t[0]) + (c.n > 1 ? " · 2 homes" : "") + '</h3><span class="from">' + price + "</span><p>" + esc(t[1]) + "</p></li>";
+      return '<li class="tier' + (t[4] ? " main" : "") + '"><h3>' + esc(t[0]) + (c.n > 1 ? " · 2 units" : "") + '</h3><span class="from">' + price + "</span><p>" + esc(t[1]) + "</p></li>";
     }).join("");
     $("costLines").innerHTML =
       line(c.clt ? "CLT panels (pending pricing)" : "NLT panels (" + fmt(c.panelSf) + " ft² of panel)", c.clt ? "—" : money(c.panelsCost)) +
       line("Rest of build (" + fmt(c.totalArea) + " ft²" + (c.restRate == null ? "" : " × $" + fmt(c.restRate)) + ")", money(times(c.totalArea, c.restRate))) +
-      line("Site work and foundation" + (c.n > 1 ? " (2 homes)" : ""), money(c.siteWork)) +
+      line("Site work and foundation" + (c.n > 1 ? " (2 units)" : ""), money(c.siteWork)) +
       line((s.utilities === "separate" ? "Separate utility hookups" : "Utilities tied into the main house") + " (about " + fmt(c.runFt) + " ft of trench)", money(c.utilCost)) +
       line("Design, engineering, permits" + (c.softPct == null ? "" : " (" + fmt(c.softPct, c.softPct % 1 ? 1 : 0) + "%)"), money(soft)) +
       '<div class="cost-line total"><span>' + (c.clt ? "Range without CLT panels" : "Estimated range") + "</span><span>" + (c.low == null ? NO_PRICE : money(c.low) + " – " + money(c.high)) + "</span></div>";
@@ -1981,10 +1981,10 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     }
     if (s.use !== "shed") toAdd("Walls", "Exterior insulation boards, 4×8", sheets(netWall) * nU, "sheets", "continuous insulation behind the cladding");
     toAdd("Walls", "Weather barrier", Math.ceil(netWall * 1.1) * nU, "ft²");
-    toAdd("Walls", { live: "Live-edge wood boards", ply: "Exterior plywood panels", siding: "Fiber cement or metal siding" }[s.exterior] || "Cladding", Math.ceil(netWall * 1.1) * nU, "ft²", fmt(netWall) + " ft² of wall after openings" + (nU > 1 ? " per home" : ""));
+    toAdd("Walls", { live: "Live-edge wood boards", ply: "Exterior plywood panels", siding: "Fiber cement or metal siding" }[s.exterior] || "Cladding", Math.ceil(netWall * 1.1) * nU, "ft²", fmt(netWall) + " ft² of wall after openings" + (nU > 1 ? " per unit" : ""));
     toAdd("Openings", "Windows", op.windows * nU, "windows", "about 3 × 4 ft each");
     toAdd("Openings", "Exterior doors", op.doors * nU, "doors", "about 3 × 7 ft");
-    toAdd("Roof", "Metal roofing", Math.ceil(roofArea / 100 * 1.1) * nU, "squares", fmt(roofArea) + " ft² of roof including overhangs" + (nU > 1 ? " per home" : ""));
+    toAdd("Roof", "Metal roofing", Math.ceil(roofArea / 100 * 1.1) * nU, "squares", fmt(roofArea) + " ft² of roof including overhangs" + (nU > 1 ? " per unit" : ""));
     toAdd("Roof", "Roof underlayment", Math.ceil(roofArea * 1.1) * nU, "ft²");
     if (s.use !== "shed") toAdd("Roof", "Roof insulation boards, 4×8", sheets(roofArea) * 2 * nU, "sheets", "two layers over the NLT deck (placeholder)");
     if (adu) toAdd("Interior", "Floor finish", Math.ceil(c.area * 1.1) * nU, "ft²", radioVal("fl") === "basic" ? "rental-grade vinyl plank" : "finish to match the finish level");
@@ -2043,7 +2043,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     if (J.indexOf("Washoe") !== -1) add("info", "Check lot-size eligibility", "Sources conflict on Washoe's minimum lot size for an ADU at Incline Village. Confirm with Washoe County and TRPA before designing.", "https://www.trpa.gov/adus/");
     if (CA) add("info", "Don't count on heat-pump rebates", "HEEHRA single-family rebates on TECH Clean California's site were fully reserved statewide as of February 24, 2026, with later requests waitlisted, and Liberty's program is written for existing homes upgrading electric systems.", "https://techcleanca.com/incentives/single-family-incentives/");
     if (!adu) {
-      SV = [["info", "Most savings here apply to homes", "Fee waivers and housing programs are for ADUs and workforce units. A small shed may not need a building permit, depending on your city or county, so ask before you build.", "https://www.washoecounty.gov/building/getting_started/what_requires_a_permit.php"]];
+      SV = [["info", "Most savings here apply to ADUs", "Fee waivers and housing programs are for ADUs and workforce units. A small shed may not need a building permit, depending on your city or county, so ask before you build.", "https://www.washoecounty.gov/building/getting_started/what_requires_a_permit.php"]];
     }
     $("savings").innerHTML = SV.map(function (k) {
       var lab = { ok: "May save", warn: "Check", info: "Tip" }[k[0]];
@@ -2052,8 +2052,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
 
     // design library: standard footprints, each checked against the selected lot
     var DESIGNS = [
-      ["Garden shed", 12, 8, "useShed", "fdSkids"], ["Studio", 20, 16, "useAdu", "fdCrawl"], ["Workshop", 24, 16, "useWork", "fdSlab"],
-      ["Studio plus", 24, 20, "useAdu", "fdCrawl"], ["One bedroom", 28, 24, "useAdu", "fdCrawl"], ["Two bedroom", 36, 20, "useAdu", "fdCrawl"]
+      ["Garden shed", 12, 8, "useShed", "fdSkids"], ["Studio ADU", 20, 16, "useAdu", "fdCrawl"], ["Workshop", 24, 16, "useWork", "fdSlab"],
+      ["Large studio ADU", 24, 20, "useAdu", "fdCrawl"], ["One-bedroom ADU", 28, 24, "useAdu", "fdCrawl"], ["Two-bedroom ADU", 36, 20, "useAdu", "fdCrawl"]
     ];
     var allowedCov = s.lot && s.lot.allowedCoverageSqft != null ? s.lot.allowedCoverageSqft : (s.loc.trpa && s.landClass && s.lotArea != null ? s.lotArea * s.landClass.pct / 100 : null);
     var covLeft = allowedCov != null && s.existCov != null ? allowedCov - s.existCov : null;
@@ -2211,7 +2211,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     try { reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
     stage.insertBefore(renderer.domElement, stage.firstChild);
     renderer.domElement.setAttribute("role", "img");
-    renderer.domElement.setAttribute("aria-label", "3D model of the timber home design");
+    renderer.domElement.setAttribute("aria-label", "3D model of the timber structure design");
 
     var scene = new THREE.Scene();
     var camera = new THREE.PerspectiveCamera(38, 1, 0.5, 400000);
@@ -3002,7 +3002,7 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     });
     pts.push(pts[0].clone());
     var fl = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), M.footDash); fl.computeLineDistances(); site.add(fl);
-    var l1 = !fitsSpot ? "No open spot fits this size" : ok ? "A home could go here" : "A home could go here, but",
+    var l1 = !fitsSpot ? "No open spot fits this size" : ok ? "A structure could go here" : "A structure could go here, but",
         l2 = left == null ? "coverage left isn't known" : left <= 0 ? "no land coverage is left" : (ok ? "about " : "only about ") + fmt(Math.round(left / 10) * 10) + " ft² of coverage left";
     site.add(placeLabel(l1, l2, gx, y + r * 0.5 + 8, gz, ok));
   }
