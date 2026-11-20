@@ -1,4 +1,4 @@
-# Tahoe Timber Planner
+# Tahoe Permit Planner
 
 A working demo from [Tahoe Wood](https://tahoewood.org). You lay out an ADU, workforce unit, workshop or shed built from nail-laminated timber (NLT) panels made locally from Tahoe forest-thinning wood on a 4-ft plywood module. The planner then:
 
