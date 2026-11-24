@@ -841,6 +841,14 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
   var NAV_PARAM = new URLSearchParams(location.search).get("navigator");
   var NAV_URL = NAV_PARAM === "1" ? "http://34.83.148.83/" : /^http:\/\/localhost:\d+\/?$/.test(NAV_PARAM || "") ? NAV_PARAM.replace(/\/?$/, "/") : null;
   var NAV_AREAS = { "City of South Lake Tahoe": "slt_city", "El Dorado County": "el_dorado_uninc", "Placer County": "placer_uninc", "Town of Truckee": "truckee_town", "Washoe County": "washoe_uninc", "Douglas County": "douglas_uninc" };
+  // The Census place of a sample lot or location preset, so the Navigator can tell which water and sewer
+  // provider serves it rather than listing every provider in the county as "maybe". Only one place per
+  // name: "Zephyr Cove / Stateline" and "Olympic Valley / Alpine Meadows / Northstar" send none. The
+  // Navigator keeps only names on its own list (frontend/src/permitHandoff.js, PLANNER_PLACES). Census geocoder,
+  // 2026-11-24: each sample lot is in its place, except the Meyers one, in Tahoe Paradise just outside Meyers CDP,
+  // whose providers (South Tahoe PUD, Lake Valley Fire, Lake Tahoe Unified) are the same as Meyers CDP's.
+  var NAV_PLACES = { "South Lake Tahoe": "South Lake Tahoe city", "Meyers": "Meyers CDP", "Tahoma": "Tahoma CDP", "Tahoe City": "Sunnyside-Tahoe City CDP",
+                     "Kings Beach": "Kings Beach CDP", "Carnelian Bay": "Carnelian Bay CDP", "Incline Village": "Incline Village CDP", "Zephyr Cove": "Zephyr Cove CDP", "Truckee": "Truckee town" };
   function handoffUrl(s, c) {
     var area = NAV_AREAS[s.loc.juris];
     if (!area) return null;
@@ -876,6 +884,8 @@ footer { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 90
     }
     var payload = { v: 1, type: { adu: "build_adu", workshop: "build_workshop", shed: "build_shed" }[s.use], area: area, in_trpa: !!s.loc.trpa, answers: answers, project: project };
     if (lot && lot.live) { payload.address = lot.community; payload.apn = lot.apn; payload.lat = lot.lat; payload.lon = lot.lon; }
+    // A searched lot's map point settles its place; a snapshot lot's community is TRPA's label, not a Census place.
+    else if ((!lot || /^lot-/.test(lot.id)) && NAV_PLACES.hasOwnProperty(s.loc.name)) payload.place = NAV_PLACES[s.loc.name];
     var binary = "";
     new TextEncoder().encode(JSON.stringify(payload)).forEach(function (b) { binary += String.fromCharCode(b); });
     return NAV_URL + "#permit=" + btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
